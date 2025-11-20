@@ -39,8 +39,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.schema = exports.db = void 0;
 const postgres_js_1 = require("drizzle-orm/postgres-js");
 const postgres_1 = __importDefault(require("postgres"));
+const dotenv = __importStar(require("dotenv"));
 const schema = __importStar(require("../../drizzle/schema"));
 exports.schema = schema;
+dotenv.config();
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
     throw new Error('DATABASE_URL is not defined in environment variables. Please check your .env file.');
