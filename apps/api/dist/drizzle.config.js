@@ -32,19 +32,18 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.schema = exports.db = void 0;
-const postgres_js_1 = require("drizzle-orm/postgres-js");
-const postgres_1 = __importDefault(require("postgres"));
-const schema = __importStar(require("../../drizzle/schema"));
-exports.schema = schema;
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-    throw new Error('DATABASE_URL is not defined in environment variables. Please check your .env file.');
-}
-const queryClient = (0, postgres_1.default)(connectionString);
-exports.db = (0, postgres_js_1.drizzle)(queryClient, { schema });
-//# sourceMappingURL=database.js.map
+const drizzle_kit_1 = require("drizzle-kit");
+const dotenv = __importStar(require("dotenv"));
+dotenv.config();
+exports.default = (0, drizzle_kit_1.defineConfig)({
+    schema: './drizzle/schema.ts',
+    out: './drizzle/migrations',
+    dialect: 'postgresql',
+    dbCredentials: {
+        url: process.env.DATABASE_URL,
+    },
+    verbose: true,
+    strict: true,
+});
+//# sourceMappingURL=drizzle.config.js.map
