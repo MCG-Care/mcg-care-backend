@@ -6,26 +6,24 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AppModule = void 0;
+exports.DB_PROVIDER = exports.DatabaseModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const users_module_1 = require("./modules/users/users.module");
-const database_module_1 = require("./config/database.module");
-let AppModule = class AppModule {
+const database_1 = require("./database");
+const DB_PROVIDER = 'DRIZZLE_DB';
+exports.DB_PROVIDER = DB_PROVIDER;
+let DatabaseModule = class DatabaseModule {
 };
-exports.AppModule = AppModule;
-exports.AppModule = AppModule = __decorate([
+exports.DatabaseModule = DatabaseModule;
+exports.DatabaseModule = DatabaseModule = __decorate([
+    (0, common_1.Global)(),
     (0, common_1.Module)({
-        imports: [
-            config_1.ConfigModule.forRoot({
-                isGlobal: true,
-                envFilePath: '.env',
-            }),
-            database_module_1.DatabaseModule,
-            users_module_1.UsersModule,
+        providers: [
+            {
+                provide: DB_PROVIDER,
+                useValue: database_1.db,
+            },
         ],
-        controllers: [],
-        providers: [],
+        exports: [DB_PROVIDER],
     })
-], AppModule);
-//# sourceMappingURL=app.module.js.map
+], DatabaseModule);
+//# sourceMappingURL=database.module.js.map

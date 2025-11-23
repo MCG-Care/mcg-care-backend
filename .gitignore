@@ -3,6 +3,10 @@
 /node_modules
 /build
 
+# Documentation
+*.md
+
+
 # Logs
 logs
 *.log
@@ -41,6 +45,10 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+
+# Drizzle
+**/drizzle/migrations/
+.drizzle
 
 # temp directory
 .temp
