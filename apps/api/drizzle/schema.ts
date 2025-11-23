@@ -357,6 +357,16 @@ export const forumComments = pgTable(
   }),
 );
 
+// Forum Post Images Table
+export const forumPostImages = pgTable('forum_post_images', {
+  id: serial('id').primaryKey(),
+  postId: integer('post_id')
+    .notNull()
+    .references(() => forumPosts.id, { onDelete: 'cascade' }),
+  url: text('url').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // ============================================
 // RELATIONS (for Drizzle ORM query builder)
 // ============================================
@@ -487,6 +497,7 @@ export const forumPostsRelations = relations(forumPosts, ({ one, many }) => ({
     references: [users.id],
   }),
   comments: many(forumComments),
+  images: many(forumPostImages),
 }));
 
 export const forumCommentsRelations = relations(forumComments, ({ one }) => ({
@@ -497,6 +508,13 @@ export const forumCommentsRelations = relations(forumComments, ({ one }) => ({
   user: one(users, {
     fields: [forumComments.userId],
     references: [users.id],
+  }),
+}));
+
+export const forumPostImagesRelations = relations(forumPostImages, ({ one }) => ({
+  post: one(forumPosts, {
+    fields: [forumPostImages.postId],
+    references: [forumPosts.id],
   }),
 }));
 

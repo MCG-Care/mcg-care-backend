@@ -44,12 +44,12 @@ export declare class UsersService {
         role: 'customer' | 'technician' | 'admin';
         addressId?: number;
     }): Promise<{
+        password: string;
         id: number;
         name: string;
         createdAt: Date;
         updatedAt: Date;
         email: string;
-        password: string;
         phoneNo: string;
         addressId: number | null;
         role: "customer" | "technician" | "admin";
@@ -71,12 +71,12 @@ export declare class UsersService {
         updatedAt: Date;
     }>;
     deleteUser(id: number): Promise<{
+        password: string;
         id: number;
         name: string;
         createdAt: Date;
         updatedAt: Date;
         email: string;
-        password: string;
         phoneNo: string;
         addressId: number | null;
         role: "customer" | "technician" | "admin";

@@ -5,10 +5,14 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Global validation pipe for DTOs (optional for now)
+  // Enable CORS for development
+  app.enableCors();
+
+  // Global validation pipe for DTOs
   app.useGlobalPipes(new ValidationPipe());
 
-  await app.listen(3001);
-  console.log(`🚀 Application running on: http://localhost:3001`);
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`🚀 Application running on: http://localhost:${port}`);
 }
 bootstrap();
