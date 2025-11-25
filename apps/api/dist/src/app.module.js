@@ -10,6 +10,7 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const users_module_1 = require("./modules/users/users.module");
+const products_module_1 = require("./modules/products/products.module");
 const database_module_1 = require("./config/database.module");
 let AppModule = class AppModule {
 };
@@ -23,6 +24,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             database_module_1.DatabaseModule,
             users_module_1.UsersModule,
+            products_module_1.ProductsModule,
         ],
         controllers: [],
         providers: [],
