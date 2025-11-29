@@ -25,11 +25,11 @@ export declare class ProductsService {
         voltageCount: number | null;
         releaseDate: string | null;
         productImages: {
+            url: string;
             id: number;
             createdAt: Date;
             updatedAt: Date;
             productId: number;
-            url: string;
         }[];
     }>;
     findAll(query: QueryProductsDto): Promise<{
@@ -53,11 +53,11 @@ export declare class ProductsService {
             voltageCount: number | null;
             releaseDate: string | null;
             productImages: {
+                url: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 productId: number;
-                url: string;
             }[];
         }[];
         pagination: {
@@ -87,11 +87,11 @@ export declare class ProductsService {
         voltageCount: number | null;
         releaseDate: string | null;
         productImages: {
+            url: string;
             id: number;
             createdAt: Date;
             updatedAt: Date;
             productId: number;
-            url: string;
         }[];
     }>;
     update(id: number, updateProductDto: UpdateProductDto, imageFiles?: Express.Multer.File[]): Promise<{
@@ -114,11 +114,11 @@ export declare class ProductsService {
         voltageCount: number | null;
         releaseDate: string | null;
         productImages: {
+            url: string;
             id: number;
             createdAt: Date;
             updatedAt: Date;
             productId: number;
-            url: string;
         }[];
     }>;
     remove(id: number): Promise<{

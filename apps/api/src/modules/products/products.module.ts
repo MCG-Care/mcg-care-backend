@@ -10,3 +10,5 @@ import { SupabaseService } from '../../config/supabase.service';
 })
 export class ProductsModule {}
 
+
+
