@@ -9,7 +9,14 @@ async function bootstrap() {
   app.enableCors();
 
   // Global validation pipe for DTOs
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // Enable transformation
+      transformOptions: {
+        enableImplicitConversion: true, // Allow implicit type conversion
+      },
+    }),
+  );
 
   const port = process.env.PORT || 3001;
   await app.listen(port);

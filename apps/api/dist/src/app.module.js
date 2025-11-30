@@ -11,6 +11,8 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const user_module_1 = require("./modules/users/user.module");
 const auth_module_1 = require("./modules/auth/auth.module");
+const products_module_1 = require("./modules/products/products.module");
+const forum_module_1 = require("./modules/forum/forum.module");
 const database_module_1 = require("./config/database.module");
 let AppModule = class AppModule {
 };
@@ -25,6 +27,8 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             database_module_1.DatabaseModule,
             user_module_1.UsersModule,
+            products_module_1.ProductsModule,
+            forum_module_1.ForumModule,
         ],
         controllers: [],
         providers: [],
