@@ -9,26 +9,24 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UsersController = void 0;
+exports.JwtStrategy = void 0;
 const common_1 = require("@nestjs/common");
-const users_service_1 = require("./users.service");
-let UsersController = class UsersController {
-    constructor(usersService) {
-        this.usersService = usersService;
+const passport_1 = require("@nestjs/passport");
+const passport_jwt_1 = require("passport-jwt");
+let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
+    constructor() {
+        super({
+            jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
+            secretOrKey: process.env.JWT_SECRET || 'dev-secret',
+        });
     }
-    getAllUsers() {
-        return this.usersService.getAllUsers();
+    async validate(payload) {
+        return { id: payload.sub, email: payload.email, role: payload.role };
     }
 };
-exports.UsersController = UsersController;
-__decorate([
-    (0, common_1.Get)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], UsersController.prototype, "getAllUsers", null);
-exports.UsersController = UsersController = __decorate([
-    (0, common_1.Controller)('users'),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
-], UsersController);
-//# sourceMappingURL=users.controller.js.map
+exports.JwtStrategy = JwtStrategy;
+exports.JwtStrategy = JwtStrategy = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [])
+], JwtStrategy);
+//# sourceMappingURL=jwt.strategy.js.map

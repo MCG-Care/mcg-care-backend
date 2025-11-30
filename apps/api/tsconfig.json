@@ -12,7 +12,8 @@
     "incremental": true,
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strictPropertyInitialization": false
   },
   "exclude": ["node_modules", "dist"]
 }

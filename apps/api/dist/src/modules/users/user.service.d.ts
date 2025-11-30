@@ -1,5 +1,6 @@
-import { db } from '../../config/database';
-type Database = typeof db;
+import { Database } from '../../config/database';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { AddressDto } from './dto/address.dto';
 export declare class UsersService {
     private readonly db;
     constructor(db: Database);
@@ -36,13 +37,13 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
     }>;
-    createUser(userData: {
+    createUser(data: {
         name: string;
         email: string;
         password: string;
         phoneNo: string;
         role: 'customer' | 'technician' | 'admin';
-        addressId?: number;
+        addressId: number;
     }): Promise<{
         password: string;
         id: number;
@@ -54,12 +55,16 @@ export declare class UsersService {
         addressId: number | null;
         role: "customer" | "technician" | "admin";
     }>;
-    updateUser(id: number, userData: Partial<{
-        name: string;
-        email: string;
-        phoneNo: string;
-        addressId: number;
-    }>): Promise<{
+    createAddress(dto: AddressDto): Promise<{
+        id: number;
+        address: string | null;
+        township: string;
+        city: string;
+        district: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    updateUser(id: number, data: UpdateUserDto): Promise<{
         id: number;
         name: string;
         email: string;
@@ -82,4 +87,3 @@ export declare class UsersService {
         role: "customer" | "technician" | "admin";
     }>;
 }
-export {};

@@ -22,7 +22,7 @@ let UsersService = class UsersService {
         this.db = db;
     }
     async getAllUsers() {
-        return await this.db.select().from(database_1.schema.users);
+        return this.db.select().from(database_1.schema.users);
     }
     async getUserById(id) {
         const result = await this.db
@@ -40,26 +40,24 @@ let UsersService = class UsersService {
             .limit(1);
         return result[0] || null;
     }
-    async createUser(userData) {
-        const result = await this.db
-            .insert(database_1.schema.users)
-            .values(userData)
-            .returning();
+    async createUser(data) {
+        const result = await this.db.insert(database_1.schema.users).values(data).returning();
         return result[0];
     }
-    async updateUser(id, userData) {
+    async createAddress(dto) {
+        const result = await this.db.insert(database_1.schema.addresses).values(dto).returning();
+        return result[0];
+    }
+    async updateUser(id, data) {
         const result = await this.db
             .update(database_1.schema.users)
-            .set(Object.assign(Object.assign({}, userData), { updatedAt: new Date() }))
+            .set(Object.assign(Object.assign({}, data), { updatedAt: new Date() }))
             .where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id))
             .returning();
         return result[0] || null;
     }
     async deleteUser(id) {
-        const result = await this.db
-            .delete(database_1.schema.users)
-            .where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id))
-            .returning();
+        const result = await this.db.delete(database_1.schema.users).where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id)).returning();
         return result[0] || null;
     }
 };
@@ -69,4 +67,4 @@ exports.UsersService = UsersService = __decorate([
     __param(0, (0, common_1.Inject)(database_module_1.DB_PROVIDER)),
     __metadata("design:paramtypes", [Object])
 ], UsersService);
-//# sourceMappingURL=users.service.js.map
+//# sourceMappingURL=user.service.js.map
