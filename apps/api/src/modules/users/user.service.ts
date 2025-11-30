@@ -1,21 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DB_PROVIDER } from '../../config/database.module';
-import { db } from '../../config/database';
+import { db, Database } from '../../config/database';
 import { schema } from '../../config/database';
+import * as bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
-
-type Database = typeof db;
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { AddressDto } from './dto/address.dto';
 
 @Injectable()
 export class UsersService {
   constructor(@Inject(DB_PROVIDER) private readonly db: Database) {}
 
-  // Example: Get all users
   async getAllUsers() {
-    return await this.db.select().from(schema.users);
+    return this.db.select().from(schema.users);
   }
 
-  // Example: Get user by ID
   async getUserById(id: number) {
     const result = await this.db
       .select()
@@ -26,7 +26,6 @@ export class UsersService {
     return result[0] || null;
   }
 
-  // Example: Get user by email
   async getUserByEmail(email: string) {
     const result = await this.db
       .select()
@@ -37,48 +36,37 @@ export class UsersService {
     return result[0] || null;
   }
 
-  // Example: Create a new user
-  async createUser(userData: {
+  async createUser(data: {
     name: string;
     email: string;
     password: string;
     phoneNo: string;
     role: 'customer' | 'technician' | 'admin';
-    addressId?: number;
+    addressId: number;
   }) {
-    const result = await this.db
-      .insert(schema.users)
-      .values(userData)
-      .returning();
+    const result = await this.db.insert(schema.users).values(data).returning();
 
     return result[0];
   }
 
-  // Example: Update user
-  async updateUser(
-    id: number,
-    userData: Partial<{
-      name: string;
-      email: string;
-      phoneNo: string;
-      addressId: number;
-    }>,
-  ) {
+  async createAddress(dto: AddressDto) {
+    const result = await this.db.insert(schema.addresses).values(dto).returning();
+
+    return result[0];
+  }
+
+  async updateUser(id: number, data: UpdateUserDto) {
     const result = await this.db
       .update(schema.users)
-      .set({ ...userData, updatedAt: new Date() })
+      .set({ ...data, updatedAt: new Date() })
       .where(eq(schema.users.id, id))
       .returning();
 
     return result[0] || null;
   }
 
-  // Example: Delete user
   async deleteUser(id: number) {
-    const result = await this.db
-      .delete(schema.users)
-      .where(eq(schema.users.id, id))
-      .returning();
+    const result = await this.db.delete(schema.users).where(eq(schema.users.id, id)).returning();
 
     return result[0] || null;
   }

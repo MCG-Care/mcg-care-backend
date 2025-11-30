@@ -9,7 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const users_module_1 = require("./modules/users/users.module");
+const user_module_1 = require("./modules/users/user.module");
+const auth_module_1 = require("./modules/auth/auth.module");
 const database_module_1 = require("./config/database.module");
 let AppModule = class AppModule {
 };
@@ -21,8 +22,9 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
                 envFilePath: '.env',
             }),
+            auth_module_1.AuthModule,
             database_module_1.DatabaseModule,
-            users_module_1.UsersModule,
+            user_module_1.UsersModule,
         ],
         controllers: [],
         providers: [],

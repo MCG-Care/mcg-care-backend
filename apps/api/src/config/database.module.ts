@@ -16,4 +16,3 @@ const DB_PROVIDER = 'DRIZZLE_DB';
 export class DatabaseModule {}
 
 export { DB_PROVIDER };
-

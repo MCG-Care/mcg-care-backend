@@ -8,15 +8,25 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersModule = void 0;
 const common_1 = require("@nestjs/common");
-const users_controller_1 = require("./users.controller");
-const users_service_1 = require("./users.service");
+const user_service_1 = require("./user.service");
+const user_controller_1 = require("./user.controller");
+const database_module_1 = require("../../config/database.module");
+const database_1 = require("../../config/database");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
-        controllers: [users_controller_1.UsersController],
-        providers: [users_service_1.UsersService],
+        imports: [database_module_1.DatabaseModule],
+        controllers: [user_controller_1.UsersController],
+        providers: [
+            user_service_1.UsersService,
+            {
+                provide: database_module_1.DB_PROVIDER,
+                useValue: database_1.db,
+            },
+        ],
+        exports: [user_service_1.UsersService],
     })
 ], UsersModule);
-//# sourceMappingURL=users.module.js.map
+//# sourceMappingURL=user.module.js.map

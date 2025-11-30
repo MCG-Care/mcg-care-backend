@@ -1968,6 +1968,81 @@ export declare const forumComments: import("drizzle-orm/pg-core").PgTableWithCol
     };
     dialect: "pg";
 }>;
+export declare const forumPostImages: import("drizzle-orm/pg-core").PgTableWithColumns<{
+    name: "forum_post_images";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/pg-core").PgColumn<{
+            name: "id";
+            tableName: "forum_post_images";
+            dataType: "number";
+            columnType: "PgSerial";
+            data: number;
+            driverParam: number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        postId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "post_id";
+            tableName: "forum_post_images";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        url: import("drizzle-orm/pg-core").PgColumn<{
+            name: "url";
+            tableName: "forum_post_images";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        createdAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "created_at";
+            tableName: "forum_post_images";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
 export declare const addressesRelations: import("drizzle-orm").Relations<"addresses", {
     users: import("drizzle-orm").Many<"users">;
 }>;
@@ -2027,8 +2102,12 @@ export declare const feedbacksRelations: import("drizzle-orm").Relations<"feedba
 export declare const forumPostsRelations: import("drizzle-orm").Relations<"forum_posts", {
     user: import("drizzle-orm").One<"users", true>;
     comments: import("drizzle-orm").Many<"forum_comments">;
+    images: import("drizzle-orm").Many<"forum_post_images">;
 }>;
 export declare const forumCommentsRelations: import("drizzle-orm").Relations<"forum_comments", {
     post: import("drizzle-orm").One<"forum_posts", true>;
     user: import("drizzle-orm").One<"users", true>;
+}>;
+export declare const forumPostImagesRelations: import("drizzle-orm").Relations<"forum_post_images", {
+    post: import("drizzle-orm").One<"forum_posts", true>;
 }>;

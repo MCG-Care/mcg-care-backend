@@ -9,5 +9,11 @@
     "dev:api": "npm --workspace apps/api run start:dev",
     "dev:web": "npm --workspace apps/web run dev",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\""
+  },
+  "dependencies": {
+    "@nestjs/mapped-types": "^2.1.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.7.3"
   }
 }
