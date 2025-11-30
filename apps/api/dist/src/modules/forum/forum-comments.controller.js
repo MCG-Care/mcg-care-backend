@@ -18,11 +18,15 @@ const forum_comments_service_1 = require("./forum-comments.service");
 const create_comment_dto_1 = require("./dto/create-comment.dto");
 const update_comment_dto_1 = require("./dto/update-comment.dto");
 const query_comments_dto_1 = require("./dto/query-comments.dto");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 let ForumCommentsController = class ForumCommentsController {
     constructor(forumCommentsService) {
         this.forumCommentsService = forumCommentsService;
     }
-    async create(createCommentDto) {
+    async create(createCommentDto, user) {
+        const userId = user.id;
+        createCommentDto.userId = userId;
         return this.forumCommentsService.create(createCommentDto);
     }
     async findAll(query) {
@@ -31,36 +35,24 @@ let ForumCommentsController = class ForumCommentsController {
     async findOne(id) {
         return this.forumCommentsService.findOne(id);
     }
-    async update(id, updateCommentDto) {
-        const userIdRaw = updateCommentDto.userId;
-        if (!userIdRaw) {
-            throw new common_1.BadRequestException('userId is required in body (temporary until auth is implemented)');
-        }
-        const userId = typeof userIdRaw === 'number' ? userIdRaw : parseInt(userIdRaw, 10);
-        if (isNaN(userId)) {
-            throw new common_1.BadRequestException('userId must be a valid number');
-        }
+    async update(id, updateCommentDto, user) {
+        const userId = user.id;
         return this.forumCommentsService.update(id, updateCommentDto, userId);
     }
-    async remove(id, body) {
-        const userIdRaw = body.userId;
-        const isAdmin = body.isAdmin === true || body.isAdmin === 'true';
-        if (!userIdRaw) {
-            throw new common_1.BadRequestException('userId is required in body (temporary until auth is implemented)');
-        }
-        const userId = typeof userIdRaw === 'number' ? userIdRaw : parseInt(userIdRaw, 10);
-        if (isNaN(userId)) {
-            throw new common_1.BadRequestException('userId must be a valid number');
-        }
+    async remove(id, user) {
+        const userId = user.id;
+        const isAdmin = user.role === 'admin';
         return this.forumCommentsService.remove(id, userId, isAdmin);
     }
 };
 exports.ForumCommentsController = ForumCommentsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_comment_dto_1.CreateCommentDto]),
+    __metadata("design:paramtypes", [create_comment_dto_1.CreateCommentDto, Object]),
     __metadata("design:returntype", Promise)
 ], ForumCommentsController.prototype, "create", null);
 __decorate([
@@ -79,16 +71,19 @@ __decorate([
 ], ForumCommentsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, update_comment_dto_1.UpdateCommentDto]),
+    __metadata("design:paramtypes", [Number, update_comment_dto_1.UpdateCommentDto, Object]),
     __metadata("design:returntype", Promise)
 ], ForumCommentsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)

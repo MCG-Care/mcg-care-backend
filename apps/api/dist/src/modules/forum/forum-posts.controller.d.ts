@@ -5,7 +5,7 @@ import { QueryPostsDto } from './dto/query-posts.dto';
 export declare class ForumPostsController {
     private readonly forumPostsService;
     constructor(forumPostsService: ForumPostsService);
-    create(createPostDto: CreatePostDto, files?: Express.Multer.File[]): Promise<{
+    create(createPostDto: CreatePostDto, files?: Express.Multer.File[], user?: any): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date | null;
@@ -33,9 +33,9 @@ export declare class ForumPostsController {
             };
         }[];
         images: {
+            url: string;
             id: number;
             createdAt: Date;
-            url: string;
             postId: number;
         }[];
     }>;
@@ -56,9 +56,9 @@ export declare class ForumPostsController {
                 role: "customer" | "technician" | "admin";
             };
             images: {
+                url: string;
                 id: number;
                 createdAt: Date;
-                url: string;
                 postId: number;
             }[];
         }[];
@@ -97,13 +97,13 @@ export declare class ForumPostsController {
             };
         }[];
         images: {
+            url: string;
             id: number;
             createdAt: Date;
-            url: string;
             postId: number;
         }[];
     }>;
-    update(id: number, updatePostDto: UpdatePostDto, files?: Express.Multer.File[]): Promise<{
+    update(id: number, updatePostDto: UpdatePostDto, files?: Express.Multer.File[], user?: any): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date | null;
@@ -131,16 +131,16 @@ export declare class ForumPostsController {
             };
         }[];
         images: {
+            url: string;
             id: number;
             createdAt: Date;
-            url: string;
             postId: number;
         }[];
     }>;
-    remove(id: number, body: any): Promise<{
+    remove(id: number, user?: any): Promise<{
         message: string;
     }>;
-    removeImage(postId: number, imageId: number, body: any): Promise<{
+    removeImage(postId: number, imageId: number, user?: any): Promise<{
         message: string;
     }>;
 }

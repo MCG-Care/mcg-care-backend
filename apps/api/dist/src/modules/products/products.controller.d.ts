@@ -5,7 +5,7 @@ import { QueryProductsDto } from './dto/query-products.dto';
 export declare class ProductsController {
     private readonly productsService;
     constructor(productsService: ProductsService);
-    create(createProductDto: CreateProductDto, files: Express.Multer.File[]): Promise<{
+    create(createProductDto: CreateProductDto, files: Express.Multer.File[], user?: any): Promise<{
         id: number;
         brand: string;
         name: string;
@@ -94,7 +94,7 @@ export declare class ProductsController {
             productId: number;
         }[];
     }>;
-    update(id: number, updateProductDto: UpdateProductDto, files?: Express.Multer.File[]): Promise<{
+    update(id: number, updateProductDto: UpdateProductDto, files?: Express.Multer.File[], user?: any): Promise<{
         id: number;
         brand: string;
         name: string;
@@ -121,10 +121,10 @@ export declare class ProductsController {
             productId: number;
         }[];
     }>;
-    remove(id: number): Promise<{
+    remove(id: number, user?: any): Promise<{
         message: string;
     }>;
-    removeImage(productId: number, imageId: number): Promise<{
+    removeImage(productId: number, imageId: number, user?: any): Promise<{
         message: string;
     }>;
 }

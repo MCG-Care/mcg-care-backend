@@ -5,7 +5,7 @@ import { QueryCommentsDto } from './dto/query-comments.dto';
 export declare class ForumCommentsController {
     private readonly forumCommentsService;
     constructor(forumCommentsService: ForumCommentsService);
-    create(createCommentDto: CreateCommentDto): Promise<{
+    create(createCommentDto: CreateCommentDto, user?: any): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -67,7 +67,7 @@ export declare class ForumCommentsController {
             title: string;
         };
     }>;
-    update(id: number, updateCommentDto: UpdateCommentDto): Promise<{
+    update(id: number, updateCommentDto: UpdateCommentDto, user?: any): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -85,7 +85,7 @@ export declare class ForumCommentsController {
             title: string;
         };
     }>;
-    remove(id: number, body: any): Promise<{
+    remove(id: number, user?: any): Promise<{
         message: string;
     }>;
 }
