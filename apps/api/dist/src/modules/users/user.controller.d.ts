@@ -3,7 +3,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
-    getAllUsers(): Promise<{
+    getAllUsers(user?: any): Promise<{
         id: number;
         name: string;
         email: string;
@@ -14,7 +14,7 @@ export declare class UsersController {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
-    getUser(id: string): Promise<{
+    getUser(id: string, user?: any): Promise<{
         id: number;
         name: string;
         email: string;
@@ -25,7 +25,7 @@ export declare class UsersController {
         createdAt: Date;
         updatedAt: Date;
     }>;
-    updateUser(id: string, dto: UpdateUserDto): Promise<{
+    updateUser(id: string, dto: UpdateUserDto, user?: any): Promise<{
         id: number;
         name: string;
         email: string;
@@ -36,7 +36,7 @@ export declare class UsersController {
         createdAt: Date;
         updatedAt: Date;
     }>;
-    deleteUser(id: string): Promise<{
+    deleteUser(id: string, user?: any): Promise<{
         password: string;
         id: number;
         name: string;

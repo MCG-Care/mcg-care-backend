@@ -33,9 +33,9 @@ export declare class ForumPostsService {
             };
         }[];
         images: {
+            url: string;
             id: number;
             createdAt: Date;
-            url: string;
             postId: number;
         }[];
     }>;
@@ -56,9 +56,9 @@ export declare class ForumPostsService {
                 role: "customer" | "technician" | "admin";
             };
             images: {
+                url: string;
                 id: number;
                 createdAt: Date;
-                url: string;
                 postId: number;
             }[];
         }[];
@@ -97,9 +97,9 @@ export declare class ForumPostsService {
             };
         }[];
         images: {
+            url: string;
             id: number;
             createdAt: Date;
-            url: string;
             postId: number;
         }[];
     }>;
@@ -131,9 +131,9 @@ export declare class ForumPostsService {
             };
         }[];
         images: {
+            url: string;
             id: number;
             createdAt: Date;
-            url: string;
             postId: number;
         }[];
     }>;

@@ -19,11 +19,14 @@ const forum_posts_service_1 = require("./forum-posts.service");
 const create_post_dto_1 = require("./dto/create-post.dto");
 const update_post_dto_1 = require("./dto/update-post.dto");
 const query_posts_dto_1 = require("./dto/query-posts.dto");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 let ForumPostsController = class ForumPostsController {
     constructor(forumPostsService) {
         this.forumPostsService = forumPostsService;
     }
-    async create(createPostDto, files) {
+    async create(createPostDto, files, user) {
+        const userId = user.id;
         if (files && files.length > 0) {
             const allowedMimeTypes = [
                 'image/jpeg',
@@ -37,6 +40,7 @@ let ForumPostsController = class ForumPostsController {
                 }
             }
         }
+        createPostDto.userId = userId;
         return this.forumPostsService.create(createPostDto, files);
     }
     async findAll(query) {
@@ -45,15 +49,8 @@ let ForumPostsController = class ForumPostsController {
     async findOne(id) {
         return this.forumPostsService.findOne(id);
     }
-    async update(id, updatePostDto, files) {
-        const userIdRaw = updatePostDto.userId;
-        if (!userIdRaw) {
-            throw new common_1.BadRequestException('userId is required in body (temporary until auth is implemented)');
-        }
-        const userId = parseInt(userIdRaw, 10);
-        if (isNaN(userId)) {
-            throw new common_1.BadRequestException('userId must be a valid number');
-        }
+    async update(id, updatePostDto, files, user) {
+        const userId = user.id;
         if (files && files.length > 0) {
             const allowedMimeTypes = [
                 'image/jpeg',
@@ -69,39 +66,27 @@ let ForumPostsController = class ForumPostsController {
         }
         return this.forumPostsService.update(id, updatePostDto, userId, files);
     }
-    async remove(id, body) {
-        const userIdRaw = body.userId;
-        const isAdmin = body.isAdmin === true || body.isAdmin === 'true';
-        if (!userIdRaw) {
-            throw new common_1.BadRequestException('userId is required in body (temporary until auth is implemented)');
-        }
-        const userId = parseInt(userIdRaw, 10);
-        if (isNaN(userId)) {
-            throw new common_1.BadRequestException('userId must be a valid number');
-        }
+    async remove(id, user) {
+        const userId = user.id;
+        const isAdmin = user.role === 'admin';
         return this.forumPostsService.remove(id, userId, isAdmin);
     }
-    async removeImage(postId, imageId, body) {
-        const userIdRaw = body.userId;
-        const isAdmin = body.isAdmin === true || body.isAdmin === 'true';
-        if (!userIdRaw) {
-            throw new common_1.BadRequestException('userId is required in body (temporary until auth is implemented)');
-        }
-        const userId = parseInt(userIdRaw, 10);
-        if (isNaN(userId)) {
-            throw new common_1.BadRequestException('userId must be a valid number');
-        }
+    async removeImage(postId, imageId, user) {
+        const userId = user.id;
+        const isAdmin = user.role === 'admin';
         return this.forumPostsService.removeImage(postId, imageId, userId, isAdmin);
     }
 };
 exports.ForumPostsController = ForumPostsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images', 10)),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.UploadedFiles)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_post_dto_1.CreatePostDto, Array]),
+    __metadata("design:paramtypes", [create_post_dto_1.CreatePostDto, Array, Object]),
     __metadata("design:returntype", Promise)
 ], ForumPostsController.prototype, "create", null);
 __decorate([
@@ -120,27 +105,31 @@ __decorate([
 ], ForumPostsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images', 10)),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.UploadedFiles)()),
+    __param(3, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, update_post_dto_1.UpdatePostDto, Array]),
+    __metadata("design:paramtypes", [Number, update_post_dto_1.UpdatePostDto, Array, Object]),
     __metadata("design:returntype", Promise)
 ], ForumPostsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], ForumPostsController.prototype, "remove", null);
 __decorate([
     (0, common_1.Delete)(':postId/images/:imageId'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('postId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Param)('imageId', common_1.ParseIntPipe)),
-    __param(2, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Number, Object]),
     __metadata("design:returntype", Promise)

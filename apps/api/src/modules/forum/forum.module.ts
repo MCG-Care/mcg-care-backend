@@ -5,9 +5,10 @@ import { ForumPostsController } from './forum-posts.controller';
 import { ForumCommentsController } from './forum-comments.controller';
 import { DatabaseModule } from '../../config/database.module';
 import { SupabaseService } from '../../config/supabase.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, AuthModule],
   controllers: [ForumPostsController, ForumCommentsController],
   providers: [ForumPostsService, ForumCommentsService, SupabaseService],
   exports: [ForumPostsService, ForumCommentsService],

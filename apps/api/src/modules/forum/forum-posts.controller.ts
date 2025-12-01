@@ -11,25 +11,31 @@ import {
   Query,
   ParseIntPipe,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ForumPostsService } from './forum-posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { QueryPostsDto } from './dto/query-posts.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('forum/posts')
 export class ForumPostsController {
   constructor(private readonly forumPostsService: ForumPostsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10)) // Max 10 images per post
   async create(
     @Body() createPostDto: CreatePostDto,
     @UploadedFiles() files?: Express.Multer.File[],
+    @CurrentUser() user?: any,
   ) {
-    // TODO: Get userId from auth token instead of body
-    // For now, accepting it in the body for testing
+    // Get userId from authenticated user
+    const userId = user.id;
+    // Note: Any logged-in user can post (frontend handles role-based UI)
 
     // Validate file types
     if (files && files.length > 0) {
@@ -48,6 +54,9 @@ export class ForumPostsController {
       }
     }
 
+    // Override userId from DTO with authenticated user's ID
+    createPostDto.userId = userId;
+
     return this.forumPostsService.create(createPostDto, files);
   }
 
@@ -62,26 +71,16 @@ export class ForumPostsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePostDto: UpdatePostDto,
     @UploadedFiles() files?: Express.Multer.File[],
+    @CurrentUser() user?: any,
   ) {
-    // TODO: Get userId from auth token
-    // For now, accepting it in the body for testing
-    const userIdRaw = (updatePostDto as any).userId;
-    if (!userIdRaw) {
-      throw new BadRequestException(
-        'userId is required in body (temporary until auth is implemented)',
-      );
-    }
-
-    // Convert to number (form-data sends as string)
-    const userId = parseInt(userIdRaw, 10);
-    if (isNaN(userId)) {
-      throw new BadRequestException('userId must be a valid number');
-    }
+    // Get userId from authenticated user - ownership validated in service
+    const userId = user.id;
 
     // Validate file types
     if (files && files.length > 0) {
@@ -104,47 +103,27 @@ export class ForumPostsController {
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
-    // TODO: Get userId and role from auth token
-    const userIdRaw = body.userId;
-    const isAdmin = body.isAdmin === true || body.isAdmin === 'true';
-
-    if (!userIdRaw) {
-      throw new BadRequestException(
-        'userId is required in body (temporary until auth is implemented)',
-      );
-    }
-
-    // Convert to number
-    const userId = parseInt(userIdRaw, 10);
-    if (isNaN(userId)) {
-      throw new BadRequestException('userId must be a valid number');
-    }
+  @UseGuards(JwtAuthGuard)
+  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user?: any) {
+    // Get userId and role from authenticated user
+    const userId = user.id;
+    const isAdmin = user.role === 'admin';
+    // Service validates ownership or admin status
 
     return this.forumPostsService.remove(id, userId, isAdmin);
   }
 
   @Delete(':postId/images/:imageId')
+  @UseGuards(JwtAuthGuard)
   async removeImage(
     @Param('postId', ParseIntPipe) postId: number,
     @Param('imageId', ParseIntPipe) imageId: number,
-    @Body() body: any,
+    @CurrentUser() user?: any,
   ) {
-    // TODO: Get userId and role from auth token
-    const userIdRaw = body.userId;
-    const isAdmin = body.isAdmin === true || body.isAdmin === 'true';
-
-    if (!userIdRaw) {
-      throw new BadRequestException(
-        'userId is required in body (temporary until auth is implemented)',
-      );
-    }
-
-    // Convert to number
-    const userId = parseInt(userIdRaw, 10);
-    if (isNaN(userId)) {
-      throw new BadRequestException('userId must be a valid number');
-    }
+    // Get userId and role from authenticated user
+    const userId = user.id;
+    const isAdmin = user.role === 'admin';
+    // Service validates ownership or admin status
 
     return this.forumPostsService.removeImage(postId, imageId, userId, isAdmin);
   }

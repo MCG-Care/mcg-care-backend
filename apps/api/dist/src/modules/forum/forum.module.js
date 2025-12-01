@@ -14,12 +14,13 @@ const forum_posts_controller_1 = require("./forum-posts.controller");
 const forum_comments_controller_1 = require("./forum-comments.controller");
 const database_module_1 = require("../../config/database.module");
 const supabase_service_1 = require("../../config/supabase.service");
+const auth_module_1 = require("../auth/auth.module");
 let ForumModule = class ForumModule {
 };
 exports.ForumModule = ForumModule;
 exports.ForumModule = ForumModule = __decorate([
     (0, common_1.Module)({
-        imports: [database_module_1.DatabaseModule],
+        imports: [database_module_1.DatabaseModule, auth_module_1.AuthModule],
         controllers: [forum_posts_controller_1.ForumPostsController, forum_comments_controller_1.ForumCommentsController],
         providers: [forum_posts_service_1.ForumPostsService, forum_comments_service_1.ForumCommentsService, supabase_service_1.SupabaseService],
         exports: [forum_posts_service_1.ForumPostsService, forum_comments_service_1.ForumCommentsService],

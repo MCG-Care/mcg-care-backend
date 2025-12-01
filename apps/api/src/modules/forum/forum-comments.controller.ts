@@ -9,19 +9,29 @@ import {
   Query,
   ParseIntPipe,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { ForumCommentsService } from './forum-comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { QueryCommentsDto } from './dto/query-comments.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('forum/comments')
 export class ForumCommentsController {
   constructor(private readonly forumCommentsService: ForumCommentsService) {}
 
   @Post()
-  async create(@Body() createCommentDto: CreateCommentDto) {
-    // TODO: Get userId from auth token instead of body
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createCommentDto: CreateCommentDto, @CurrentUser() user?: any) {
+    // Get userId from authenticated user
+    const userId = user.id;
+    // Note: Any logged-in user can comment
+
+    // Override userId from DTO with authenticated user's ID
+    createCommentDto.userId = userId;
+
     return this.forumCommentsService.create(createCommentDto);
   }
 
@@ -36,44 +46,25 @@ export class ForumCommentsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCommentDto: UpdateCommentDto,
+    @CurrentUser() user?: any,
   ) {
-    // TODO: Get userId from auth token
-    const userIdRaw = (updateCommentDto as any).userId;
-    if (!userIdRaw) {
-      throw new BadRequestException(
-        'userId is required in body (temporary until auth is implemented)',
-      );
-    }
-
-    // Convert to number (JSON sends as number, but just in case)
-    const userId = typeof userIdRaw === 'number' ? userIdRaw : parseInt(userIdRaw, 10);
-    if (isNaN(userId)) {
-      throw new BadRequestException('userId must be a valid number');
-    }
+    // Get userId from authenticated user - ownership validated in service
+    const userId = user.id;
 
     return this.forumCommentsService.update(id, updateCommentDto, userId);
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
-    // TODO: Get userId and role from auth token
-    const userIdRaw = body.userId;
-    const isAdmin = body.isAdmin === true || body.isAdmin === 'true';
-
-    if (!userIdRaw) {
-      throw new BadRequestException(
-        'userId is required in body (temporary until auth is implemented)',
-      );
-    }
-
-    // Convert to number (JSON sends as number, but just in case)
-    const userId = typeof userIdRaw === 'number' ? userIdRaw : parseInt(userIdRaw, 10);
-    if (isNaN(userId)) {
-      throw new BadRequestException('userId must be a valid number');
-    }
+  @UseGuards(JwtAuthGuard)
+  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user?: any) {
+    // Get userId and role from authenticated user
+    const userId = user.id;
+    const isAdmin = user.role === 'admin';
+    // Service validates ownership or admin status
 
     return this.forumCommentsService.remove(id, userId, isAdmin);
   }

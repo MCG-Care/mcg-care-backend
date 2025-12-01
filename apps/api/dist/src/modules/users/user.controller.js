@@ -16,50 +16,74 @@ exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const update_user_dto_1 = require("./dto/update-user.dto");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
     }
-    getAllUsers() {
+    getAllUsers(user) {
+        if (user.role !== 'admin') {
+            throw new common_1.ForbiddenException('Only admins can view all users');
+        }
         return this.usersService.getAllUsers();
     }
-    getUser(id) {
-        return this.usersService.getUserById(Number(id));
+    getUser(id, user) {
+        const requestedId = Number(id);
+        if (user.role !== 'admin' && user.id !== requestedId) {
+            throw new common_1.ForbiddenException('You can only view your own profile');
+        }
+        return this.usersService.getUserById(requestedId);
     }
-    updateUser(id, dto) {
-        return this.usersService.updateUser(Number(id), dto);
+    updateUser(id, dto, user) {
+        const requestedId = Number(id);
+        if (user.role !== 'admin' && user.id !== requestedId) {
+            throw new common_1.ForbiddenException('You can only update your own profile');
+        }
+        return this.usersService.updateUser(requestedId, dto);
     }
-    deleteUser(id) {
+    deleteUser(id, user) {
+        if (user.role !== 'admin') {
+            throw new common_1.ForbiddenException('Only admins can delete users');
+        }
         return this.usersService.deleteUser(Number(id));
     }
 };
 exports.UsersController = UsersController;
 __decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getAllUsers", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getUser", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_user_dto_1.UpdateUserDto]),
+    __metadata("design:paramtypes", [String, update_user_dto_1.UpdateUserDto, Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateUser", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "deleteUser", null);
 exports.UsersController = UsersController = __decorate([
