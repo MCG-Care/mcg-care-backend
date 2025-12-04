@@ -9,10 +9,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const schedule_1 = require("@nestjs/schedule");
 const user_module_1 = require("./modules/users/user.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const products_module_1 = require("./modules/products/products.module");
 const forum_module_1 = require("./modules/forum/forum.module");
+const customer_products_module_1 = require("./modules/customer-products/customer-products.module");
+const service_types_module_1 = require("./modules/service-types/service-types.module");
+const technician_services_module_1 = require("./modules/technician-services/technician-services.module");
+const timeslots_module_1 = require("./modules/timeslots/timeslots.module");
 const database_module_1 = require("./config/database.module");
 let AppModule = class AppModule {
 };
@@ -24,11 +29,16 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
                 envFilePath: '.env',
             }),
+            schedule_1.ScheduleModule.forRoot(),
             auth_module_1.AuthModule,
             database_module_1.DatabaseModule,
             user_module_1.UsersModule,
             products_module_1.ProductsModule,
             forum_module_1.ForumModule,
+            customer_products_module_1.CustomerProductsModule,
+            service_types_module_1.ServiceTypesModule,
+            technician_services_module_1.TechnicianServicesModule,
+            timeslots_module_1.TimeslotsModule,
         ],
         controllers: [],
         providers: [],
