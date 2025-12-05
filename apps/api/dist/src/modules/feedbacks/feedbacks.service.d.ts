@@ -1,0 +1,466 @@
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { UpdateFeedbackDto } from './dto/update-feedback.dto';
+import { QueryFeedbacksDto } from './dto/query-feedbacks.dto';
+export declare class FeedbacksService {
+    create(userId: number, userRole: string, createFeedbackDto: CreateFeedbackDto): Promise<{
+        id: number;
+        createdAt: Date;
+        bookingId: number;
+        note: string | null;
+        rating: number;
+        satisfaction: number | null;
+        issueResolved: boolean | null;
+        booking: {
+            duration: number;
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+            technicianId: number;
+            airconId: number;
+            bookingOnDate: string;
+            bookingForDate: string;
+            bookingTime: string;
+            fees: string;
+            status: "pending" | "inprogress" | "done" | "unsuccessful";
+            technician: {
+                password: string;
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                email: string;
+                phoneNo: string;
+                addressId: number | null;
+                role: "customer" | "technician" | "admin";
+            };
+            bookingServices: {
+                createdAt: Date;
+                serviceId: number;
+                bookingId: number;
+                service: {
+                    duration: number;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    description: string | null;
+                    serviceFee: string;
+                };
+            }[];
+            aircon: {
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                productId: number;
+                customerId: number;
+                purchaseDate: string | null;
+                qrUrl: string | null;
+                purchaseCode: string | null;
+                customer: {
+                    password: string;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    email: string;
+                    phoneNo: string;
+                    addressId: number | null;
+                    role: "customer" | "technician" | "admin";
+                };
+                product: {
+                    id: number;
+                    brand: string;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    productModel: string;
+                    price: string | null;
+                    description: string | null;
+                    capacity: string | null;
+                    type: "split" | "window" | "cassette" | "portable" | "central";
+                    energyRating: number | null;
+                    coolingPower: number | null;
+                    refrigerant: string | null;
+                    warranty: number | null;
+                    tagline: string | null;
+                    voltageAverage: number | null;
+                    voltageCount: number | null;
+                    releaseDate: string | null;
+                };
+            };
+        };
+    }>;
+    findAll(userId: number, userRole: string, query: QueryFeedbacksDto): Promise<{
+        data: {
+            id: number;
+            createdAt: Date;
+            bookingId: number;
+            note: string | null;
+            rating: number;
+            satisfaction: number | null;
+            issueResolved: boolean | null;
+            booking: {
+                duration: number;
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                description: string | null;
+                technicianId: number;
+                airconId: number;
+                bookingOnDate: string;
+                bookingForDate: string;
+                bookingTime: string;
+                fees: string;
+                status: "pending" | "inprogress" | "done" | "unsuccessful";
+                technician: {
+                    password: string;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    email: string;
+                    phoneNo: string;
+                    addressId: number | null;
+                    role: "customer" | "technician" | "admin";
+                };
+                bookingServices: {
+                    createdAt: Date;
+                    serviceId: number;
+                    bookingId: number;
+                    service: {
+                        duration: number;
+                        id: number;
+                        name: string;
+                        createdAt: Date;
+                        updatedAt: Date;
+                        description: string | null;
+                        serviceFee: string;
+                    };
+                }[];
+                aircon: {
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    productId: number;
+                    customerId: number;
+                    purchaseDate: string | null;
+                    qrUrl: string | null;
+                    purchaseCode: string | null;
+                    customer: {
+                        password: string;
+                        id: number;
+                        name: string;
+                        createdAt: Date;
+                        updatedAt: Date;
+                        email: string;
+                        phoneNo: string;
+                        addressId: number | null;
+                        role: "customer" | "technician" | "admin";
+                    };
+                    product: {
+                        id: number;
+                        brand: string;
+                        name: string;
+                        createdAt: Date;
+                        updatedAt: Date;
+                        productModel: string;
+                        price: string | null;
+                        description: string | null;
+                        capacity: string | null;
+                        type: "split" | "window" | "cassette" | "portable" | "central";
+                        energyRating: number | null;
+                        coolingPower: number | null;
+                        refrigerant: string | null;
+                        warranty: number | null;
+                        tagline: string | null;
+                        voltageAverage: number | null;
+                        voltageCount: number | null;
+                        releaseDate: string | null;
+                    };
+                };
+            };
+        }[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }>;
+    findByBookingId(bookingId: number, userId: number, userRole: string): Promise<{
+        id: number;
+        createdAt: Date;
+        bookingId: number;
+        note: string | null;
+        rating: number;
+        satisfaction: number | null;
+        issueResolved: boolean | null;
+        booking: {
+            duration: number;
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+            technicianId: number;
+            airconId: number;
+            bookingOnDate: string;
+            bookingForDate: string;
+            bookingTime: string;
+            fees: string;
+            status: "pending" | "inprogress" | "done" | "unsuccessful";
+            technician: {
+                password: string;
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                email: string;
+                phoneNo: string;
+                addressId: number | null;
+                role: "customer" | "technician" | "admin";
+            };
+            bookingServices: {
+                createdAt: Date;
+                serviceId: number;
+                bookingId: number;
+                service: {
+                    duration: number;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    description: string | null;
+                    serviceFee: string;
+                };
+            }[];
+            aircon: {
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                productId: number;
+                customerId: number;
+                purchaseDate: string | null;
+                qrUrl: string | null;
+                purchaseCode: string | null;
+                customer: {
+                    password: string;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    email: string;
+                    phoneNo: string;
+                    addressId: number | null;
+                    role: "customer" | "technician" | "admin";
+                };
+                product: {
+                    id: number;
+                    brand: string;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    productModel: string;
+                    price: string | null;
+                    description: string | null;
+                    capacity: string | null;
+                    type: "split" | "window" | "cassette" | "portable" | "central";
+                    energyRating: number | null;
+                    coolingPower: number | null;
+                    refrigerant: string | null;
+                    warranty: number | null;
+                    tagline: string | null;
+                    voltageAverage: number | null;
+                    voltageCount: number | null;
+                    releaseDate: string | null;
+                };
+            };
+        };
+    }>;
+    findOne(id: number, userId: number, userRole: string): Promise<{
+        id: number;
+        createdAt: Date;
+        bookingId: number;
+        note: string | null;
+        rating: number;
+        satisfaction: number | null;
+        issueResolved: boolean | null;
+        booking: {
+            duration: number;
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+            technicianId: number;
+            airconId: number;
+            bookingOnDate: string;
+            bookingForDate: string;
+            bookingTime: string;
+            fees: string;
+            status: "pending" | "inprogress" | "done" | "unsuccessful";
+            technician: {
+                password: string;
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                email: string;
+                phoneNo: string;
+                addressId: number | null;
+                role: "customer" | "technician" | "admin";
+            };
+            bookingServices: {
+                createdAt: Date;
+                serviceId: number;
+                bookingId: number;
+                service: {
+                    duration: number;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    description: string | null;
+                    serviceFee: string;
+                };
+            }[];
+            aircon: {
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                productId: number;
+                customerId: number;
+                purchaseDate: string | null;
+                qrUrl: string | null;
+                purchaseCode: string | null;
+                customer: {
+                    password: string;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    email: string;
+                    phoneNo: string;
+                    addressId: number | null;
+                    role: "customer" | "technician" | "admin";
+                };
+                product: {
+                    id: number;
+                    brand: string;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    productModel: string;
+                    price: string | null;
+                    description: string | null;
+                    capacity: string | null;
+                    type: "split" | "window" | "cassette" | "portable" | "central";
+                    energyRating: number | null;
+                    coolingPower: number | null;
+                    refrigerant: string | null;
+                    warranty: number | null;
+                    tagline: string | null;
+                    voltageAverage: number | null;
+                    voltageCount: number | null;
+                    releaseDate: string | null;
+                };
+            };
+        };
+    }>;
+    update(id: number, userId: number, userRole: string, updateFeedbackDto: UpdateFeedbackDto): Promise<{
+        id: number;
+        createdAt: Date;
+        bookingId: number;
+        note: string | null;
+        rating: number;
+        satisfaction: number | null;
+        issueResolved: boolean | null;
+        booking: {
+            duration: number;
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+            technicianId: number;
+            airconId: number;
+            bookingOnDate: string;
+            bookingForDate: string;
+            bookingTime: string;
+            fees: string;
+            status: "pending" | "inprogress" | "done" | "unsuccessful";
+            technician: {
+                password: string;
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                email: string;
+                phoneNo: string;
+                addressId: number | null;
+                role: "customer" | "technician" | "admin";
+            };
+            bookingServices: {
+                createdAt: Date;
+                serviceId: number;
+                bookingId: number;
+                service: {
+                    duration: number;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    description: string | null;
+                    serviceFee: string;
+                };
+            }[];
+            aircon: {
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                productId: number;
+                customerId: number;
+                purchaseDate: string | null;
+                qrUrl: string | null;
+                purchaseCode: string | null;
+                customer: {
+                    password: string;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    email: string;
+                    phoneNo: string;
+                    addressId: number | null;
+                    role: "customer" | "technician" | "admin";
+                };
+                product: {
+                    id: number;
+                    brand: string;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    productModel: string;
+                    price: string | null;
+                    description: string | null;
+                    capacity: string | null;
+                    type: "split" | "window" | "cassette" | "portable" | "central";
+                    energyRating: number | null;
+                    coolingPower: number | null;
+                    refrigerant: string | null;
+                    warranty: number | null;
+                    tagline: string | null;
+                    voltageAverage: number | null;
+                    voltageCount: number | null;
+                    releaseDate: string | null;
+                };
+            };
+        };
+    }>;
+    remove(id: number, userId: number, userRole: string): Promise<{
+        message: string;
+    }>;
+}

@@ -18,6 +18,9 @@ const customer_products_module_1 = require("./modules/customer-products/customer
 const service_types_module_1 = require("./modules/service-types/service-types.module");
 const technician_services_module_1 = require("./modules/technician-services/technician-services.module");
 const timeslots_module_1 = require("./modules/timeslots/timeslots.module");
+const bookings_module_1 = require("./modules/bookings/bookings.module");
+const service_logs_module_1 = require("./modules/service-logs/service-logs.module");
+const feedbacks_module_1 = require("./modules/feedbacks/feedbacks.module");
 const database_module_1 = require("./config/database.module");
 let AppModule = class AppModule {
 };
@@ -39,6 +42,9 @@ exports.AppModule = AppModule = __decorate([
             service_types_module_1.ServiceTypesModule,
             technician_services_module_1.TechnicianServicesModule,
             timeslots_module_1.TimeslotsModule,
+            bookings_module_1.BookingsModule,
+            service_logs_module_1.ServiceLogsModule,
+            feedbacks_module_1.FeedbacksModule,
         ],
         controllers: [],
         providers: [],

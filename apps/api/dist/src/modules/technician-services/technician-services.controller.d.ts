@@ -33,12 +33,12 @@ export declare class TechnicianServicesController {
         serviceId: number;
         serviceName: string;
         technicians: {
+            password: string;
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
             email: string;
-            password: string;
             phoneNo: string;
             addressId: number | null;
             role: "customer" | "technician" | "admin";

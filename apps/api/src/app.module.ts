@@ -9,6 +9,9 @@ import { CustomerProductsModule } from './modules/customer-products/customer-pro
 import { ServiceTypesModule } from './modules/service-types/service-types.module';
 import { TechnicianServicesModule } from './modules/technician-services/technician-services.module';
 import { TimeslotsModule } from './modules/timeslots/timeslots.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
+import { ServiceLogsModule } from './modules/service-logs/service-logs.module';
+import { FeedbacksModule } from './modules/feedbacks/feedbacks.module';
 import { DatabaseModule } from './config/database.module';
 
 @Module({
@@ -27,6 +30,9 @@ import { DatabaseModule } from './config/database.module';
     ServiceTypesModule,
     TechnicianServicesModule,
     TimeslotsModule,
+    BookingsModule,
+    ServiceLogsModule,
+    FeedbacksModule,
   ],
   controllers: [],
   providers: [],

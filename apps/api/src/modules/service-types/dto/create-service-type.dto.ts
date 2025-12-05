@@ -30,3 +30,4 @@ export class CreateServiceTypeDto {
   duration!: number; // in minutes
 }
 
+

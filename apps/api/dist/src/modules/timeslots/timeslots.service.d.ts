@@ -20,12 +20,12 @@ export declare class TimeslotsService {
         technicianId: number;
         slots: number[];
         technician: {
+            password: string;
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
             email: string;
-            password: string;
             phoneNo: string;
             addressId: number | null;
             role: "customer" | "technician" | "admin";
@@ -48,12 +48,12 @@ export declare class TimeslotsService {
         technicianId: number;
         slots: number[];
         technician: {
+            password: string;
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
             email: string;
-            password: string;
             phoneNo: string;
             addressId: number | null;
             role: "customer" | "technician" | "admin";
