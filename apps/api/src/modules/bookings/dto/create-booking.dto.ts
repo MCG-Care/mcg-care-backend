@@ -36,3 +36,4 @@ export class CreateBookingDto {
   @IsString()
   description?: string; // Optional description from customer
 }
+

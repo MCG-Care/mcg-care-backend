@@ -13,16 +13,23 @@ const drizzle_orm_1 = require("drizzle-orm");
 let ServiceLogsService = class ServiceLogsService {
     async create(userId, userRole, createServiceLogDto) {
         const { bookingId, note } = createServiceLogDto;
-        if (userRole !== 'technician' && userRole !== 'admin') {
-            throw new common_1.ForbiddenException('Only technicians and admins can create service logs');
+        if (userRole !== 'technician') {
+            throw new common_1.ForbiddenException('Only technicians can create service logs');
         }
         const booking = await database_1.db.query.bookings.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.bookings.id, bookingId),
+            with: {
+                aircon: {
+                    with: {
+                        customer: true,
+                    },
+                },
+            },
         });
         if (!booking) {
             throw new common_1.NotFoundException(`Booking with ID ${bookingId} not found`);
         }
-        if (userRole === 'technician' && booking.technicianId !== userId) {
+        if (booking.technicianId !== userId) {
             throw new common_1.ForbiddenException('You can only create service logs for your assigned bookings');
         }
         const existingLog = await database_1.db.query.serviceLogs.findFirst({
@@ -90,6 +97,52 @@ let ServiceLogsService = class ServiceLogsService {
         }
         return serviceLog;
     }
+    async findByAirconId(airconId, userId, userRole) {
+        const aircon = await database_1.db.query.customerProducts.findFirst({
+            where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
+            with: {
+                customer: true,
+            },
+        });
+        if (!aircon) {
+            throw new common_1.NotFoundException(`Customer product with ID ${airconId} not found`);
+        }
+        if (userRole === 'customer') {
+            if (aircon.customerId !== userId) {
+                throw new common_1.ForbiddenException('You can only view service logs for your own aircons');
+            }
+        }
+        const bookings = await database_1.db.query.bookings.findMany({
+            where: (0, drizzle_orm_1.eq)(database_1.schema.bookings.airconId, airconId),
+        });
+        if (bookings.length === 0) {
+            return [];
+        }
+        const bookingIds = bookings.map((b) => b.id);
+        const serviceLogs = await database_1.db.query.serviceLogs.findMany({
+            where: (0, drizzle_orm_1.inArray)(database_1.schema.serviceLogs.bookingId, bookingIds),
+            with: {
+                booking: {
+                    with: {
+                        technician: true,
+                        aircon: {
+                            with: {
+                                customer: true,
+                                product: true,
+                            },
+                        },
+                        bookingServices: {
+                            with: {
+                                service: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: [(0, drizzle_orm_1.desc)(database_1.schema.serviceLogs.createdAt)],
+        });
+        return serviceLogs;
+    }
     async findOne(id, userId, userRole) {
         const serviceLog = await database_1.db.query.serviceLogs.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.serviceLogs.id, id),
@@ -129,27 +182,35 @@ let ServiceLogsService = class ServiceLogsService {
     }
     async update(id, userId, userRole, updateServiceLogDto) {
         const serviceLog = await this.findOne(id, userId, userRole);
-        if (userRole !== 'technician' && userRole !== 'admin') {
-            throw new common_1.ForbiddenException('Only technicians and admins can update service logs');
+        if (userRole !== 'technician') {
+            throw new common_1.ForbiddenException('Only technicians can update service logs');
         }
-        if (userRole === 'technician' &&
-            serviceLog.booking.technicianId !== userId) {
+        if (serviceLog.booking.technicianId !== userId) {
             throw new common_1.ForbiddenException('You can only update service logs for your assigned bookings');
+        }
+        const updateData = {};
+        if (updateServiceLogDto.note !== undefined) {
+            updateData.note = updateServiceLogDto.note;
         }
         await database_1.db
             .update(database_1.schema.serviceLogs)
-            .set({
-            note: updateServiceLogDto.note,
-        })
+            .set(updateData)
             .where((0, drizzle_orm_1.eq)(database_1.schema.serviceLogs.id, id));
         return this.findOne(id, userId, userRole);
     }
     async remove(id, userId, userRole) {
         const serviceLog = await this.findOne(id, userId, userRole);
-        if (userRole !== 'admin') {
-            throw new common_1.ForbiddenException('Only admins can delete service logs');
+        if (userRole === 'customer') {
+            throw new common_1.ForbiddenException('Customers cannot delete service logs');
         }
-        await database_1.db.delete(database_1.schema.serviceLogs).where((0, drizzle_orm_1.eq)(database_1.schema.serviceLogs.id, id));
+        if (userRole === 'technician') {
+            if (serviceLog.booking.technicianId !== userId) {
+                throw new common_1.ForbiddenException('You can only delete service logs for your assigned bookings');
+            }
+        }
+        await database_1.db
+            .delete(database_1.schema.serviceLogs)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.serviceLogs.id, id));
         return { message: 'Service log deleted successfully' };
     }
 };

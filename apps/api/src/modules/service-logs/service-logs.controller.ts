@@ -44,6 +44,18 @@ export class ServiceLogsController {
     );
   }
 
+  @Get('aircon/:airconId')
+  async findByAirconId(
+    @Param('airconId', ParseIntPipe) airconId: number,
+    @CurrentUser() user: any,
+  ) {
+    return this.serviceLogsService.findByAirconId(
+      airconId,
+      user.id,
+      user.role,
+    );
+  }
+
   @Get(':id')
   async findOne(
     @Param('id', ParseIntPipe) id: number,
@@ -74,3 +86,4 @@ export class ServiceLogsController {
     return this.serviceLogsService.remove(id, user.id, user.role);
   }
 }
+

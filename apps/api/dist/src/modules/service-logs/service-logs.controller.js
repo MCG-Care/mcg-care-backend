@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServiceLogsController = void 0;
 const common_1 = require("@nestjs/common");
@@ -29,6 +28,9 @@ let ServiceLogsController = class ServiceLogsController {
     }
     async findByBookingId(bookingId, user) {
         return this.serviceLogsService.findByBookingId(bookingId, user.id, user.role);
+    }
+    async findByAirconId(airconId, user) {
+        return this.serviceLogsService.findByAirconId(airconId, user.id, user.role);
     }
     async findOne(id, user) {
         return this.serviceLogsService.findOne(id, user.id, user.role);
@@ -58,6 +60,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ServiceLogsController.prototype, "findByBookingId", null);
 __decorate([
+    (0, common_1.Get)('aircon/:airconId'),
+    __param(0, (0, common_1.Param)('airconId', common_1.ParseIntPipe)),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], ServiceLogsController.prototype, "findByAirconId", null);
+__decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
@@ -85,6 +95,6 @@ __decorate([
 exports.ServiceLogsController = ServiceLogsController = __decorate([
     (0, common_1.Controller)('service-logs'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof service_logs_service_1.ServiceLogsService !== "undefined" && service_logs_service_1.ServiceLogsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [service_logs_service_1.ServiceLogsService])
 ], ServiceLogsController);
 //# sourceMappingURL=service-logs.controller.js.map

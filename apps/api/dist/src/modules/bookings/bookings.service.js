@@ -47,9 +47,9 @@ let BookingsService = class BookingsService {
         if (services.length !== serviceIds.length) {
             throw new common_1.BadRequestException('One or more service IDs are invalid');
         }
-        const totalDuration = services.reduce((sum, service) => sum + service.duration, 0) + 60;
+        const serviceDuration = services.reduce((sum, service) => sum + service.duration, 0);
         const totalFees = services.reduce((sum, service) => sum + parseFloat(service.serviceFee), 0);
-        const requiredHours = Math.ceil(totalDuration / 60);
+        const serviceHours = Math.ceil(serviceDuration / 60);
         const bookingDate = new Date(bookingForDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -64,9 +64,15 @@ let BookingsService = class BookingsService {
         if (bookingTime < 9 || bookingTime > 16) {
             throw new common_1.BadRequestException('Booking time must be between 9 and 16');
         }
-        if (bookingTime + requiredHours > 17) {
-            throw new common_1.BadRequestException(`Booking duration (${requiredHours} hours) extends beyond working hours (5 PM). Please choose an earlier time.`);
+        const serviceEndTime = bookingTime + serviceHours;
+        if (serviceEndTime > 17) {
+            throw new common_1.BadRequestException(`Service duration (${serviceHours} hours) extends beyond working hours (5 PM). Please choose an earlier time.`);
         }
+        const hasSlotForTraffic = serviceEndTime < 17;
+        const totalDuration = hasSlotForTraffic
+            ? serviceDuration + 60
+            : serviceDuration;
+        const requiredHours = Math.ceil(totalDuration / 60);
         const assignedTechnicianId = await this.findAvailableTechnician(serviceIds, customerDistrict, bookingForDate, bookingTime, requiredHours);
         if (!assignedTechnicianId) {
             throw new common_1.BadRequestException('No available technician found for the selected date, time, and services. Please try a different time slot.');

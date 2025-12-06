@@ -20,12 +20,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
-                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
+                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -55,12 +55,12 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
-                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
+                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";
@@ -107,12 +107,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
-                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
+                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -142,12 +142,12 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
-                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
+                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";
@@ -175,7 +175,7 @@ export declare class ServiceLogsService {
             };
         };
     }>;
-    findOne(id: number, userId: number, userRole: string): Promise<{
+    findByAirconId(airconId: number, userId: number, userRole: string): Promise<{
         id: number;
         createdAt: Date;
         bookingId: number;
@@ -194,12 +194,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
-                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
+                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -229,12 +229,99 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
-                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
+                    password: string;
+                    phoneNo: string;
+                    addressId: number | null;
+                    role: "customer" | "technician" | "admin";
+                };
+                product: {
+                    id: number;
+                    brand: string;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    productModel: string;
+                    price: string | null;
+                    description: string | null;
+                    capacity: string | null;
+                    type: "split" | "window" | "cassette" | "portable" | "central";
+                    energyRating: number | null;
+                    coolingPower: number | null;
+                    refrigerant: string | null;
+                    warranty: number | null;
+                    tagline: string | null;
+                    voltageAverage: number | null;
+                    voltageCount: number | null;
+                    releaseDate: string | null;
+                };
+            };
+        };
+    }[]>;
+    findOne(id: number, userId: number, userRole: string): Promise<{
+        id: number;
+        createdAt: Date;
+        bookingId: number;
+        note: string;
+        booking: {
+            duration: number;
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+            technicianId: number;
+            airconId: number;
+            bookingOnDate: string;
+            bookingForDate: string;
+            bookingTime: string;
+            fees: string;
+            status: "pending" | "inprogress" | "done" | "unsuccessful";
+            technician: {
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                email: string;
+                password: string;
+                phoneNo: string;
+                addressId: number | null;
+                role: "customer" | "technician" | "admin";
+            };
+            bookingServices: {
+                createdAt: Date;
+                serviceId: number;
+                bookingId: number;
+                service: {
+                    duration: number;
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    description: string | null;
+                    serviceFee: string;
+                };
+            }[];
+            aircon: {
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                productId: number;
+                customerId: number;
+                purchaseDate: string | null;
+                qrUrl: string | null;
+                purchaseCode: string | null;
+                customer: {
+                    id: number;
+                    name: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    email: string;
+                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";
@@ -281,12 +368,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
-                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
+                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -316,12 +403,12 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
-                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
+                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";

@@ -68,3 +68,4 @@ export class FeedbacksController {
     return this.feedbacksService.remove(id, user.id, user.role);
   }
 }
+

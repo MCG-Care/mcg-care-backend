@@ -64,9 +64,11 @@ export class BookingsService {
       throw new BadRequestException('One or more service IDs are invalid');
     }
 
-    // Calculate total duration (in minutes) = sum of service durations + 60 extra minutes
-    const totalDuration =
-      services.reduce((sum, service) => sum + service.duration, 0) + 60;
+    // Calculate service duration (in minutes) without extra traffic time
+    const serviceDuration = services.reduce(
+      (sum, service) => sum + service.duration,
+      0,
+    );
 
     // Calculate total fees (sum of all service fees)
     const totalFees = services.reduce(
@@ -74,8 +76,8 @@ export class BookingsService {
       0,
     );
 
-    // Calculate required hours (round up)
-    const requiredHours = Math.ceil(totalDuration / 60);
+    // Calculate required hours for actual service (round up)
+    const serviceHours = Math.ceil(serviceDuration / 60);
 
     // 3. Validate booking date and time
     const bookingDate = new Date(bookingForDate);
@@ -98,12 +100,20 @@ export class BookingsService {
       throw new BadRequestException('Booking time must be between 9 and 16');
     }
 
-    // Check if the booking would extend beyond working hours
-    if (bookingTime + requiredHours > 17) {
+    // Check if service would extend beyond working hours (5 PM)
+    const serviceEndTime = bookingTime + serviceHours;
+    if (serviceEndTime > 17) {
       throw new BadRequestException(
-        `Booking duration (${requiredHours} hours) extends beyond working hours (5 PM). Please choose an earlier time.`,
+        `Service duration (${serviceHours} hours) extends beyond working hours (5 PM). Please choose an earlier time.`,
       );
     }
+
+    // Add 1 hour for traffic only if there are available slots after the booking
+    const hasSlotForTraffic = serviceEndTime < 17;
+    const totalDuration = hasSlotForTraffic
+      ? serviceDuration + 60
+      : serviceDuration;
+    const requiredHours = Math.ceil(totalDuration / 60);
 
     // 4. Find available technician
     const assignedTechnicianId = await this.findAvailableTechnician(
@@ -686,3 +696,4 @@ export class BookingsService {
     return Promise.all(uploadPromises);
   }
 }
+
