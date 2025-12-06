@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServiceTypesController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const service_types_service_1 = require("./service-types.service");
 const create_service_type_dto_1 = require("./dto/create-service-type.dto");
 const update_service_type_dto_1 = require("./dto/update-service-type.dto");
@@ -53,6 +54,8 @@ exports.ServiceTypesController = ServiceTypesController;
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Create service type (Admin only)' }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -61,6 +64,7 @@ __decorate([
 ], ServiceTypesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all service types (Public)' }),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [query_service_types_dto_1.QueryServiceTypesDto]),
@@ -68,6 +72,8 @@ __decorate([
 ], ServiceTypesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get service type by ID (Public)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Service Type ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -76,6 +82,9 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update service type (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Service Type ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -86,6 +95,9 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete service type (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Service Type ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -93,6 +105,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ServiceTypesController.prototype, "remove", null);
 exports.ServiceTypesController = ServiceTypesController = __decorate([
+    (0, swagger_1.ApiTags)('service-types'),
     (0, common_1.Controller)('service-types'),
     __metadata("design:paramtypes", [service_types_service_1.ServiceTypesService])
 ], ServiceTypesController);

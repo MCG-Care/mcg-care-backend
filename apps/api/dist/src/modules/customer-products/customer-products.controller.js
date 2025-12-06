@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CustomerProductsController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const customer_products_service_1 = require("./customer-products.service");
 const create_customer_product_dto_1 = require("./dto/create-customer-product.dto");
 const update_customer_product_dto_1 = require("./dto/update-customer-product.dto");
@@ -73,6 +74,7 @@ let CustomerProductsController = class CustomerProductsController {
 exports.CustomerProductsController = CustomerProductsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Register customer product (Customer only)' }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -81,6 +83,7 @@ __decorate([
 ], CustomerProductsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get customer products (filtered by user role)' }),
     __param(0, (0, common_1.Query)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -89,6 +92,8 @@ __decorate([
 ], CustomerProductsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('qr/:qrUrl'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get customer product by QR code' }),
+    (0, swagger_1.ApiParam)({ name: 'qrUrl', description: 'QR URL' }),
     __param(0, (0, common_1.Param)('qrUrl')),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -97,6 +102,8 @@ __decorate([
 ], CustomerProductsController.prototype, "findByQR", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get customer product by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Customer Product ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -105,6 +112,8 @@ __decorate([
 ], CustomerProductsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update customer product (Customer only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Customer Product ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -114,6 +123,8 @@ __decorate([
 ], CustomerProductsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete customer product (Customer only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Customer Product ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -121,6 +132,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CustomerProductsController.prototype, "remove", null);
 exports.CustomerProductsController = CustomerProductsController = __decorate([
+    (0, swagger_1.ApiTags)('customer-products'),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.Controller)('customer-products'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [customer_products_service_1.CustomerProductsService])

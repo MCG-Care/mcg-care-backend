@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TimeslotsController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const timeslots_service_1 = require("./timeslots.service");
 const create_timeslot_dto_1 = require("./dto/create-timeslot.dto");
 const update_timeslot_dto_1 = require("./dto/update-timeslot.dto");
@@ -80,6 +81,7 @@ let TimeslotsController = class TimeslotsController {
 exports.TimeslotsController = TimeslotsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create timeslot (Admin only)' }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -88,6 +90,7 @@ __decorate([
 ], TimeslotsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all timeslots (filtered by user role)' }),
     __param(0, (0, common_1.Query)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -96,6 +99,10 @@ __decorate([
 ], TimeslotsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('technician/:technicianId/availability'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get technician availability' }),
+    (0, swagger_1.ApiParam)({ name: 'technicianId', description: 'Technician ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'startDate', description: 'Start date (YYYY-MM-DD)', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'endDate', description: 'End date (YYYY-MM-DD)', required: true }),
     __param(0, (0, common_1.Param)('technicianId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Query)('startDate')),
     __param(2, (0, common_1.Query)('endDate')),
@@ -106,6 +113,8 @@ __decorate([
 ], TimeslotsController.prototype, "getTechnicianAvailability", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get timeslot by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Timeslot ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -114,6 +123,8 @@ __decorate([
 ], TimeslotsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update timeslot (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Timeslot ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -123,6 +134,8 @@ __decorate([
 ], TimeslotsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete timeslot (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Timeslot ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -131,6 +144,8 @@ __decorate([
 ], TimeslotsController.prototype, "remove", null);
 __decorate([
     (0, common_1.Post)('technician/:technicianId/initialize'),
+    (0, swagger_1.ApiOperation)({ summary: 'Initialize technician timeslots (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'technicianId', description: 'Technician ID' }),
     __param(0, (0, common_1.Param)('technicianId', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -139,12 +154,15 @@ __decorate([
 ], TimeslotsController.prototype, "initializeTechnician", null);
 __decorate([
     (0, common_1.Post)('maintenance/daily'),
+    (0, swagger_1.ApiOperation)({ summary: 'Run daily timeslot maintenance (Admin only)' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], TimeslotsController.prototype, "dailyMaintenance", null);
 exports.TimeslotsController = TimeslotsController = __decorate([
+    (0, swagger_1.ApiTags)('timeslots'),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.Controller)('timeslots'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [timeslots_service_1.TimeslotsService])

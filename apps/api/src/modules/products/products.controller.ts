@@ -15,6 +15,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiConsumes } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -22,12 +23,16 @@ import { QueryProductsDto } from './dto/query-products.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Create product (Admin only)' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('images', 10)) // Max 10 images per product
   async create(
     @Body() createProductDto: CreateProductDto,
@@ -52,17 +57,24 @@ export class ProductsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all products (Public)' })
   async findAll(@Query() query: QueryProductsDto) {
     return this.productsService.findAll(query);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get product by ID (Public)' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.findOne(id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update product (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('images', 10)) // Max 10 images per product
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -92,6 +104,9 @@ export class ProductsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete product (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
   async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user?: any) {
     // Simple role check - admin only
     if (user.role !== 'admin') {
@@ -103,6 +118,10 @@ export class ProductsController {
 
   @Delete(':productId/images/:imageId')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete product image (Admin only)' })
+  @ApiParam({ name: 'productId', description: 'Product ID' })
+  @ApiParam({ name: 'imageId', description: 'Image ID' })
   async removeImage(
     @Param('productId', ParseIntPipe) productId: number,
     @Param('imageId', ParseIntPipe) imageId: number,

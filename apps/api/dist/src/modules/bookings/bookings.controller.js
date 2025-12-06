@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingsController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
+const swagger_1 = require("@nestjs/swagger");
 const bookings_service_1 = require("./bookings.service");
 const create_booking_dto_1 = require("./dto/create-booking.dto");
 const update_booking_dto_1 = require("./dto/update-booking.dto");
@@ -65,6 +66,8 @@ let BookingsController = class BookingsController {
 exports.BookingsController = BookingsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new booking (Customer only)' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images', 10)),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.UploadedFiles)()),
@@ -75,6 +78,7 @@ __decorate([
 ], BookingsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all bookings (filtered by user role)' }),
     __param(0, (0, common_1.Query)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -83,6 +87,8 @@ __decorate([
 ], BookingsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get booking by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Booking ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -91,6 +97,8 @@ __decorate([
 ], BookingsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update booking' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Booking ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -100,6 +108,8 @@ __decorate([
 ], BookingsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete booking' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Booking ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -108,6 +118,9 @@ __decorate([
 ], BookingsController.prototype, "remove", null);
 __decorate([
     (0, common_1.Delete)(':bookingId/images/:imageId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Remove image from booking' }),
+    (0, swagger_1.ApiParam)({ name: 'bookingId', description: 'Booking ID' }),
+    (0, swagger_1.ApiParam)({ name: 'imageId', description: 'Image ID' }),
     __param(0, (0, common_1.Param)('bookingId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Param)('imageId', common_1.ParseIntPipe)),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -116,6 +129,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "removeImage", null);
 exports.BookingsController = BookingsController = __decorate([
+    (0, swagger_1.ApiTags)('bookings'),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.Controller)('bookings'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [bookings_service_1.BookingsService])

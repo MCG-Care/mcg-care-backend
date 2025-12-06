@@ -1,16 +1,20 @@
 import { Body, Controller, Get, Param, Post, Patch, Delete, UseGuards, ForbiddenException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { UsersService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('users')
+@ApiBearerAuth('JWT-auth')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get all users (Admin only)' })
   getAllUsers(@CurrentUser() user?: any) {
     // Simple role check - admin only
     if (user.role !== 'admin') {
@@ -22,6 +26,8 @@ export class UsersController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiParam({ name: 'id', description: 'User ID' })
   getUser(@Param('id') id: string, @CurrentUser() user?: any) {
     const requestedId = Number(id);
     
@@ -35,6 +41,8 @@ export class UsersController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
   updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto, @CurrentUser() user?: any) {
     const requestedId = Number(id);
     
@@ -48,6 +56,8 @@ export class UsersController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Delete user (Admin only)' })
+  @ApiParam({ name: 'id', description: 'User ID' })
   deleteUser(@Param('id') id: string, @CurrentUser() user?: any) {
     // Simple role check - admin only
     if (user.role !== 'admin') {

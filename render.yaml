@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: mcg-care-backend
+    runtime: node
+    region: singapore  # Choose closest region: oregon, frankfurt, singapore
+    plan: free
+    branch: deploy-test  # Change to 'main' when ready
+    rootDir: apps/api
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false  # You'll add this manually in Render dashboard
+      - key: SUPABASE_URL
+        sync: false  # You'll add this manually in Render dashboard
+      - key: SUPABASE_SERVICE_KEY
+        sync: false  # You'll add this manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false  # You'll add this manually in Render dashboard
+      - key: JWT_EXPIRES_IN
+        value: 7d
+    healthCheckPath: /

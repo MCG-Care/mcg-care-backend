@@ -36,3 +36,4 @@ export class QueryBookingsDto {
   bookingForDate?: string; // Filter by booking date
 }
 
+

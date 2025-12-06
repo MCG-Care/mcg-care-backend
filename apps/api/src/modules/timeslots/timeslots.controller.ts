@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
   ForbiddenException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { TimeslotsService } from './timeslots.service';
 import { CreateTimeslotDto } from './dto/create-timeslot.dto';
 import { UpdateTimeslotDto } from './dto/update-timeslot.dto';
@@ -18,12 +19,15 @@ import { QueryTimeslotsDto } from './dto/query-timeslots.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('timeslots')
+@ApiBearerAuth('JWT-auth')
 @Controller('timeslots')
 @UseGuards(JwtAuthGuard)
 export class TimeslotsController {
   constructor(private readonly timeslotsService: TimeslotsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create timeslot (Admin only)' })
   async create(
     @Body() createTimeslotDto: CreateTimeslotDto,
     @CurrentUser() user: any,
@@ -37,6 +41,7 @@ export class TimeslotsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all timeslots (filtered by user role)' })
   async findAll(@Query() query: QueryTimeslotsDto, @CurrentUser() user: any) {
     // Admins can view all timeslots
     // Technicians can view their own timeslots
@@ -52,6 +57,10 @@ export class TimeslotsController {
   }
 
   @Get('technician/:technicianId/availability')
+  @ApiOperation({ summary: 'Get technician availability' })
+  @ApiParam({ name: 'technicianId', description: 'Technician ID' })
+  @ApiQuery({ name: 'startDate', description: 'Start date (YYYY-MM-DD)', required: true })
+  @ApiQuery({ name: 'endDate', description: 'End date (YYYY-MM-DD)', required: true })
   async getTechnicianAvailability(
     @Param('technicianId', ParseIntPipe) technicianId: number,
     @Query('startDate') startDate: string,
@@ -71,6 +80,8 @@ export class TimeslotsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get timeslot by ID' })
+  @ApiParam({ name: 'id', description: 'Timeslot ID' })
   async findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
@@ -86,6 +97,8 @@ export class TimeslotsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update timeslot (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Timeslot ID' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTimeslotDto: UpdateTimeslotDto,
@@ -100,6 +113,8 @@ export class TimeslotsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete timeslot (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Timeslot ID' })
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
@@ -113,6 +128,8 @@ export class TimeslotsController {
   }
 
   @Post('technician/:technicianId/initialize')
+  @ApiOperation({ summary: 'Initialize technician timeslots (Admin only)' })
+  @ApiParam({ name: 'technicianId', description: 'Technician ID' })
   async initializeTechnician(
     @Param('technicianId', ParseIntPipe) technicianId: number,
     @CurrentUser() user: any,
@@ -128,6 +145,7 @@ export class TimeslotsController {
   }
 
   @Post('maintenance/daily')
+  @ApiOperation({ summary: 'Run daily timeslot maintenance (Admin only)' })
   async dailyMaintenance(@CurrentUser() user: any) {
     // Only admins can trigger maintenance manually
     // (This is also run automatically by cron job)
@@ -138,6 +156,7 @@ export class TimeslotsController {
     return this.timeslotsService.dailyTimeslotMaintenance();
   }
 }
+
 
 
 

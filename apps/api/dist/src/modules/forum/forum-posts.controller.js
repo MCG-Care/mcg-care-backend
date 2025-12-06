@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ForumPostsController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
+const swagger_1 = require("@nestjs/swagger");
 const forum_posts_service_1 = require("./forum-posts.service");
 const create_post_dto_1 = require("./dto/create-post.dto");
 const update_post_dto_1 = require("./dto/update-post.dto");
@@ -81,6 +82,9 @@ exports.ForumPostsController = ForumPostsController;
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Create forum post' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images', 10)),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.UploadedFiles)()),
@@ -91,6 +95,7 @@ __decorate([
 ], ForumPostsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all forum posts (Public)' }),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [query_posts_dto_1.QueryPostsDto]),
@@ -98,6 +103,8 @@ __decorate([
 ], ForumPostsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get forum post by ID (Public)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -106,6 +113,10 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update forum post' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images', 10)),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
@@ -118,6 +129,9 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete forum post' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -127,6 +141,10 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':postId/images/:imageId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete image from forum post' }),
+    (0, swagger_1.ApiParam)({ name: 'postId', description: 'Post ID' }),
+    (0, swagger_1.ApiParam)({ name: 'imageId', description: 'Image ID' }),
     __param(0, (0, common_1.Param)('postId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Param)('imageId', common_1.ParseIntPipe)),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -135,6 +153,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ForumPostsController.prototype, "removeImage", null);
 exports.ForumPostsController = ForumPostsController = __decorate([
+    (0, swagger_1.ApiTags)('forum'),
     (0, common_1.Controller)('forum/posts'),
     __metadata("design:paramtypes", [forum_posts_service_1.ForumPostsService])
 ], ForumPostsController);

@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
+const swagger_1 = require("@nestjs/swagger");
 const products_service_1 = require("./products.service");
 const create_product_dto_1 = require("./dto/create-product.dto");
 const update_product_dto_1 = require("./dto/update-product.dto");
@@ -73,6 +74,9 @@ exports.ProductsController = ProductsController;
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Create product (Admin only)' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images', 10)),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.UploadedFiles)()),
@@ -83,6 +87,7 @@ __decorate([
 ], ProductsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all products (Public)' }),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [query_products_dto_1.QueryProductsDto]),
@@ -90,6 +95,8 @@ __decorate([
 ], ProductsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get product by ID (Public)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -98,6 +105,10 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update product (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product ID' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images', 10)),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
@@ -110,6 +121,9 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete product (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -119,6 +133,10 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':productId/images/:imageId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete product image (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'productId', description: 'Product ID' }),
+    (0, swagger_1.ApiParam)({ name: 'imageId', description: 'Image ID' }),
     __param(0, (0, common_1.Param)('productId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Param)('imageId', common_1.ParseIntPipe)),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -127,6 +145,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "removeImage", null);
 exports.ProductsController = ProductsController = __decorate([
+    (0, swagger_1.ApiTags)('products'),
     (0, common_1.Controller)('products'),
     __metadata("design:paramtypes", [products_service_1.ProductsService])
 ], ProductsController);

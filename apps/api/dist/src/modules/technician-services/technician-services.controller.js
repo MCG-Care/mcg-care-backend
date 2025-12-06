@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TechnicianServicesController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const technician_services_service_1 = require("./technician-services.service");
 const assign_service_dto_1 = require("./dto/assign-service.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -65,6 +66,7 @@ let TechnicianServicesController = class TechnicianServicesController {
 exports.TechnicianServicesController = TechnicianServicesController;
 __decorate([
     (0, common_1.Post)('assign'),
+    (0, swagger_1.ApiOperation)({ summary: 'Assign services to technician (Admin or Technician)' }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -73,6 +75,8 @@ __decorate([
 ], TechnicianServicesController.prototype, "assignServices", null);
 __decorate([
     (0, common_1.Get)('technician/:technicianId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get services for a technician' }),
+    (0, swagger_1.ApiParam)({ name: 'technicianId', description: 'Technician ID' }),
     __param(0, (0, common_1.Param)('technicianId', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -81,6 +85,8 @@ __decorate([
 ], TechnicianServicesController.prototype, "getTechnicianServices", null);
 __decorate([
     (0, common_1.Get)('service/:serviceId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get technicians for a service (Admin only)' }),
+    (0, swagger_1.ApiParam)({ name: 'serviceId', description: 'Service Type ID' }),
     __param(0, (0, common_1.Param)('serviceId', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -89,6 +95,7 @@ __decorate([
 ], TechnicianServicesController.prototype, "getTechniciansForService", null);
 __decorate([
     (0, common_1.Get)('all'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all technicians with their services (Admin only)' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -96,6 +103,9 @@ __decorate([
 ], TechnicianServicesController.prototype, "getAllTechniciansWithServices", null);
 __decorate([
     (0, common_1.Delete)('technician/:technicianId/service/:serviceId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Remove service from technician (Admin or Technician)' }),
+    (0, swagger_1.ApiParam)({ name: 'technicianId', description: 'Technician ID' }),
+    (0, swagger_1.ApiParam)({ name: 'serviceId', description: 'Service Type ID' }),
     __param(0, (0, common_1.Param)('technicianId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Param)('serviceId', common_1.ParseIntPipe)),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -104,6 +114,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TechnicianServicesController.prototype, "removeService", null);
 exports.TechnicianServicesController = TechnicianServicesController = __decorate([
+    (0, swagger_1.ApiTags)('technician-services'),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.Controller)('technician-services'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [technician_services_service_1.TechnicianServicesService])

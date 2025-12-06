@@ -9,11 +9,14 @@ import {
   ParseIntPipe,
   ForbiddenException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { TechnicianServicesService } from './technician-services.service';
 import { AssignServiceDto } from './dto/assign-service.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('technician-services')
+@ApiBearerAuth('JWT-auth')
 @Controller('technician-services')
 @UseGuards(JwtAuthGuard)
 export class TechnicianServicesController {
@@ -22,6 +25,7 @@ export class TechnicianServicesController {
   ) {}
 
   @Post('assign')
+  @ApiOperation({ summary: 'Assign services to technician (Admin or Technician)' })
   async assignServices(
     @Body() assignServiceDto: AssignServiceDto,
     @CurrentUser() user: any,
@@ -45,6 +49,8 @@ export class TechnicianServicesController {
   }
 
   @Get('technician/:technicianId')
+  @ApiOperation({ summary: 'Get services for a technician' })
+  @ApiParam({ name: 'technicianId', description: 'Technician ID' })
   async getTechnicianServices(
     @Param('technicianId', ParseIntPipe) technicianId: number,
     @CurrentUser() user: any,
@@ -65,6 +71,8 @@ export class TechnicianServicesController {
   }
 
   @Get('service/:serviceId')
+  @ApiOperation({ summary: 'Get technicians for a service (Admin only)' })
+  @ApiParam({ name: 'serviceId', description: 'Service Type ID' })
   async getTechniciansForService(
     @Param('serviceId', ParseIntPipe) serviceId: number,
     @CurrentUser() user: any,
@@ -80,6 +88,7 @@ export class TechnicianServicesController {
   }
 
   @Get('all')
+  @ApiOperation({ summary: 'Get all technicians with their services (Admin only)' })
   async getAllTechniciansWithServices(@CurrentUser() user: any) {
     // Only admins can view all technicians with services
     if (user.role !== 'admin') {
@@ -92,6 +101,9 @@ export class TechnicianServicesController {
   }
 
   @Delete('technician/:technicianId/service/:serviceId')
+  @ApiOperation({ summary: 'Remove service from technician (Admin or Technician)' })
+  @ApiParam({ name: 'technicianId', description: 'Technician ID' })
+  @ApiParam({ name: 'serviceId', description: 'Service Type ID' })
   async removeService(
     @Param('technicianId', ParseIntPipe) technicianId: number,
     @Param('serviceId', ParseIntPipe) serviceId: number,

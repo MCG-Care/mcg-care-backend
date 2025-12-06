@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
   ForbiddenException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { CustomerProductsService } from './customer-products.service';
 import { CreateCustomerProductDto } from './dto/create-customer-product.dto';
 import { UpdateCustomerProductDto } from './dto/update-customer-product.dto';
@@ -18,6 +19,8 @@ import { QueryCustomerProductsDto } from './dto/query-customer-products.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('customer-products')
+@ApiBearerAuth('JWT-auth')
 @Controller('customer-products')
 @UseGuards(JwtAuthGuard)
 export class CustomerProductsController {
@@ -26,6 +29,7 @@ export class CustomerProductsController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Register customer product (Customer only)' })
   async create(
     @Body() createCustomerProductDto: CreateCustomerProductDto,
     @CurrentUser() user: any,
@@ -42,6 +46,7 @@ export class CustomerProductsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get customer products (filtered by user role)' })
   async findAll(
     @Query() query: QueryCustomerProductsDto,
     @CurrentUser() user: any,
@@ -61,6 +66,8 @@ export class CustomerProductsController {
   }
 
   @Get('qr/:qrUrl')
+  @ApiOperation({ summary: 'Get customer product by QR code' })
+  @ApiParam({ name: 'qrUrl', description: 'QR URL' })
   async findByQR(@Param('qrUrl') qrUrl: string, @CurrentUser() user: any) {
     // Technicians and admins can scan QR codes
     // Customers can also view their own products via QR
@@ -87,6 +94,8 @@ export class CustomerProductsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get customer product by ID' })
+  @ApiParam({ name: 'id', description: 'Customer Product ID' })
   async findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
@@ -106,6 +115,8 @@ export class CustomerProductsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update customer product (Customer only)' })
+  @ApiParam({ name: 'id', description: 'Customer Product ID' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCustomerProductDto: UpdateCustomerProductDto,
@@ -124,6 +135,8 @@ export class CustomerProductsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete customer product (Customer only)' })
+  @ApiParam({ name: 'id', description: 'Customer Product ID' })
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,

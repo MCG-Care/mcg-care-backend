@@ -20,12 +20,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -55,12 +55,12 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
+                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
-                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";
@@ -107,12 +107,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -142,12 +142,12 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
+                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
-                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";
@@ -194,12 +194,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -229,12 +229,12 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
+                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
-                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";
@@ -281,12 +281,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -316,12 +316,12 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
+                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
-                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";
@@ -368,12 +368,12 @@ export declare class ServiceLogsService {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -403,12 +403,12 @@ export declare class ServiceLogsService {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
+                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
-                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";

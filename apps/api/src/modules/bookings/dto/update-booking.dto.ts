@@ -15,3 +15,4 @@ export class UpdateBookingDto {
   fees?: number; // Technician can add extra fees
 }
 
+

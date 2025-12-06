@@ -19,12 +19,12 @@ export declare class BookingsController {
         fees: string;
         status: "pending" | "inprogress" | "done" | "unsuccessful";
         technician: {
+            password: string;
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
             email: string;
-            password: string;
             phoneNo: string;
             addressId: number | null;
             role: "customer" | "technician" | "admin";
@@ -52,12 +52,6 @@ export declare class BookingsController {
                 serviceFee: string;
             };
         }[];
-        bookingImages: {
-            id: number;
-            createdAt: Date;
-            url: string;
-            bookingId: number;
-        }[];
         aircon: {
             id: number;
             name: string;
@@ -69,12 +63,12 @@ export declare class BookingsController {
             qrUrl: string | null;
             purchaseCode: string | null;
             customer: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -109,6 +103,12 @@ export declare class BookingsController {
                 releaseDate: string | null;
             };
         };
+        bookingImages: {
+            url: string;
+            id: number;
+            createdAt: Date;
+            bookingId: number;
+        }[];
         serviceLog: {
             id: number;
             createdAt: Date;
@@ -140,12 +140,12 @@ export declare class BookingsController {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -173,12 +173,6 @@ export declare class BookingsController {
                     serviceFee: string;
                 };
             }[];
-            bookingImages: {
-                id: number;
-                createdAt: Date;
-                url: string;
-                bookingId: number;
-            }[];
             aircon: {
                 id: number;
                 name: string;
@@ -190,12 +184,12 @@ export declare class BookingsController {
                 qrUrl: string | null;
                 purchaseCode: string | null;
                 customer: {
+                    password: string;
                     id: number;
                     name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     email: string;
-                    password: string;
                     phoneNo: string;
                     addressId: number | null;
                     role: "customer" | "technician" | "admin";
@@ -221,6 +215,12 @@ export declare class BookingsController {
                     releaseDate: string | null;
                 };
             };
+            bookingImages: {
+                url: string;
+                id: number;
+                createdAt: Date;
+                bookingId: number;
+            }[];
             serviceLog: {
                 id: number;
                 createdAt: Date;
@@ -258,12 +258,12 @@ export declare class BookingsController {
         fees: string;
         status: "pending" | "inprogress" | "done" | "unsuccessful";
         technician: {
+            password: string;
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
             email: string;
-            password: string;
             phoneNo: string;
             addressId: number | null;
             role: "customer" | "technician" | "admin";
@@ -291,12 +291,6 @@ export declare class BookingsController {
                 serviceFee: string;
             };
         }[];
-        bookingImages: {
-            id: number;
-            createdAt: Date;
-            url: string;
-            bookingId: number;
-        }[];
         aircon: {
             id: number;
             name: string;
@@ -308,12 +302,12 @@ export declare class BookingsController {
             qrUrl: string | null;
             purchaseCode: string | null;
             customer: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -348,6 +342,12 @@ export declare class BookingsController {
                 releaseDate: string | null;
             };
         };
+        bookingImages: {
+            url: string;
+            id: number;
+            createdAt: Date;
+            bookingId: number;
+        }[];
         serviceLog: {
             id: number;
             createdAt: Date;
@@ -378,12 +378,12 @@ export declare class BookingsController {
         fees: string;
         status: "pending" | "inprogress" | "done" | "unsuccessful";
         technician: {
+            password: string;
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
             email: string;
-            password: string;
             phoneNo: string;
             addressId: number | null;
             role: "customer" | "technician" | "admin";
@@ -411,12 +411,6 @@ export declare class BookingsController {
                 serviceFee: string;
             };
         }[];
-        bookingImages: {
-            id: number;
-            createdAt: Date;
-            url: string;
-            bookingId: number;
-        }[];
         aircon: {
             id: number;
             name: string;
@@ -428,12 +422,12 @@ export declare class BookingsController {
             qrUrl: string | null;
             purchaseCode: string | null;
             customer: {
+                password: string;
                 id: number;
                 name: string;
                 createdAt: Date;
                 updatedAt: Date;
                 email: string;
-                password: string;
                 phoneNo: string;
                 addressId: number | null;
                 role: "customer" | "technician" | "admin";
@@ -468,6 +462,12 @@ export declare class BookingsController {
                 releaseDate: string | null;
             };
         };
+        bookingImages: {
+            url: string;
+            id: number;
+            createdAt: Date;
+            bookingId: number;
+        }[];
         serviceLog: {
             id: number;
             createdAt: Date;

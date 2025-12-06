@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FeedbacksController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const feedbacks_service_1 = require("./feedbacks.service");
 const create_feedback_dto_1 = require("./dto/create-feedback.dto");
 const update_feedback_dto_1 = require("./dto/update-feedback.dto");
@@ -46,6 +47,7 @@ let FeedbacksController = class FeedbacksController {
 exports.FeedbacksController = FeedbacksController;
 __decorate([
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create feedback' }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -54,6 +56,7 @@ __decorate([
 ], FeedbacksController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all feedbacks (filtered by user role)' }),
     __param(0, (0, common_1.Query)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -62,6 +65,8 @@ __decorate([
 ], FeedbacksController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('booking/:bookingId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get feedback for a specific booking' }),
+    (0, swagger_1.ApiParam)({ name: 'bookingId', description: 'Booking ID' }),
     __param(0, (0, common_1.Param)('bookingId', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -70,6 +75,8 @@ __decorate([
 ], FeedbacksController.prototype, "findByBookingId", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get feedback by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Feedback ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -78,6 +85,8 @@ __decorate([
 ], FeedbacksController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update feedback' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Feedback ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -87,6 +96,8 @@ __decorate([
 ], FeedbacksController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete feedback' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Feedback ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -94,6 +105,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], FeedbacksController.prototype, "remove", null);
 exports.FeedbacksController = FeedbacksController = __decorate([
+    (0, swagger_1.ApiTags)('feedbacks'),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.Controller)('feedbacks'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [feedbacks_service_1.FeedbacksService])

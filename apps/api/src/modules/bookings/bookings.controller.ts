@@ -14,6 +14,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiConsumes } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
@@ -21,12 +22,16 @@ import { QueryBookingsDto } from './dto/query-bookings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('bookings')
+@ApiBearerAuth('JWT-auth')
 @Controller('bookings')
 @UseGuards(JwtAuthGuard)
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new booking (Customer only)' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('images', 10)) // Max 10 images
   async create(
     @Body() createBookingDto: CreateBookingDto,
@@ -47,11 +52,14 @@ export class BookingsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all bookings (filtered by user role)' })
   async findAll(@Query() query: QueryBookingsDto, @CurrentUser() user: any) {
     return this.bookingsService.findAll(user.id, user.role, query);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get booking by ID' })
+  @ApiParam({ name: 'id', description: 'Booking ID' })
   async findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
@@ -60,6 +68,8 @@ export class BookingsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update booking' })
+  @ApiParam({ name: 'id', description: 'Booking ID' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBookingDto: UpdateBookingDto,
@@ -69,6 +79,8 @@ export class BookingsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete booking' })
+  @ApiParam({ name: 'id', description: 'Booking ID' })
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
@@ -77,6 +89,9 @@ export class BookingsController {
   }
 
   @Delete(':bookingId/images/:imageId')
+  @ApiOperation({ summary: 'Remove image from booking' })
+  @ApiParam({ name: 'bookingId', description: 'Booking ID' })
+  @ApiParam({ name: 'imageId', description: 'Image ID' })
   async removeImage(
     @Param('bookingId', ParseIntPipe) bookingId: number,
     @Param('imageId', ParseIntPipe) imageId: number,
@@ -112,4 +127,5 @@ export class BookingsController {
     }
   }
 }
+
 
