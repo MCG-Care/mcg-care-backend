@@ -4,7 +4,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RENDER_API_URL = Deno.env.get("RENDER_API_URL") || "https://your-app.onrender.com";
-const API_AUTH_TOKEN = Deno.env.get("API_AUTH_TOKEN") || ""; // Optional: if you need auth
+const CRON_SECRET = Deno.env.get("CRON_SECRET") || ""; // Secret token for cron authentication
 
 serve(async (req) => {
   try {
@@ -32,22 +32,27 @@ serve(async (req) => {
     }
 
     if (action === "daily-maintenance") {
-      // Call the daily maintenance endpoint
+      // Call the daily maintenance endpoint using secret token (no JWT expiration)
       console.log("🔧 Running daily maintenance...");
       
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-      
-      // Add auth token if provided
-      if (API_AUTH_TOKEN) {
-        headers["Authorization"] = `Bearer ${API_AUTH_TOKEN}`;
+      if (!CRON_SECRET) {
+        throw new Error("CRON_SECRET environment variable is not set");
       }
 
-      const response = await fetch(`${RENDER_API_URL}/timeslots/maintenance/daily`, {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-Cron-Secret": CRON_SECRET,
+      };
+
+      const response = await fetch(`${RENDER_API_URL}/timeslots/maintenance/daily-cron`, {
         method: "POST",
         headers,
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Maintenance failed: ${response.status} - ${errorText}`);
+      }
 
       const data = await response.json();
       console.log(`✅ Daily maintenance completed: ${response.status}`);
@@ -75,7 +80,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       }),
       { headers: { "Content-Type": "application/json" }, status: 500 }
     );

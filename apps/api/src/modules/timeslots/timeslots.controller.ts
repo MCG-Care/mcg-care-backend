@@ -10,21 +10,27 @@ import {
   Query,
   ParseIntPipe,
   ForbiddenException,
+  UnauthorizedException,
+  Headers,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { TimeslotsService } from './timeslots.service';
 import { CreateTimeslotDto } from './dto/create-timeslot.dto';
 import { UpdateTimeslotDto } from './dto/update-timeslot.dto';
 import { QueryTimeslotsDto } from './dto/query-timeslots.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('timeslots')
 @ApiBearerAuth('JWT-auth')
 @Controller('timeslots')
 @UseGuards(JwtAuthGuard)
 export class TimeslotsController {
-  constructor(private readonly timeslotsService: TimeslotsService) {}
+  constructor(
+    private readonly timeslotsService: TimeslotsService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create timeslot (Admin only)' })
@@ -151,6 +157,25 @@ export class TimeslotsController {
     // (This is also run automatically by cron job)
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can trigger maintenance');
+    }
+
+    return this.timeslotsService.dailyTimeslotMaintenance();
+  }
+
+  @Post('maintenance/daily-cron')
+  @ApiOperation({ summary: 'Run daily timeslot maintenance (Cron job endpoint - uses secret token)' })
+  @ApiHeader({ name: 'X-Cron-Secret', description: 'Secret token for cron authentication' })
+  async dailyMaintenanceCron(@Headers('x-cron-secret') cronSecret: string) {
+    // This endpoint is for cron jobs only - uses a secret token instead of JWT
+    // This avoids JWT expiration issues
+    const expectedSecret = this.configService.get<string>('CRON_SECRET');
+    
+    if (!expectedSecret) {
+      throw new UnauthorizedException('CRON_SECRET not configured');
+    }
+
+    if (!cronSecret || cronSecret !== expectedSecret) {
+      throw new UnauthorizedException('Invalid cron secret token');
     }
 
     return this.timeslotsService.dailyTimeslotMaintenance();
