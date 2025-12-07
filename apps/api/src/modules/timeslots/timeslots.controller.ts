@@ -25,7 +25,6 @@ import { ConfigService } from '@nestjs/config';
 @ApiTags('timeslots')
 @ApiBearerAuth('JWT-auth')
 @Controller('timeslots')
-@UseGuards(JwtAuthGuard)
 export class TimeslotsController {
   constructor(
     private readonly timeslotsService: TimeslotsService,
@@ -33,6 +32,7 @@ export class TimeslotsController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create timeslot (Admin only)' })
   async create(
     @Body() createTimeslotDto: CreateTimeslotDto,
@@ -47,6 +47,7 @@ export class TimeslotsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get all timeslots (filtered by user role)' })
   async findAll(@Query() query: QueryTimeslotsDto, @CurrentUser() user: any) {
     // Admins can view all timeslots
@@ -63,6 +64,7 @@ export class TimeslotsController {
   }
 
   @Get('technician/:technicianId/availability')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get technician availability' })
   @ApiParam({ name: 'technicianId', description: 'Technician ID' })
   @ApiQuery({ name: 'startDate', description: 'Start date (YYYY-MM-DD)', required: true })
@@ -86,6 +88,7 @@ export class TimeslotsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get timeslot by ID' })
   @ApiParam({ name: 'id', description: 'Timeslot ID' })
   async findOne(
@@ -103,6 +106,7 @@ export class TimeslotsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update timeslot (Admin only)' })
   @ApiParam({ name: 'id', description: 'Timeslot ID' })
   async update(
@@ -119,6 +123,7 @@ export class TimeslotsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Delete timeslot (Admin only)' })
   @ApiParam({ name: 'id', description: 'Timeslot ID' })
   async remove(
@@ -134,6 +139,7 @@ export class TimeslotsController {
   }
 
   @Post('technician/:technicianId/initialize')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Initialize technician timeslots (Admin only)' })
   @ApiParam({ name: 'technicianId', description: 'Technician ID' })
   async initializeTechnician(
@@ -151,6 +157,7 @@ export class TimeslotsController {
   }
 
   @Post('maintenance/daily')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Run daily timeslot maintenance (Admin only)' })
   async dailyMaintenance(@CurrentUser() user: any) {
     // Only admins can trigger maintenance manually
