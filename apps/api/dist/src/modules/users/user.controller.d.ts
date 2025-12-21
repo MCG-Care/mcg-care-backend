@@ -14,7 +14,32 @@ export declare class UsersController {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
+    getAllTechnicianRatings(user?: any): Promise<{
+        technicianId: number;
+        technicianName: string;
+        averageRating: number;
+        averageRatingRounded: number;
+        totalFeedbacks: number;
+    }[]>;
+    getTechnicianAverageRating(id: string): Promise<{
+        technicianId: number;
+        averageRating: number;
+        totalFeedbacks: number;
+        averageRatingRounded: number;
+    }>;
     getUser(id: string, user?: any): Promise<{
+        id: number;
+        name: string;
+        email: string;
+        password: string;
+        phoneNo: string;
+        addressId: number | null;
+        role: "customer" | "technician" | "admin";
+        createdAt: Date;
+        updatedAt: Date;
+    } | {
+        averageRating: number;
+        totalFeedbacks: number;
         id: number;
         name: string;
         email: string;

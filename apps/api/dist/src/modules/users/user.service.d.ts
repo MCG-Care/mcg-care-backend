@@ -15,7 +15,19 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
-    getUserById(id: number): Promise<{
+    getUserById(id: number, includeRating?: boolean): Promise<{
+        id: number;
+        name: string;
+        email: string;
+        password: string;
+        phoneNo: string;
+        addressId: number | null;
+        role: "customer" | "technician" | "admin";
+        createdAt: Date;
+        updatedAt: Date;
+    } | {
+        averageRating: number;
+        totalFeedbacks: number;
         id: number;
         name: string;
         email: string;
@@ -86,4 +98,17 @@ export declare class UsersService {
         addressId: number | null;
         role: "customer" | "technician" | "admin";
     }>;
+    getTechnicianAverageRating(technicianId: number): Promise<{
+        technicianId: number;
+        averageRating: number;
+        totalFeedbacks: number;
+        averageRatingRounded: number;
+    }>;
+    getAllTechnicianRatings(): Promise<{
+        technicianId: number;
+        technicianName: string;
+        averageRating: number;
+        averageRatingRounded: number;
+        totalFeedbacks: number;
+    }[]>;
 }

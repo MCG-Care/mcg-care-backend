@@ -2,9 +2,11 @@ import { TimeslotsService } from './timeslots.service';
 import { CreateTimeslotDto } from './dto/create-timeslot.dto';
 import { UpdateTimeslotDto } from './dto/update-timeslot.dto';
 import { QueryTimeslotsDto } from './dto/query-timeslots.dto';
+import { ConfigService } from '@nestjs/config';
 export declare class TimeslotsController {
     private readonly timeslotsService;
-    constructor(timeslotsService: TimeslotsService);
+    private readonly configService;
+    constructor(timeslotsService: TimeslotsService, configService: ConfigService);
     create(createTimeslotDto: CreateTimeslotDto, user: any): Promise<{
         date: string;
         id: number;
@@ -98,6 +100,12 @@ export declare class TimeslotsController {
         count: number;
     }>;
     dailyMaintenance(user: any): Promise<{
+        message: string;
+        deletedCount: number;
+        addedCount: number;
+        date: string;
+    }>;
+    dailyMaintenanceCron(cronSecret: string): Promise<{
         message: string;
         deletedCount: number;
         addedCount: number;
