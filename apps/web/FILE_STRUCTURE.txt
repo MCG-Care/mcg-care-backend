@@ -1,0 +1,91 @@
+MCG Care Admin - File Structure
+================================
+
+📁 apps/web/
+│
+├── 📄 Documentation Files
+│   ├── START_HERE.md              ⭐ Read this first!
+│   ├── SETUP_GUIDE.md             📖 Detailed setup instructions
+│   ├── IMPLEMENTATION_SUMMARY.md  📋 Complete feature list
+│   ├── README.md                  📚 Full documentation
+│   └── FILE_STRUCTURE.txt         📂 This file
+│
+├── 📁 app/ (Next.js App Router)
+│   ├── layout.tsx                 🎨 Root layout with providers
+│   ├── page.tsx                   🏠 Home (redirects to login)
+│   ├── globals.css                🎨 Global styles
+│   │
+│   ├── 📁 login/
+│   │   └── page.tsx               🔐 Login page
+│   │
+│   └── 📁 dashboard/
+│       ├── layout.tsx             📊 Dashboard layout
+│       ├── page.tsx               📊 Dashboard home
+│       ├── 📁 bookings/
+│       │   └── page.tsx           📅 Bookings page (mock)
+│       ├── 📁 customers/
+│       │   └── page.tsx           👥 Customers page (mock)
+│       ├── 📁 forum/
+│       │   └── page.tsx           💬 Forum page (mock)
+│       ├── 📁 products/
+│       │   └── page.tsx           📦 Products page (mock)
+│       ├── 📁 profile/
+│       │   └── page.tsx           👤 Profile page
+│       ├── 📁 settings/
+│       │   └── page.tsx           ⚙️ Settings page (mock)
+│       └── 📁 technicians/
+│           └── page.tsx           🔧 Technicians page (mock)
+│
+├── 📁 components/
+│   ├── 📁 dashboard/
+│   │   ├── navbar.tsx             🔝 Top navigation bar
+│   │   ├── sidebar.tsx            📑 Side navigation menu
+│   │   └── stats-card.tsx         📊 Statistics card component
+│   │
+│   ├── 📁 providers/
+│   │   ├── i18n-provider.tsx      🌍 Internationalization provider
+│   │   └── theme-provider.tsx     🌓 Theme provider (dark/light)
+│   │
+│   └── 📁 ui/ (Reusable Components)
+│       ├── button.tsx             🔘 Button component
+│       ├── card.tsx               🃏 Card component
+│       ├── dropdown-menu.tsx      📋 Dropdown menu
+│       ├── input.tsx              ⌨️ Input field
+│       └── label.tsx              🏷️ Label component
+│
+├── 📁 lib/
+│   ├── i18n.ts                    🌍 i18n configuration (EN/MY)
+│   └── utils.ts                   🛠️ Utility functions
+│
+└── 📁 public/
+    └── 📁 images/
+        └── .gitkeep               👈 PUT YOUR LOGO HERE (logo.png)
+
+Key Features:
+=============
+✅ Login page with authentication
+✅ Dashboard with statistics
+✅ Sidebar navigation (collapsible)
+✅ Top navbar with search
+✅ Dark/Light theme toggle
+✅ English/Burmese language support
+✅ Mock pages for all navigation items
+✅ Profile and settings pages
+✅ Responsive design
+✅ Beautiful red-orange gradient theme
+
+Total Files Created: 29
+- 13 Page components (.tsx)
+- 10 Reusable components (.tsx)
+- 2 Library files (.ts)
+- 4 Documentation files (.md)
+
+Next Steps:
+===========
+1. Add logo to: /public/images/logo.png
+2. Run: npm run dev:web
+3. Visit: http://localhost:3000
+4. Test all features
+5. Connect to backend API
+6. Implement real functionality
+
