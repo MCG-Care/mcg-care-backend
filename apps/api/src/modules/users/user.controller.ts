@@ -24,9 +24,30 @@ export class UsersController {
     return this.usersService.getAllUsers();
   }
 
+  @Get('technicians/ratings')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get average ratings for all technicians (Admin only)' })
+  getAllTechnicianRatings(@CurrentUser() user?: any) {
+    // Admin only - to view all technician ratings
+    // This route must come before :id routes to avoid route conflicts
+    if (user.role !== 'admin') {
+      throw new ForbiddenException('Only admins can view all technician ratings');
+    }
+    
+    return this.usersService.getAllTechnicianRatings();
+  }
+
+  @Get(':id/average-rating')
+  @ApiOperation({ summary: 'Get average rating for a technician (Public)' })
+  @ApiParam({ name: 'id', description: 'Technician ID' })
+  getTechnicianAverageRating(@Param('id') id: string) {
+    // Public endpoint - anyone can view technician ratings
+    return this.usersService.getTechnicianAverageRating(Number(id));
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiOperation({ summary: 'Get user by ID (includes average rating for technicians)' })
   @ApiParam({ name: 'id', description: 'User ID' })
   getUser(@Param('id') id: string, @CurrentUser() user?: any) {
     const requestedId = Number(id);
@@ -36,7 +57,8 @@ export class UsersController {
       throw new ForbiddenException('You can only view your own profile');
     }
     
-    return this.usersService.getUserById(requestedId);
+    // Include rating for technicians
+    return this.usersService.getUserById(requestedId, true);
   }
 
   @Patch(':id')

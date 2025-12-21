@@ -24,13 +24,23 @@ let UsersService = class UsersService {
     async getAllUsers() {
         return this.db.select().from(database_1.schema.users);
     }
-    async getUserById(id) {
+    async getUserById(id, includeRating = false) {
         const result = await this.db
             .select()
             .from(database_1.schema.users)
             .where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id))
             .limit(1);
-        return result[0] || null;
+        const user = result[0] || null;
+        if (user && includeRating && user.role === 'technician') {
+            try {
+                const ratingData = await this.getTechnicianAverageRating(id);
+                return Object.assign(Object.assign({}, user), { averageRating: ratingData.averageRatingRounded, totalFeedbacks: ratingData.totalFeedbacks });
+            }
+            catch (error) {
+                return user;
+            }
+        }
+        return user;
     }
     async getUserByEmail(email) {
         const result = await this.db
@@ -59,6 +69,63 @@ let UsersService = class UsersService {
     async deleteUser(id) {
         const result = await this.db.delete(database_1.schema.users).where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id)).returning();
         return result[0] || null;
+    }
+    async getTechnicianAverageRating(technicianId) {
+        var _a, _b;
+        const user = await this.getUserById(technicianId);
+        if (!user) {
+            throw new common_1.NotFoundException(`User with ID ${technicianId} not found`);
+        }
+        if (user.role !== 'technician') {
+            throw new common_1.NotFoundException(`User with ID ${technicianId} is not a technician`);
+        }
+        const result = await this.db
+            .select({
+            averageRating: (0, drizzle_orm_1.sql) `COALESCE(AVG(${database_1.schema.feedbacks.rating})::numeric, 0)`,
+            totalFeedbacks: (0, drizzle_orm_1.sql) `COUNT(${database_1.schema.feedbacks.id})::int`,
+        })
+            .from(database_1.schema.bookings)
+            .innerJoin(database_1.schema.feedbacks, (0, drizzle_orm_1.eq)(database_1.schema.feedbacks.bookingId, database_1.schema.bookings.id))
+            .where((0, drizzle_orm_1.eq)(database_1.schema.bookings.technicianId, technicianId));
+        const avgRating = ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.averageRating)
+            ? parseFloat(result[0].averageRating.toString())
+            : 0;
+        const totalFeedbacks = ((_b = result[0]) === null || _b === void 0 ? void 0 : _b.totalFeedbacks) || 0;
+        return {
+            technicianId,
+            averageRating: avgRating,
+            totalFeedbacks,
+            averageRatingRounded: Math.round(avgRating * 100) / 100,
+        };
+    }
+    async getAllTechnicianRatings() {
+        const technicians = await this.db
+            .select()
+            .from(database_1.schema.users)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.users.role, 'technician'));
+        const ratings = await Promise.all(technicians.map(async (technician) => {
+            var _a, _b;
+            const result = await this.db
+                .select({
+                averageRating: (0, drizzle_orm_1.sql) `COALESCE(AVG(${database_1.schema.feedbacks.rating})::numeric, 0)`,
+                totalFeedbacks: (0, drizzle_orm_1.sql) `COUNT(${database_1.schema.feedbacks.id})::int`,
+            })
+                .from(database_1.schema.bookings)
+                .innerJoin(database_1.schema.feedbacks, (0, drizzle_orm_1.eq)(database_1.schema.feedbacks.bookingId, database_1.schema.bookings.id))
+                .where((0, drizzle_orm_1.eq)(database_1.schema.bookings.technicianId, technician.id));
+            const avgRating = ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.averageRating)
+                ? parseFloat(result[0].averageRating.toString())
+                : 0;
+            const totalFeedbacks = ((_b = result[0]) === null || _b === void 0 ? void 0 : _b.totalFeedbacks) || 0;
+            return {
+                technicianId: technician.id,
+                technicianName: technician.name,
+                averageRating: avgRating,
+                averageRatingRounded: Math.round(avgRating * 100) / 100,
+                totalFeedbacks,
+            };
+        }));
+        return ratings;
     }
 };
 exports.UsersService = UsersService;

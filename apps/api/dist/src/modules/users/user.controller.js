@@ -29,12 +29,21 @@ let UsersController = class UsersController {
         }
         return this.usersService.getAllUsers();
     }
+    getAllTechnicianRatings(user) {
+        if (user.role !== 'admin') {
+            throw new common_1.ForbiddenException('Only admins can view all technician ratings');
+        }
+        return this.usersService.getAllTechnicianRatings();
+    }
+    getTechnicianAverageRating(id) {
+        return this.usersService.getTechnicianAverageRating(Number(id));
+    }
     getUser(id, user) {
         const requestedId = Number(id);
         if (user.role !== 'admin' && user.id !== requestedId) {
             throw new common_1.ForbiddenException('You can only view your own profile');
         }
-        return this.usersService.getUserById(requestedId);
+        return this.usersService.getUserById(requestedId, true);
     }
     updateUser(id, dto, user) {
         const requestedId = Number(id);
@@ -61,9 +70,27 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getAllUsers", null);
 __decorate([
+    (0, common_1.Get)('technicians/ratings'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Get average ratings for all technicians (Admin only)' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getAllTechnicianRatings", null);
+__decorate([
+    (0, common_1.Get)(':id/average-rating'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get average rating for a technician (Public)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Technician ID' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getTechnicianAverageRating", null);
+__decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiOperation)({ summary: 'Get user by ID' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get user by ID (includes average rating for technicians)' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'User ID' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),

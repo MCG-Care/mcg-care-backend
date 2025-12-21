@@ -6,3 +6,7 @@ export class UpdateServiceTypeDto extends PartialType(CreateServiceTypeDto) {}
 
 
 
+
+
+
+
