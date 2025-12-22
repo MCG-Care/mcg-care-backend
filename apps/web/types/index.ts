@@ -14,7 +14,7 @@ export interface Booking {
   bookingTime: string;
   duration: number;
   fees: string;
-  status: "pending" | "inprogress" | "done" | "unsuccessful";
+  status: "pending" | "confirmed" | "in_progress" | "inprogress" | "completed" | "done" | "cancelled" | "unsuccessful";
   description?: string;
   createdAt: string;
   updatedAt: string;
@@ -56,13 +56,16 @@ export interface ForumPost {
   id: string;
   title: string;
   content: string;
-  authorId: string;
+  userId: string;
+  likeCount: number;
+  commentCount?: number;
   createdAt: string;
   updatedAt: string;
-  author?: {
+  user?: {
     id: string;
     name: string;
     email: string;
+    role: string;
   };
   images?: Array<{
     id: string;
@@ -71,13 +74,25 @@ export interface ForumPost {
   comments?: Array<{
     id: string;
     content: string;
+    likeCount: number;
     createdAt: string;
-    author?: {
+    user?: {
       id: string;
       name: string;
       email: string;
+      role: string;
     };
   }>;
+}
+
+export interface ServiceType {
+  id: string;
+  name: string;
+  description: string;
+  serviceFee: string;
+  duration: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DashboardStats {

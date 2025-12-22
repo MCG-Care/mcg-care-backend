@@ -46,6 +46,7 @@ const translations: Translations = {
     // Navigation
     bookings: "Bookings",
     forum: "Forum",
+    services: "Services",
     products: "Products",
     technicians: "Technicians",
     customers: "Customers",
@@ -67,6 +68,29 @@ const translations: Translations = {
     status: "Status",
     date: "Date",
     actions: "Actions",
+    create: "Create",
+    update: "Update",
+    close: "Close",
+    
+    // Services
+    addServiceType: "Add Service Type",
+    createServiceType: "Create Service Type",
+    editServiceType: "Edit Service Type",
+    serviceName: "Service Name",
+    description: "Description",
+    serviceFee: "Service Fee (Ks)",
+    duration: "Duration (minutes)",
+    searchServices: "Search services...",
+    noServicesFound: "No services found matching your search",
+    noServicesAvailable: "No service types available. Create one to get started!",
+    
+    // Forum
+    forumPosts: "Forum Posts",
+    noPostsYet: "No forum posts yet",
+    
+    // Bookings
+    allBookings: "All Bookings",
+    noBookingsYet: "No bookings yet",
     
     // Booking statuses
     pending: "Pending",
@@ -98,17 +122,18 @@ const translations: Translations = {
     
     // Dashboard
     dashboard: "Dashboard",
-    pendingBookings: "စောင့်ဆိုင်းဆဲ ကြိုတင်မှာကြားမှုများ",
-    inProgressBookings: "ဆောင်ရွက်ဆဲ",
-    todayBookings: "ယနေ့ ကြိုတင်မှာကြားမှုများ",
+    pendingBookings: "လုပ်ဆောင်ရန်ရှိသော ကြိုတင်မှာကြားမှုများ",
+    inProgressBookings: "ဆောင်ရွက်ဆဲ ကြိုတင်မှာကြားမှုများ",
+    todayBookings: "ယနေ့အတွက် ကြိုတင်မှာကြားမှုများ",
     upcomingBookings: "လာမည့် ကြိုတင်မှာကြားမှုများ",
-    latestBookings: "နောက်ဆုံးကြိုတင်မှာကြားမှုများ",
+    latestBookings: "နောက်ဆုံးလက်ခံရရှိသောကြိုတင်မှာကြားမှုများ",
     latestForumPosts: "နောက်ဆုံး Forum ပို့စ်များ",
     viewAll: "အားလုံးကြည့်ရန်",
     
     // Navigation
     bookings: "ကြိုတင်မှာကြားမှုများ",
     forum: "ဖိုရမ်",
+    services: "ဝန်ဆောင်မှုများ",
     products: "ထုတ်ကုန်များ",
     technicians: "နည်းပညာရှင်များ",
     customers: "ဖောက်သည်များ",
@@ -118,7 +143,7 @@ const translations: Translations = {
     
     // Common
     loading: "တင်နေသည်...",
-    error: "အမှား",
+    error: "မှားယွင်းပါသည်",
     success: "အောင်မြင်ပါသည်",
     save: "သိမ်းမည်",
     cancel: "မလုပ်တော့",
@@ -130,6 +155,29 @@ const translations: Translations = {
     status: "အခြေအနေ",
     date: "ရက်စွဲ",
     actions: "လုပ်ဆောင်ချက်များ",
+    create: "ဖန်တီးမည်",
+    update: "အပ်ဒိတ်လုပ်မည်",
+    close: "ပိတ်မည်",
+    
+    // Services
+    addServiceType: "ဝန်ဆောင်မှုအမျိုးအစား ထည့်မည်",
+    createServiceType: "ဝန်ဆောင်မှုအမျိုးအစား ဖန်တီးမည်",
+    editServiceType: "ဝန်ဆောင်မှုအမျိုးအစား ပြင်ဆင်မည်",
+    serviceName: "ဝန်ဆောင်မှုအမည်",
+    description: "ဖော်ပြချက်",
+    serviceFee: "ဝန်ဆောင်ခ (ကျပ်)",
+    duration: "ကြာချိန် (မိနစ်)",
+    searchServices: "ဝန်ဆောင်မှုများရှာမည်...",
+    noServicesFound: "သင်ရှာသောဝန်ဆောင်မှုများမတွေ့ပါ",
+    noServicesAvailable: "ဝန်ဆောင်မှုအမျိုးအစားများမရှိသေးပါ။ စတင်ရန် တစ်ခုဖန်တီးပါ!",
+    
+    // Forum
+    forumPosts: "ဖိုရမ် ပို့စ်များ",
+    noPostsYet: "ဖိုရမ် ပို့စ်များမရှိသေးပါ",
+    
+    // Bookings
+    allBookings: "ကြိုတင်မှာကြားမှုအားလုံး",
+    noBookingsYet: "ကြိုတင်မှာကြားမှုများမရှိသေးပါ",
     
     // Booking statuses
     pending: "စောင့်ဆိုင်းဆဲ",

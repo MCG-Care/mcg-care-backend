@@ -21,3 +21,4 @@ export class QueryTimeslotsDto {
   endDate?: string; // For date range queries
 }
 
+

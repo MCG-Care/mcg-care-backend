@@ -19,3 +19,4 @@ export class QueryServiceTypesDto {
   search?: string; // Search by name or description
 }
 
+

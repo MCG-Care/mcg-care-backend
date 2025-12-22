@@ -12,12 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
+  const pathname = usePathname();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -32,12 +33,24 @@ const Navbar = () => {
     router.push("/login");
   };
 
+  const getPageTitle = () => {
+    if (pathname === "/dashboard") return t("dashboard");
+    if (pathname === "/dashboard/bookings") return t("bookings");
+    if (pathname === "/dashboard/forum") return t("forum");
+    if (pathname === "/dashboard/services") return t("services");
+    if (pathname === "/dashboard/products") return t("products");
+    if (pathname === "/dashboard/technicians") return t("technicians");
+    if (pathname === "/dashboard/customers") return t("customers");
+    if (pathname === "/dashboard/profile") return t("profile");
+    return t("dashboard");
+  };
+
   return (
     <nav className="fixed top-0 right-0 left-0 lg:left-64 h-20 bg-card border-b border-border z-30">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold hidden md:block">
-            {t("dashboard")}
+            {getPageTitle()}
           </h1>
         </div>
 

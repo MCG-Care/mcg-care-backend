@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,7 @@ import {
   UserCog,
   Menu,
   X,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -22,7 +23,7 @@ const Sidebar = () => {
   const pathname = usePathname();
   const { t } = useLanguage();
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     {
       name: t("dashboard"),
       href: "/dashboard",
@@ -39,6 +40,11 @@ const Sidebar = () => {
       icon: MessageSquare,
     },
     {
+      name: t("services"),
+      href: "/dashboard/services",
+      icon: Wrench,
+    },
+    {
       name: t("products"),
       href: "/dashboard/products",
       icon: Package,
@@ -53,7 +59,7 @@ const Sidebar = () => {
       href: "/dashboard/customers",
       icon: Users,
     },
-  ];
+  ], [t]);
 
   return (
     <>

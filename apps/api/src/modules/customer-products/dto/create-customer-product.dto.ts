@@ -17,3 +17,4 @@ export class CreateCustomerProductDto {
   purchaseCode?: string; // unique code from receipt (optional)
 }
 
+

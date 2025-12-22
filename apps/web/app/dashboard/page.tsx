@@ -19,6 +19,8 @@ import {
   Trash2,
   Save,
   Image as ImageIcon,
+  Heart,
+  Send,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
@@ -42,6 +44,8 @@ const DashboardPage = () => {
   const [editingPost, setEditingPost] = useState(false);
   const [bookingFormData, setBookingFormData] = useState<Partial<Booking>>({});
   const [postFormData, setPostFormData] = useState<Partial<ForumPost>>({});
+  const [newComment, setNewComment] = useState("");
+  const [postLiked, setPostLiked] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -203,13 +207,89 @@ const DashboardPage = () => {
     setEditingBooking(false);
   };
 
-  const openPostModal = (post: ForumPost) => {
-    setSelectedPost(post);
-    setPostFormData({
-      title: post.title,
-      content: post.content,
-    });
-    setEditingPost(false);
+  const openPostModal = async (post: ForumPost) => {
+    try {
+      // Fetch full post details with comments
+      const response = await api.get(`/forum/posts/${post.id}`);
+      setSelectedPost(response.data);
+      setPostFormData({
+        title: response.data.title,
+        content: response.data.content,
+      });
+      setEditingPost(false);
+      setNewComment("");
+      
+      // Check if user has liked the post
+      try {
+        const likeResponse = await api.get(`/forum/posts/${post.id}/liked`);
+        setPostLiked(likeResponse.data.hasLiked);
+      } catch (err) {
+        setPostLiked(false);
+      }
+    } catch (error) {
+      console.error("Error fetching post details:", error);
+      // Fallback to basic post data
+      setSelectedPost(post);
+      setPostFormData({
+        title: post.title,
+        content: post.content,
+      });
+      setEditingPost(false);
+      setNewComment("");
+      setPostLiked(false);
+    }
+  };
+
+  const handleLikePost = async () => {
+    if (!selectedPost) return;
+    
+    try {
+      const response = await api.post(`/forum/posts/${selectedPost.id}/like`);
+      setPostLiked(response.data.liked);
+      // Update the post's like count
+      setSelectedPost({
+        ...selectedPost,
+        likeCount: response.data.likeCount,
+      });
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!selectedPost || !newComment.trim()) return;
+    
+    try {
+      await api.post("/forum/comments", {
+        postId: selectedPost.id,
+        content: newComment,
+      });
+      
+      // Refresh post details to get new comment
+      const response = await api.get(`/forum/posts/${selectedPost.id}`);
+      setSelectedPost(response.data);
+      setNewComment("");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      alert("Failed to add comment");
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!selectedPost) return;
+    
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    
+    try {
+      await api.delete(`/forum/comments/${commentId}`);
+      
+      // Refresh post details
+      const response = await api.get(`/forum/posts/${selectedPost.id}`);
+      setSelectedPost(response.data);
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      alert("Failed to delete comment");
+    }
   };
 
   const statsCards = [
@@ -288,7 +368,7 @@ const DashboardPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t("latestBookings")}</CardTitle>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => window.location.href = '/dashboard/bookings'}>
               {t("viewAll")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardHeader>
@@ -337,7 +417,7 @@ const DashboardPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t("latestForumPosts")}</CardTitle>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => window.location.href = '/dashboard/forum'}>
               {t("viewAll")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardHeader>
@@ -478,7 +558,7 @@ const DashboardPage = () => {
                       key={s.service.id}
                       className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                     >
-                      {s.service?.name} - ₱{s.service?.serviceFee}
+                      {s.service?.name} - {s.service?.serviceFee} Ks
                     </span>
                   )) || <p>No services</p>}
                 </div>
@@ -567,7 +647,7 @@ const DashboardPage = () => {
                       className="mt-1"
                     />
                   ) : (
-                    <p className="font-medium mt-1">₱{selectedBooking.fees || "0.00"}</p>
+                    <p className="font-medium mt-1">{selectedBooking.fees || "0.00"} Ks</p>
                   )}
                 </div>
               </div>
@@ -724,16 +804,23 @@ const DashboardPage = () => {
               {/* Author Information */}
               <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="h-6 w-6 text-white" />
+                  <span className="text-white text-lg font-bold">
+                    {selectedPost.user?.name?.[0]?.toUpperCase() || "A"}
+                  </span>
                 </div>
                 <div className="flex-1">
                   <Label className="text-muted-foreground">Posted by</Label>
-                  <p className="font-medium text-lg">
-                    {selectedPost.author?.name || "Anonymous"}
-                  </p>
-                  {selectedPost.author?.email && (
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-lg">
+                      {selectedPost.user?.name || "Anonymous"}
+                    </p>
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary capitalize">
+                      {selectedPost.user?.role || "Customer"}
+                    </span>
+                  </div>
+                  {selectedPost.user?.email && (
                     <p className="text-sm text-muted-foreground">
-                      {selectedPost.author.email}
+                      {selectedPost.user.email}
                     </p>
                   )}
                 </div>
@@ -768,21 +855,21 @@ const DashboardPage = () => {
                 )}
               </div>
 
-              {/* Photos (if they exist in the extended type) */}
-              {(selectedPost as any).images && (selectedPost as any).images.length > 0 && (
+              {/* Photos */}
+              {selectedPost.images && selectedPost.images.length > 0 && (
                 <div>
                   <Label className="text-muted-foreground flex items-center gap-2">
                     <ImageIcon className="h-4 w-4" />
-                    Photos ({(selectedPost as any).images.length})
+                    Photos ({selectedPost.images.length})
                   </Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                    {(selectedPost as any).images.map((img: any, idx: number) => (
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    {selectedPost.images.map((img, idx) => (
                       <div
-                        key={idx}
+                        key={img.id || idx}
                         className="relative aspect-video rounded-lg overflow-hidden border bg-muted"
                       >
                         <Image
-                          src={img.url || img}
+                          src={img.url}
                           alt={`Post image ${idx + 1}`}
                           fill
                           className="object-cover"
@@ -793,39 +880,107 @@ const DashboardPage = () => {
                 </div>
               )}
 
+              {/* Like Button */}
+              {!editingPost && (
+                <div className="flex items-center gap-4 pt-4 border-t">
+                  <Button
+                    variant={postLiked ? "default" : "outline"}
+                    size="sm"
+                    onClick={handleLikePost}
+                    className="gap-2"
+                  >
+                    <Heart className={`h-4 w-4 ${postLiked ? "fill-current" : ""}`} />
+                    {postLiked ? "Liked" : "Like"} ({selectedPost.likeCount || 0})
+                  </Button>
+                </div>
+              )}
+
               {/* Comments Section */}
-              {(selectedPost as any).comments && (selectedPost as any).comments.length > 0 && (
-                <div className="border-t pt-6">
-                  <Label className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <MessageSquare className="h-5 w-5" />
-                    Comments ({(selectedPost as any).comments.length})
-                  </Label>
+              <div className="border-t pt-6">
+                <Label className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <MessageSquare className="h-5 w-5" />
+                  Comments ({selectedPost.comments?.length || 0})
+                </Label>
+
+                {/* Add Comment Input */}
+                {!editingPost && (
+                  <div className="flex gap-2 mb-4">
+                    <Input
+                      placeholder="Write a comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAddComment();
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim()}
+                      size="icon"
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {/* Comments List */}
+                {selectedPost.comments && selectedPost.comments.length > 0 ? (
                   <div className="space-y-4">
-                    {(selectedPost as any).comments.map((comment: any, idx: number) => (
-                      <div key={idx} className="p-4 bg-muted/30 rounded-lg">
+                    {selectedPost.comments.map((comment) => (
+                      <div key={comment.id} className="p-4 bg-muted/30 rounded-lg">
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                             <span className="text-white text-xs font-bold">
-                              {comment.author?.name?.[0] || "?"}
+                              {comment.user?.name?.[0]?.toUpperCase() || "A"}
                             </span>
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-1">
-                              <p className="font-medium text-sm">
-                                {comment.author?.name || "Anonymous"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {comment.createdAt ? formatDate(comment.createdAt) : "Recently"}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-sm">
+                                  {comment.user?.name || "Anonymous"}
+                                </p>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
+                                  {comment.user?.role || "Customer"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDate(comment.createdAt)}
+                                </p>
+                                {!editingPost && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                  >
+                                    <Trash2 className="h-3 w-3 text-red-600" />
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                            <p className="text-sm whitespace-pre-wrap mb-2">{comment.content}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Heart className="h-3 w-3" />
+                              <span>{comment.likeCount || 0} likes</span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-center text-muted-foreground py-4 text-sm">
+                    No comments yet. Be the first to comment!
+                  </p>
+                )}
+              </div>
 
               {!editingPost && (
                 <Button
@@ -847,3 +1002,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+

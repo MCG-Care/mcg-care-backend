@@ -15,3 +15,4 @@ export class AssignServiceDto {
   serviceIds!: number[]; // Array of service IDs to assign
 }
 
+
