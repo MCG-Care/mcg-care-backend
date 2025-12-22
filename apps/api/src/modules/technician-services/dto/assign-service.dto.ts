@@ -14,11 +14,3 @@ export class AssignServiceDto {
   @Type(() => Number)
   serviceIds!: number[]; // Array of service IDs to assign
 }
-
-
-
-
-
-
-
-

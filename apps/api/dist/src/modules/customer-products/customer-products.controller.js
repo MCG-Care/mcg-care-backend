@@ -39,9 +39,7 @@ let CustomerProductsController = class CustomerProductsController {
         return this.customerProductsService.findAll(customerId, query);
     }
     async findByQR(qrUrl, user) {
-        if (user.role !== 'technician' &&
-            user.role !== 'admin' &&
-            user.role !== 'customer') {
+        if (user.role !== 'technician' && user.role !== 'admin' && user.role !== 'customer') {
             throw new common_1.ForbiddenException('Only technicians, admins, and customers can scan QR codes');
         }
         const product = await this.customerProductsService.findByQR(qrUrl);

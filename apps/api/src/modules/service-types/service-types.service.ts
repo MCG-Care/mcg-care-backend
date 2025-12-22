@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { db, schema } from '../../config/database';
 import { eq, or, ilike, sql, desc } from 'drizzle-orm';
 import { CreateServiceTypeDto } from './dto/create-service-type.dto';
@@ -142,11 +138,3 @@ export class ServiceTypesService {
     return { message: 'Service type deleted successfully' };
   }
 }
-
-
-
-
-
-
-
-

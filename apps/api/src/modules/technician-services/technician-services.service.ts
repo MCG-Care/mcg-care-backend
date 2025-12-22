@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { db, schema } from '../../config/database';
 import { eq, and } from 'drizzle-orm';
 import { AssignServiceDto } from './dto/assign-service.dto';
@@ -25,15 +21,12 @@ export class TechnicianServicesService {
     }
 
     if (technician.role !== 'technician') {
-      throw new BadRequestException(
-        `User with ID ${technicianId} is not a technician`,
-      );
+      throw new BadRequestException(`User with ID ${technicianId} is not a technician`);
     }
 
     // Verify all service IDs exist
     const services = await db.query.serviceTypes.findMany({
-      where: (serviceTypes, { inArray }) =>
-        inArray(serviceTypes.id, serviceIds),
+      where: (serviceTypes, { inArray }) => inArray(serviceTypes.id, serviceIds),
     });
 
     if (services.length !== serviceIds.length) {
@@ -48,9 +41,7 @@ export class TechnicianServicesService {
     const existingServiceIds = existingServices.map((s) => s.serviceId);
 
     // Filter out services already assigned
-    const newServiceIds = serviceIds.filter(
-      (id) => !existingServiceIds.includes(id),
-    );
+    const newServiceIds = serviceIds.filter((id) => !existingServiceIds.includes(id));
 
     if (newServiceIds.length === 0) {
       throw new BadRequestException(
@@ -84,9 +75,7 @@ export class TechnicianServicesService {
     }
 
     if (technician.role !== 'technician') {
-      throw new BadRequestException(
-        `User with ID ${technicianId} is not a technician`,
-      );
+      throw new BadRequestException(`User with ID ${technicianId} is not a technician`);
     }
 
     // Get technician services with service details
@@ -194,11 +183,3 @@ export class TechnicianServicesService {
     }));
   }
 }
-
-
-
-
-
-
-
-

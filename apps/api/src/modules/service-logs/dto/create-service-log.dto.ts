@@ -11,9 +11,3 @@ export class CreateServiceLogDto {
   @IsString()
   note: string;
 }
-
-
-
-
-
-

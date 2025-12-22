@@ -37,12 +37,10 @@ export class SupabaseService {
     file: Buffer,
     contentType: string,
   ): Promise<string> {
-    const { data, error } = await this.supabase.storage
-      .from(bucket)
-      .upload(path, file, {
-        contentType,
-        upsert: false,
-      });
+    const { data, error } = await this.supabase.storage.from(bucket).upload(path, file, {
+      contentType,
+      upsert: false,
+    });
 
     if (error) {
       throw new Error(`Failed to upload file: ${error.message}`);
@@ -97,6 +95,3 @@ export class SupabaseService {
     return url.substring(index + bucketPath.length);
   }
 }
-
-
-

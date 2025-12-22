@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { db, schema } from '../../config/database';
 import { eq, ilike, or, and, sql, desc } from 'drizzle-orm';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -17,10 +13,7 @@ export class ForumPostsService {
   /**
    * Create a new forum post with optional images
    */
-  async create(
-    createPostDto: CreatePostDto,
-    imageFiles?: Express.Multer.File[],
-  ) {
+  async create(createPostDto: CreatePostDto, imageFiles?: Express.Multer.File[]) {
     // TODO: Get userId from auth token instead of DTO
     // For now, we'll require it in the DTO or use a default
     if (!createPostDto.userId) {
@@ -258,12 +251,7 @@ export class ForumPostsService {
   /**
    * Delete a specific post image
    */
-  async removeImage(
-    postId: number,
-    imageId: number,
-    userId: number,
-    isAdmin: boolean = false,
-  ) {
+  async removeImage(postId: number, imageId: number, userId: number, isAdmin: boolean = false) {
     // Check if post exists and user owns it
     const post = await db.query.forumPosts.findFirst({
       where: eq(schema.forumPosts.id, postId),
@@ -285,40 +273,106 @@ export class ForumPostsService {
       .select()
       .from(schema.forumPostImages)
       .where(
-        and(
-          eq(schema.forumPostImages.id, imageId),
-          eq(schema.forumPostImages.postId, postId),
-        ),
+        and(eq(schema.forumPostImages.id, imageId), eq(schema.forumPostImages.postId, postId)),
       );
 
     if (!image) {
-      throw new NotFoundException(
-        `Image with ID ${imageId} not found for post ${postId}`,
-      );
+      throw new NotFoundException(`Image with ID ${imageId} not found for post ${postId}`);
     }
 
     // Delete from storage
-    const imagePath = this.supabaseService.extractPathFromUrl(
-      image.url,
-      'forum-images',
-    );
+    const imagePath = this.supabaseService.extractPathFromUrl(image.url, 'forum-images');
     await this.supabaseService.deleteFile('forum-images', imagePath);
 
     // Delete from database
-    await db
-      .delete(schema.forumPostImages)
-      .where(eq(schema.forumPostImages.id, imageId));
+    await db.delete(schema.forumPostImages).where(eq(schema.forumPostImages.id, imageId));
 
     return { message: 'Image deleted successfully' };
   }
 
   /**
+   * Like a forum post
+   */
+  async likePost(postId: number, userId: number) {
+    // Check if post exists
+    const post = await db.query.forumPosts.findFirst({
+      where: eq(schema.forumPosts.id, postId),
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Forum post with ID ${postId} not found`);
+    }
+
+    // Check if user already liked this post
+    const existingLike = await db.query.forumPostLikes.findFirst({
+      where: and(
+        eq(schema.forumPostLikes.postId, postId),
+        eq(schema.forumPostLikes.userId, userId),
+      ),
+    });
+
+    if (existingLike) {
+      // User already liked this post, so unlike it
+      await db
+        .delete(schema.forumPostLikes)
+        .where(
+          and(eq(schema.forumPostLikes.postId, postId), eq(schema.forumPostLikes.userId, userId)),
+        );
+
+      // Decrement like count
+      await db
+        .update(schema.forumPosts)
+        .set({
+          likeCount: sql`${schema.forumPosts.likeCount} - 1`,
+        })
+        .where(eq(schema.forumPosts.id, postId));
+
+      return {
+        message: 'Post unliked successfully',
+        liked: false,
+        likeCount: post.likeCount - 1,
+      };
+    } else {
+      // User hasn't liked this post yet, so like it
+      await db.insert(schema.forumPostLikes).values({
+        postId,
+        userId,
+      });
+
+      // Increment like count
+      await db
+        .update(schema.forumPosts)
+        .set({
+          likeCount: sql`${schema.forumPosts.likeCount} + 1`,
+        })
+        .where(eq(schema.forumPosts.id, postId));
+
+      return {
+        message: 'Post liked successfully',
+        liked: true,
+        likeCount: post.likeCount + 1,
+      };
+    }
+  }
+
+  /**
+   * Check if a user has liked a specific post
+   */
+  async hasUserLikedPost(postId: number, userId: number): Promise<boolean> {
+    const like = await db.query.forumPostLikes.findFirst({
+      where: and(
+        eq(schema.forumPostLikes.postId, postId),
+        eq(schema.forumPostLikes.userId, userId),
+      ),
+    });
+
+    return !!like;
+  }
+
+  /**
    * Upload post images to Supabase Storage
    */
-  private async uploadPostImages(
-    postId: number,
-    files: Express.Multer.File[],
-  ): Promise<string[]> {
+  private async uploadPostImages(postId: number, files: Express.Multer.File[]): Promise<string[]> {
     const uploadPromises = files.map(async (file) => {
       // Generate unique filename
       const timestamp = Date.now();
@@ -328,15 +382,9 @@ export class ForumPostsService {
       const path = `posts/${postId}/${filename}`;
 
       // Upload to Supabase
-      return this.supabaseService.uploadFile(
-        'forum-images',
-        path,
-        file.buffer,
-        file.mimetype,
-      );
+      return this.supabaseService.uploadFile('forum-images', path, file.buffer, file.mimetype);
     });
 
     return Promise.all(uploadPromises);
   }
 }
-

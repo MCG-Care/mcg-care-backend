@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsInt,
-  Min,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateServiceTypeDto {
@@ -29,11 +22,3 @@ export class CreateServiceTypeDto {
   @IsNotEmpty()
   duration!: number; // in minutes
 }
-
-
-
-
-
-
-
-

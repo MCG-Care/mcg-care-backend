@@ -28,10 +28,7 @@ export class CustomerProductsService {
   /**
    * Register a new customer product (aircon)
    */
-  async create(
-    customerId: number,
-    createCustomerProductDto: CreateCustomerProductDto,
-  ) {
+  async create(customerId: number, createCustomerProductDto: CreateCustomerProductDto) {
     const { productId, name, purchaseCode } = createCustomerProductDto;
 
     // Check if product exists
@@ -50,9 +47,7 @@ export class CustomerProductsService {
       });
 
       if (existingProduct) {
-        throw new BadRequestException(
-          `Purchase code "${purchaseCode}" is already registered`,
-        );
+        throw new BadRequestException(`Purchase code "${purchaseCode}" is already registered`);
       }
     }
 
@@ -75,9 +70,7 @@ export class CustomerProductsService {
     }
 
     if (!qrUrl) {
-      throw new BadRequestException(
-        'Failed to generate unique QR code. Please try again.',
-      );
+      throw new BadRequestException('Failed to generate unique QR code. Please try again.');
     }
 
     // Determine purchase date: if purchase code is provided, use current date; otherwise null
@@ -146,9 +139,7 @@ export class CustomerProductsService {
       let warrantyEndDate: string | null = null;
       if (cp.purchaseDate && cp.product.warranty) {
         const purchaseDate = new Date(cp.purchaseDate);
-        purchaseDate.setFullYear(
-          purchaseDate.getFullYear() + cp.product.warranty,
-        );
+        purchaseDate.setFullYear(purchaseDate.getFullYear() + cp.product.warranty);
         warrantyEndDate = purchaseDate.toISOString().split('T')[0];
       }
 
@@ -198,18 +189,14 @@ export class CustomerProductsService {
 
     // Check if the customer owns this product (skip check for admin)
     if (!isAdmin && customerId && customerProduct.customerId !== customerId) {
-      throw new ForbiddenException(
-        'You do not have permission to access this product',
-      );
+      throw new ForbiddenException('You do not have permission to access this product');
     }
 
     // Calculate warranty end date
     let warrantyEndDate: string | null = null;
     if (customerProduct.purchaseDate && customerProduct.product.warranty) {
       const purchaseDate = new Date(customerProduct.purchaseDate);
-      purchaseDate.setFullYear(
-        purchaseDate.getFullYear() + customerProduct.product.warranty,
-      );
+      purchaseDate.setFullYear(purchaseDate.getFullYear() + customerProduct.product.warranty);
       warrantyEndDate = purchaseDate.toISOString().split('T')[0];
     }
 
@@ -259,9 +246,7 @@ export class CustomerProductsService {
     let warrantyEndDate: string | null = null;
     if (customerProduct.purchaseDate && customerProduct.product.warranty) {
       const purchaseDate = new Date(customerProduct.purchaseDate);
-      purchaseDate.setFullYear(
-        purchaseDate.getFullYear() + customerProduct.product.warranty,
-      );
+      purchaseDate.setFullYear(purchaseDate.getFullYear() + customerProduct.product.warranty);
       warrantyEndDate = purchaseDate.toISOString().split('T')[0];
     }
 
@@ -274,11 +259,7 @@ export class CustomerProductsService {
   /**
    * Update a customer product
    */
-  async update(
-    id: number,
-    customerId: number,
-    updateCustomerProductDto: UpdateCustomerProductDto,
-  ) {
+  async update(id: number, customerId: number, updateCustomerProductDto: UpdateCustomerProductDto) {
     // Check if customer product exists and belongs to customer
     const existingProduct = await this.findOne(id, customerId, false);
 
@@ -298,17 +279,12 @@ export class CustomerProductsService {
     ) {
       // Don't allow changing an existing purchase code
       if (existingProduct.purchaseCode) {
-        throw new BadRequestException(
-          'Cannot change an existing purchase code',
-        );
+        throw new BadRequestException('Cannot change an existing purchase code');
       }
 
       // Check if the new purchase code is already used
       const duplicateProduct = await db.query.customerProducts.findFirst({
-        where: eq(
-          schema.customerProducts.purchaseCode,
-          updateCustomerProductDto.purchaseCode,
-        ),
+        where: eq(schema.customerProducts.purchaseCode, updateCustomerProductDto.purchaseCode),
       });
 
       if (duplicateProduct) {
@@ -327,10 +303,7 @@ export class CustomerProductsService {
       .update(schema.customerProducts)
       .set(updateData)
       .where(
-        and(
-          eq(schema.customerProducts.id, id),
-          eq(schema.customerProducts.customerId, customerId),
-        ),
+        and(eq(schema.customerProducts.id, id), eq(schema.customerProducts.customerId, customerId)),
       )
       .returning();
 
@@ -349,13 +322,9 @@ export class CustomerProductsService {
     await db
       .delete(schema.customerProducts)
       .where(
-        and(
-          eq(schema.customerProducts.id, id),
-          eq(schema.customerProducts.customerId, customerId),
-        ),
+        and(eq(schema.customerProducts.id, id), eq(schema.customerProducts.customerId, customerId)),
       );
 
     return { message: 'Customer product deleted successfully' };
   }
 }
-

@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsDecimal } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateBookingDto {
@@ -14,9 +14,3 @@ export class UpdateBookingDto {
   @Type(() => Number)
   fees?: number; // Technician can add extra fees
 }
-
-
-
-
-
-
