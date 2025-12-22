@@ -45,6 +45,15 @@ let ForumCommentsController = class ForumCommentsController {
         const isAdmin = user.role === 'admin';
         return this.forumCommentsService.remove(id, userId, isAdmin);
     }
+    async likeComment(id, user) {
+        const userId = user.id;
+        return this.forumCommentsService.likeComment(id, userId);
+    }
+    async hasLikedComment(id, user) {
+        const userId = user.id;
+        const hasLiked = await this.forumCommentsService.hasUserLikedComment(id, userId);
+        return { commentId: id, userId, hasLiked };
+    }
 };
 exports.ForumCommentsController = ForumCommentsController;
 __decorate([
@@ -100,6 +109,30 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], ForumCommentsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)(':id/like'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Like/Unlike a forum comment (toggle)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Comment ID' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], ForumCommentsController.prototype, "likeComment", null);
+__decorate([
+    (0, common_1.Get)(':id/liked'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Check if current user has liked a comment' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Comment ID' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], ForumCommentsController.prototype, "hasLikedComment", null);
 exports.ForumCommentsController = ForumCommentsController = __decorate([
     (0, swagger_1.ApiTags)('forum'),
     (0, common_1.Controller)('forum/comments'),

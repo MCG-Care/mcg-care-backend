@@ -238,10 +238,7 @@ let FeedbacksService = class FeedbacksService {
         if (updateFeedbackDto.note !== undefined) {
             updateData.note = updateFeedbackDto.note;
         }
-        await database_1.db
-            .update(database_1.schema.feedbacks)
-            .set(updateData)
-            .where((0, drizzle_orm_1.eq)(database_1.schema.feedbacks.id, id));
+        await database_1.db.update(database_1.schema.feedbacks).set(updateData).where((0, drizzle_orm_1.eq)(database_1.schema.feedbacks.id, id));
         return this.findOne(id, userId, userRole);
     }
     async remove(id, userId, userRole) {

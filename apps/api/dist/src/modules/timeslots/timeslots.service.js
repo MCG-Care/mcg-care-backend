@@ -74,10 +74,7 @@ let TimeslotsService = class TimeslotsService {
                     },
                 },
             },
-            orderBy: (timeslots, { asc }) => [
-                asc(timeslots.date),
-                asc(timeslots.technicianId),
-            ],
+            orderBy: (timeslots, { asc }) => [asc(timeslots.date), asc(timeslots.technicianId)],
         });
         return timeslots;
     }

@@ -69,9 +69,7 @@ let BookingsService = class BookingsService {
             throw new common_1.BadRequestException(`Service duration (${serviceHours} hours) extends beyond working hours (5 PM). Please choose an earlier time.`);
         }
         const hasSlotForTraffic = serviceEndTime < 17;
-        const totalDuration = hasSlotForTraffic
-            ? serviceDuration + 60
-            : serviceDuration;
+        const totalDuration = hasSlotForTraffic ? serviceDuration + 60 : serviceDuration;
         const requiredHours = Math.ceil(totalDuration / 60);
         const assignedTechnicianId = await this.findAvailableTechnician(serviceIds, customerDistrict, bookingForDate, bookingTime, requiredHours);
         if (!assignedTechnicianId) {
@@ -325,10 +323,7 @@ let BookingsService = class BookingsService {
         if (updateBookingDto.fees !== undefined) {
             updateData.fees = updateBookingDto.fees.toString();
         }
-        await database_1.db
-            .update(database_1.schema.bookings)
-            .set(updateData)
-            .where((0, drizzle_orm_1.eq)(database_1.schema.bookings.id, id));
+        await database_1.db.update(database_1.schema.bookings).set(updateData).where((0, drizzle_orm_1.eq)(database_1.schema.bookings.id, id));
         return this.findOne(id, userId, userRole);
     }
     async remove(id, userId, userRole) {
@@ -390,9 +385,7 @@ let BookingsService = class BookingsService {
         }
         const imagePath = this.supabaseService.extractPathFromUrl(image.url, 'booking-images');
         await this.supabaseService.deleteFile('booking-images', imagePath);
-        await database_1.db
-            .delete(database_1.schema.bookingImages)
-            .where((0, drizzle_orm_1.eq)(database_1.schema.bookingImages.id, imageId));
+        await database_1.db.delete(database_1.schema.bookingImages).where((0, drizzle_orm_1.eq)(database_1.schema.bookingImages.id, imageId));
         return { message: 'Image deleted successfully' };
     }
     async uploadBookingImages(bookingId, files) {

@@ -24,4 +24,3 @@ export class QueryCommentsDto {
   @Min(1)
   limit?: number = 20;
 }
-

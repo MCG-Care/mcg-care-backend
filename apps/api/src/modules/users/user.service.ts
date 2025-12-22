@@ -110,16 +110,11 @@ export class UsersService {
         totalFeedbacks: sql<number>`COUNT(${schema.feedbacks.id})::int`,
       })
       .from(schema.bookings)
-      .innerJoin(
-        schema.feedbacks,
-        eq(schema.feedbacks.bookingId, schema.bookings.id),
-      )
+      .innerJoin(schema.feedbacks, eq(schema.feedbacks.bookingId, schema.bookings.id))
       .where(eq(schema.bookings.technicianId, technicianId));
 
     // If no feedbacks exist, result will be empty array
-    const avgRating = result[0]?.averageRating
-      ? parseFloat(result[0].averageRating.toString())
-      : 0;
+    const avgRating = result[0]?.averageRating ? parseFloat(result[0].averageRating.toString()) : 0;
     const totalFeedbacks = result[0]?.totalFeedbacks || 0;
 
     return {
@@ -150,10 +145,7 @@ export class UsersService {
             totalFeedbacks: sql<number>`COUNT(${schema.feedbacks.id})::int`,
           })
           .from(schema.bookings)
-          .innerJoin(
-            schema.feedbacks,
-            eq(schema.feedbacks.bookingId, schema.bookings.id),
-          )
+          .innerJoin(schema.feedbacks, eq(schema.feedbacks.bookingId, schema.bookings.id))
           .where(eq(schema.bookings.technicianId, technician.id));
 
         const avgRating = result[0]?.averageRating

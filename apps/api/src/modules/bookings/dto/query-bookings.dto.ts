@@ -35,9 +35,3 @@ export class QueryBookingsDto {
   @IsDateString()
   bookingForDate?: string; // Filter by booking date
 }
-
-
-
-
-
-

@@ -8,9 +8,3 @@ import { FeedbacksController } from './feedbacks.controller';
   exports: [FeedbacksService],
 })
 export class FeedbacksModule {}
-
-
-
-
-
-

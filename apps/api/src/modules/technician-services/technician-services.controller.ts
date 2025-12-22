@@ -20,29 +20,20 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @Controller('technician-services')
 @UseGuards(JwtAuthGuard)
 export class TechnicianServicesController {
-  constructor(
-    private readonly technicianServicesService: TechnicianServicesService,
-  ) {}
+  constructor(private readonly technicianServicesService: TechnicianServicesService) {}
 
   @Post('assign')
   @ApiOperation({ summary: 'Assign services to technician (Admin or Technician)' })
-  async assignServices(
-    @Body() assignServiceDto: AssignServiceDto,
-    @CurrentUser() user: any,
-  ) {
+  async assignServices(@Body() assignServiceDto: AssignServiceDto, @CurrentUser() user: any) {
     // Admins can assign services to any technician
     // Technicians can assign services to themselves only
     if (user.role !== 'admin' && user.role !== 'technician') {
-      throw new ForbiddenException(
-        'Only admins and technicians can assign services',
-      );
+      throw new ForbiddenException('Only admins and technicians can assign services');
     }
 
     // Technicians can only assign services to themselves
     if (user.role === 'technician' && assignServiceDto.technicianId !== user.id) {
-      throw new ForbiddenException(
-        'Technicians can only assign services to themselves',
-      );
+      throw new ForbiddenException('Technicians can only assign services to themselves');
     }
 
     return this.technicianServicesService.assignServices(assignServiceDto);
@@ -58,9 +49,7 @@ export class TechnicianServicesController {
     // Admins can view any technician's services
     // Technicians can view their own services
     if (user.role !== 'admin' && user.role !== 'technician') {
-      throw new ForbiddenException(
-        'Only admins and technicians can view technician services',
-      );
+      throw new ForbiddenException('Only admins and technicians can view technician services');
     }
 
     if (user.role === 'technician' && user.id !== technicianId) {
@@ -79,9 +68,7 @@ export class TechnicianServicesController {
   ) {
     // Only admins can view which technicians can perform a service
     if (user.role !== 'admin') {
-      throw new ForbiddenException(
-        'Only admins can view technicians for a service',
-      );
+      throw new ForbiddenException('Only admins can view technicians for a service');
     }
 
     return this.technicianServicesService.getTechniciansForService(serviceId);
@@ -92,9 +79,7 @@ export class TechnicianServicesController {
   async getAllTechniciansWithServices(@CurrentUser() user: any) {
     // Only admins can view all technicians with services
     if (user.role !== 'admin') {
-      throw new ForbiddenException(
-        'Only admins can view all technicians with services',
-      );
+      throw new ForbiddenException('Only admins can view all technicians with services');
     }
 
     return this.technicianServicesService.getAllTechniciansWithServices();
@@ -112,22 +97,14 @@ export class TechnicianServicesController {
     // Admins can remove services from any technician
     // Technicians can remove services from themselves only
     if (user.role !== 'admin' && user.role !== 'technician') {
-      throw new ForbiddenException(
-        'Only admins and technicians can remove services',
-      );
+      throw new ForbiddenException('Only admins and technicians can remove services');
     }
 
     // Technicians can only remove their own services
     if (user.role === 'technician' && technicianId !== user.id) {
-      throw new ForbiddenException(
-        'Technicians can only remove their own services',
-      );
+      throw new ForbiddenException('Technicians can only remove their own services');
     }
 
-    return this.technicianServicesService.removeService(
-      technicianId,
-      serviceId,
-    );
+    return this.technicianServicesService.removeService(technicianId, serviceId);
   }
 }
-

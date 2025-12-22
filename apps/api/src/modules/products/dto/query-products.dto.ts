@@ -27,6 +27,3 @@ export class QueryProductsDto {
   @Type(() => Number)
   limit?: number = 10;
 }
-
-
-

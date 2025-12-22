@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.forumPostImagesRelations = exports.forumCommentsRelations = exports.forumPostsRelations = exports.feedbacksRelations = exports.serviceLogsRelations = exports.bookingImagesRelations = exports.bookingServicesRelations = exports.bookingsRelations = exports.technicianServicesRelations = exports.serviceTypesRelations = exports.timeslotsRelations = exports.customerProductsRelations = exports.productImagesRelations = exports.productsRelations = exports.usersRelations = exports.addressesRelations = exports.forumPostImages = exports.forumComments = exports.forumPosts = exports.feedbacks = exports.serviceLogs = exports.bookingImages = exports.bookingServices = exports.bookings = exports.technicianServices = exports.serviceTypes = exports.timeslots = exports.customerProducts = exports.productImages = exports.products = exports.users = exports.addresses = exports.bookingStatusEnum = exports.productTypeEnum = exports.userRoleEnum = void 0;
+exports.forumCommentLikesRelations = exports.forumPostLikesRelations = exports.forumPostImagesRelations = exports.forumCommentsRelations = exports.forumPostsRelations = exports.feedbacksRelations = exports.serviceLogsRelations = exports.bookingImagesRelations = exports.bookingServicesRelations = exports.bookingsRelations = exports.technicianServicesRelations = exports.serviceTypesRelations = exports.timeslotsRelations = exports.customerProductsRelations = exports.productImagesRelations = exports.productsRelations = exports.usersRelations = exports.addressesRelations = exports.forumCommentLikes = exports.forumPostLikes = exports.forumPostImages = exports.forumComments = exports.forumPosts = exports.feedbacks = exports.serviceLogs = exports.bookingImages = exports.bookingServices = exports.bookings = exports.technicianServices = exports.serviceTypes = exports.timeslots = exports.customerProducts = exports.productImages = exports.products = exports.users = exports.addresses = exports.bookingStatusEnum = exports.productTypeEnum = exports.userRoleEnum = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 const drizzle_orm_1 = require("drizzle-orm");
 exports.userRoleEnum = (0, pg_core_1.pgEnum)('user_role', [
@@ -240,6 +240,32 @@ exports.forumPostImages = (0, pg_core_1.pgTable)('forum_post_images', {
     url: (0, pg_core_1.text)('url').notNull(),
     createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
 });
+exports.forumPostLikes = (0, pg_core_1.pgTable)('forum_post_likes', {
+    userId: (0, pg_core_1.integer)('user_id')
+        .notNull()
+        .references(() => exports.users.id, { onDelete: 'cascade' }),
+    postId: (0, pg_core_1.integer)('post_id')
+        .notNull()
+        .references(() => exports.forumPosts.id, { onDelete: 'cascade' }),
+    createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
+}, (table) => ({
+    pk: (0, pg_core_1.primaryKey)({ columns: [table.userId, table.postId] }),
+    userIdIdx: (0, pg_core_1.index)('forum_post_likes_user_id_idx').on(table.userId),
+    postIdIdx: (0, pg_core_1.index)('forum_post_likes_post_id_idx').on(table.postId),
+}));
+exports.forumCommentLikes = (0, pg_core_1.pgTable)('forum_comment_likes', {
+    userId: (0, pg_core_1.integer)('user_id')
+        .notNull()
+        .references(() => exports.users.id, { onDelete: 'cascade' }),
+    commentId: (0, pg_core_1.integer)('comment_id')
+        .notNull()
+        .references(() => exports.forumComments.id, { onDelete: 'cascade' }),
+    createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
+}, (table) => ({
+    pk: (0, pg_core_1.primaryKey)({ columns: [table.userId, table.commentId] }),
+    userIdIdx: (0, pg_core_1.index)('forum_comment_likes_user_id_idx').on(table.userId),
+    commentIdIdx: (0, pg_core_1.index)('forum_comment_likes_comment_id_idx').on(table.commentId),
+}));
 exports.addressesRelations = (0, drizzle_orm_1.relations)(exports.addresses, ({ many }) => ({
     users: many(exports.users),
 }));
@@ -254,6 +280,8 @@ exports.usersRelations = (0, drizzle_orm_1.relations)(exports.users, ({ one, man
     timeslots: many(exports.timeslots),
     forumPosts: many(exports.forumPosts),
     forumComments: many(exports.forumComments),
+    forumPostLikes: many(exports.forumPostLikes),
+    forumCommentLikes: many(exports.forumCommentLikes),
 }));
 exports.productsRelations = (0, drizzle_orm_1.relations)(exports.products, ({ many }) => ({
     productImages: many(exports.productImages),
@@ -345,8 +373,9 @@ exports.forumPostsRelations = (0, drizzle_orm_1.relations)(exports.forumPosts, (
     }),
     comments: many(exports.forumComments),
     images: many(exports.forumPostImages),
+    likes: many(exports.forumPostLikes),
 }));
-exports.forumCommentsRelations = (0, drizzle_orm_1.relations)(exports.forumComments, ({ one }) => ({
+exports.forumCommentsRelations = (0, drizzle_orm_1.relations)(exports.forumComments, ({ one, many }) => ({
     post: one(exports.forumPosts, {
         fields: [exports.forumComments.postId],
         references: [exports.forumPosts.id],
@@ -355,11 +384,32 @@ exports.forumCommentsRelations = (0, drizzle_orm_1.relations)(exports.forumComme
         fields: [exports.forumComments.userId],
         references: [exports.users.id],
     }),
+    likes: many(exports.forumCommentLikes),
 }));
 exports.forumPostImagesRelations = (0, drizzle_orm_1.relations)(exports.forumPostImages, ({ one }) => ({
     post: one(exports.forumPosts, {
         fields: [exports.forumPostImages.postId],
         references: [exports.forumPosts.id],
+    }),
+}));
+exports.forumPostLikesRelations = (0, drizzle_orm_1.relations)(exports.forumPostLikes, ({ one }) => ({
+    user: one(exports.users, {
+        fields: [exports.forumPostLikes.userId],
+        references: [exports.users.id],
+    }),
+    post: one(exports.forumPosts, {
+        fields: [exports.forumPostLikes.postId],
+        references: [exports.forumPosts.id],
+    }),
+}));
+exports.forumCommentLikesRelations = (0, drizzle_orm_1.relations)(exports.forumCommentLikes, ({ one }) => ({
+    user: one(exports.users, {
+        fields: [exports.forumCommentLikes.userId],
+        references: [exports.users.id],
+    }),
+    comment: one(exports.forumComments, {
+        fields: [exports.forumCommentLikes.commentId],
+        references: [exports.forumComments.id],
     }),
 }));
 //# sourceMappingURL=schema.js.map
