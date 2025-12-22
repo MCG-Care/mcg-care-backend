@@ -1,11 +1,4 @@
-import {
-  IsInt,
-  IsString,
-  IsOptional,
-  IsBoolean,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsInt, IsString, IsOptional, IsBoolean, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateFeedbackDto {
@@ -32,9 +25,3 @@ export class UpdateFeedbackDto {
   @IsString()
   note?: string;
 }
-
-
-
-
-
-

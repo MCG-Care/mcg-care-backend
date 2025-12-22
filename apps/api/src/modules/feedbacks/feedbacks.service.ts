@@ -15,13 +15,8 @@ export class FeedbacksService {
   /**
    * Create a feedback for a booking (customer only, after service is done)
    */
-  async create(
-    userId: number,
-    userRole: string,
-    createFeedbackDto: CreateFeedbackDto,
-  ) {
-    const { bookingId, rating, satisfaction, issueResolved, note } =
-      createFeedbackDto;
+  async create(userId: number, userRole: string, createFeedbackDto: CreateFeedbackDto) {
+    const { bookingId, rating, satisfaction, issueResolved, note } = createFeedbackDto;
 
     // Only customers can create feedback
     if (userRole !== 'customer') {
@@ -46,16 +41,12 @@ export class FeedbacksService {
 
     // Verify customer owns the booking
     if (booking.aircon.customerId !== userId) {
-      throw new ForbiddenException(
-        'You can only create feedback for your own bookings',
-      );
+      throw new ForbiddenException('You can only create feedback for your own bookings');
     }
 
     // Check if booking is completed
     if (booking.status !== 'done') {
-      throw new BadRequestException(
-        'You can only create feedback for completed bookings',
-      );
+      throw new BadRequestException('You can only create feedback for completed bookings');
     }
 
     // Check if feedback already exists for this booking
@@ -116,9 +107,7 @@ export class FeedbacksService {
     } else if (userRole === 'technician') {
       // Technicians can see feedback for their bookings
       if (technicianId && technicianId !== userId) {
-        throw new ForbiddenException(
-          'You can only view feedback for your own bookings',
-        );
+        throw new ForbiddenException('You can only view feedback for your own bookings');
       }
       // We'll filter after joining with bookings
     } else if (userRole === 'admin') {
@@ -166,9 +155,7 @@ export class FeedbacksService {
 
     // Apply role-based filtering
     if (userRole === 'customer') {
-      feedbacks = feedbacks.filter(
-        (f) => f.booking.aircon.customerId === userId,
-      );
+      feedbacks = feedbacks.filter((f) => f.booking.aircon.customerId === userId);
     } else if (userRole === 'technician') {
       feedbacks = feedbacks.filter((f) => f.booking.technicianId === userId);
     } else if (userRole === 'admin' && technicianId) {
@@ -192,11 +179,7 @@ export class FeedbacksService {
   /**
    * Get feedback by booking ID
    */
-  async findByBookingId(
-    bookingId: number,
-    userId: number,
-    userRole: string,
-  ) {
+  async findByBookingId(bookingId: number, userId: number, userRole: string) {
     // Verify booking exists and user has access
     const booking = await db.query.bookings.findFirst({
       where: eq(schema.bookings.id, bookingId),
@@ -216,15 +199,11 @@ export class FeedbacksService {
     // Authorization check
     if (userRole === 'customer') {
       if (booking.aircon.customerId !== userId) {
-        throw new ForbiddenException(
-          'You can only view feedback for your own bookings',
-        );
+        throw new ForbiddenException('You can only view feedback for your own bookings');
       }
     } else if (userRole === 'technician') {
       if (booking.technicianId !== userId) {
-        throw new ForbiddenException(
-          'You can only view feedback for your assigned bookings',
-        );
+        throw new ForbiddenException('You can only view feedback for your assigned bookings');
       }
     }
 
@@ -251,9 +230,7 @@ export class FeedbacksService {
     });
 
     if (!feedback) {
-      throw new NotFoundException(
-        `Feedback not found for booking ${bookingId}`,
-      );
+      throw new NotFoundException(`Feedback not found for booking ${bookingId}`);
     }
 
     return feedback;
@@ -292,15 +269,11 @@ export class FeedbacksService {
     // Authorization check
     if (userRole === 'customer') {
       if (feedback.booking.aircon.customerId !== userId) {
-        throw new ForbiddenException(
-          'You can only view your own feedback',
-        );
+        throw new ForbiddenException('You can only view your own feedback');
       }
     } else if (userRole === 'technician') {
       if (feedback.booking.technicianId !== userId) {
-        throw new ForbiddenException(
-          'You can only view feedback for your assigned bookings',
-        );
+        throw new ForbiddenException('You can only view feedback for your assigned bookings');
       }
     }
 
@@ -310,12 +283,7 @@ export class FeedbacksService {
   /**
    * Update a feedback (customer who created it only)
    */
-  async update(
-    id: number,
-    userId: number,
-    userRole: string,
-    updateFeedbackDto: UpdateFeedbackDto,
-  ) {
+  async update(id: number, userId: number, userRole: string, updateFeedbackDto: UpdateFeedbackDto) {
     const feedback = await this.findOne(id, userId, userRole);
 
     // Only customers who created the feedback can update
@@ -342,10 +310,7 @@ export class FeedbacksService {
       updateData.note = updateFeedbackDto.note;
     }
 
-    await db
-      .update(schema.feedbacks)
-      .set(updateData)
-      .where(eq(schema.feedbacks.id, id));
+    await db.update(schema.feedbacks).set(updateData).where(eq(schema.feedbacks.id, id));
 
     return this.findOne(id, userId, userRole);
   }
@@ -370,9 +335,3 @@ export class FeedbacksService {
     return { message: 'Feedback deleted successfully' };
   }
 }
-
-
-
-
-
-

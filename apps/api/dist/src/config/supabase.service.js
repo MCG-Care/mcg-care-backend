@@ -27,9 +27,7 @@ let SupabaseService = class SupabaseService {
         return this.supabase;
     }
     async uploadFile(bucket, path, file, contentType) {
-        const { data, error } = await this.supabase.storage
-            .from(bucket)
-            .upload(path, file, {
+        const { data, error } = await this.supabase.storage.from(bucket).upload(path, file, {
             contentType,
             upsert: false,
         });

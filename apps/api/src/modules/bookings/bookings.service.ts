@@ -23,8 +23,7 @@ export class BookingsService {
     createBookingDto: CreateBookingDto,
     imageFiles?: Express.Multer.File[],
   ) {
-    const { airconId, serviceIds, bookingForDate, bookingTime, description } =
-      createBookingDto;
+    const { airconId, serviceIds, bookingForDate, bookingTime, description } = createBookingDto;
 
     // 1. Verify customer owns the aircon
     const aircon = await db.query.customerProducts.findFirst({
@@ -65,16 +64,10 @@ export class BookingsService {
     }
 
     // Calculate service duration (in minutes) without extra traffic time
-    const serviceDuration = services.reduce(
-      (sum, service) => sum + service.duration,
-      0,
-    );
+    const serviceDuration = services.reduce((sum, service) => sum + service.duration, 0);
 
     // Calculate total fees (sum of all service fees)
-    const totalFees = services.reduce(
-      (sum, service) => sum + parseFloat(service.serviceFee),
-      0,
-    );
+    const totalFees = services.reduce((sum, service) => sum + parseFloat(service.serviceFee), 0);
 
     // Calculate required hours for actual service (round up)
     const serviceHours = Math.ceil(serviceDuration / 60);
@@ -110,9 +103,7 @@ export class BookingsService {
 
     // Add 1 hour for traffic only if there are available slots after the booking
     const hasSlotForTraffic = serviceEndTime < 17;
-    const totalDuration = hasSlotForTraffic
-      ? serviceDuration + 60
-      : serviceDuration;
+    const totalDuration = hasSlotForTraffic ? serviceDuration + 60 : serviceDuration;
     const requiredHours = Math.ceil(totalDuration / 60);
 
     // 4. Find available technician
@@ -157,19 +148,11 @@ export class BookingsService {
     await db.insert(schema.bookingServices).values(bookingServiceRecords);
 
     // 7. Update technician's timeslots (remove booked hours)
-    await this.updateTimeslots(
-      assignedTechnicianId,
-      bookingForDate,
-      bookingTime,
-      requiredHours,
-    );
+    await this.updateTimeslots(assignedTechnicianId, bookingForDate, bookingTime, requiredHours);
 
     // 8. Upload images if provided
     if (imageFiles && imageFiles.length > 0) {
-      const imageUrls = await this.uploadBookingImages(
-        newBooking.id,
-        imageFiles,
-      );
+      const imageUrls = await this.uploadBookingImages(newBooking.id, imageFiles);
 
       const imageRecords = imageUrls.map((url) => ({
         bookingId: newBooking.id,
@@ -223,9 +206,7 @@ export class BookingsService {
     for (const tech of shuffled) {
       // Check if technician has all required services
       const techServiceIds = tech.technicianServices.map((ts) => ts.serviceId);
-      const hasAllServices = serviceIds.every((serviceId) =>
-        techServiceIds.includes(serviceId),
-      );
+      const hasAllServices = serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
 
       if (!hasAllServices) {
         continue;
@@ -257,10 +238,7 @@ export class BookingsService {
     requiredHours: number,
   ): Promise<boolean> {
     const timeslot = await db.query.timeslots.findFirst({
-      where: and(
-        eq(schema.timeslots.technicianId, technicianId),
-        eq(schema.timeslots.date, date),
-      ),
+      where: and(eq(schema.timeslots.technicianId, technicianId), eq(schema.timeslots.date, date)),
     });
 
     if (!timeslot || !timeslot.slots) {
@@ -268,10 +246,7 @@ export class BookingsService {
     }
 
     // Check if all required hours are available
-    const requiredSlots = Array.from(
-      { length: requiredHours },
-      (_, i) => startHour + i,
-    );
+    const requiredSlots = Array.from({ length: requiredHours }, (_, i) => startHour + i);
 
     return requiredSlots.every((hour) => timeslot.slots.includes(hour));
   }
@@ -286,10 +261,7 @@ export class BookingsService {
     requiredHours: number,
   ): Promise<void> {
     const timeslot = await db.query.timeslots.findFirst({
-      where: and(
-        eq(schema.timeslots.technicianId, technicianId),
-        eq(schema.timeslots.date, date),
-      ),
+      where: and(eq(schema.timeslots.technicianId, technicianId), eq(schema.timeslots.date, date)),
     });
 
     if (!timeslot) {
@@ -297,14 +269,9 @@ export class BookingsService {
     }
 
     // Remove booked hours from available slots
-    const hoursToRemove = Array.from(
-      { length: requiredHours },
-      (_, i) => startHour + i,
-    );
+    const hoursToRemove = Array.from({ length: requiredHours }, (_, i) => startHour + i);
 
-    const updatedSlots = timeslot.slots.filter(
-      (slot) => !hoursToRemove.includes(slot),
-    );
+    const updatedSlots = timeslot.slots.filter((slot) => !hoursToRemove.includes(slot));
 
     await db
       .update(schema.timeslots)
@@ -330,11 +297,7 @@ export class BookingsService {
   /**
    * Find all bookings with pagination and filters
    */
-  async findAll(
-    userId: number,
-    userRole: string,
-    query: QueryBookingsDto,
-  ) {
+  async findAll(userId: number, userRole: string, query: QueryBookingsDto) {
     const {
       page = 1,
       limit = 10,
@@ -486,9 +449,7 @@ export class BookingsService {
       }
     } else if (userRole === 'technician') {
       if (booking.technicianId !== userId) {
-        throw new ForbiddenException(
-          'You can only view your assigned bookings',
-        );
+        throw new ForbiddenException('You can only view your assigned bookings');
       }
     }
     // Admins can view any booking
@@ -499,12 +460,7 @@ export class BookingsService {
   /**
    * Update a booking (status, description, fees)
    */
-  async update(
-    id: number,
-    userId: number,
-    userRole: string,
-    updateBookingDto: UpdateBookingDto,
-  ) {
+  async update(id: number, userId: number, userRole: string, updateBookingDto: UpdateBookingDto) {
     const booking = await this.findOne(id, userId, userRole);
 
     // Only technicians and admins can update bookings
@@ -532,10 +488,7 @@ export class BookingsService {
       updateData.fees = updateBookingDto.fees.toString();
     }
 
-    await db
-      .update(schema.bookings)
-      .set(updateData)
-      .where(eq(schema.bookings.id, id));
+    await db.update(schema.bookings).set(updateData).where(eq(schema.bookings.id, id));
 
     return this.findOne(id, userId, userRole);
   }
@@ -598,10 +551,7 @@ export class BookingsService {
     // Calculate hours that were booked
     const startHour = parseInt(booking.bookingTime.split(':')[0]);
     const requiredHours = Math.ceil(booking.duration / 60);
-    const hoursToRestore = Array.from(
-      { length: requiredHours },
-      (_, i) => startHour + i,
-    );
+    const hoursToRestore = Array.from({ length: requiredHours }, (_, i) => startHour + i);
 
     // Add back the hours (ensure no duplicates and keep sorted)
     const restoredSlots = [...new Set([...timeslot.slots, ...hoursToRestore])].sort(
@@ -620,12 +570,7 @@ export class BookingsService {
   /**
    * Delete a specific booking image (technician or admin)
    */
-  async removeImage(
-    bookingId: number,
-    imageId: number,
-    userId: number,
-    userRole: string,
-  ) {
+  async removeImage(bookingId: number, imageId: number, userId: number, userRole: string) {
     const booking = await this.findOne(bookingId, userId, userRole);
 
     // Only technicians assigned to the booking or admins can delete images
@@ -634,9 +579,7 @@ export class BookingsService {
     }
 
     if (userRole === 'technician' && booking.technicianId !== userId) {
-      throw new ForbiddenException(
-        'You can only delete images from your assigned bookings',
-      );
+      throw new ForbiddenException('You can only delete images from your assigned bookings');
     }
 
     // Find the image
@@ -644,29 +587,19 @@ export class BookingsService {
       .select()
       .from(schema.bookingImages)
       .where(
-        and(
-          eq(schema.bookingImages.id, imageId),
-          eq(schema.bookingImages.bookingId, bookingId),
-        ),
+        and(eq(schema.bookingImages.id, imageId), eq(schema.bookingImages.bookingId, bookingId)),
       );
 
     if (!image) {
-      throw new NotFoundException(
-        `Image with ID ${imageId} not found for booking ${bookingId}`,
-      );
+      throw new NotFoundException(`Image with ID ${imageId} not found for booking ${bookingId}`);
     }
 
     // Delete from storage
-    const imagePath = this.supabaseService.extractPathFromUrl(
-      image.url,
-      'booking-images',
-    );
+    const imagePath = this.supabaseService.extractPathFromUrl(image.url, 'booking-images');
     await this.supabaseService.deleteFile('booking-images', imagePath);
 
     // Delete from database
-    await db
-      .delete(schema.bookingImages)
-      .where(eq(schema.bookingImages.id, imageId));
+    await db.delete(schema.bookingImages).where(eq(schema.bookingImages.id, imageId));
 
     return { message: 'Image deleted successfully' };
   }
@@ -685,15 +618,9 @@ export class BookingsService {
       const filename = `booking-${bookingId}-${timestamp}-${randomString}.${extension}`;
       const path = `bookings/${bookingId}/${filename}`;
 
-      return this.supabaseService.uploadFile(
-        'booking-images',
-        path,
-        file.buffer,
-        file.mimetype,
-      );
+      return this.supabaseService.uploadFile('booking-images', path, file.buffer, file.mimetype);
     });
 
     return Promise.all(uploadPromises);
   }
 }
-

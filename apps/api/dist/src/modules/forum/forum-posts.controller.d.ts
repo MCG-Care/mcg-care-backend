@@ -143,4 +143,14 @@ export declare class ForumPostsController {
     removeImage(postId: number, imageId: number, user?: any): Promise<{
         message: string;
     }>;
+    likePost(id: number, user?: any): Promise<{
+        message: string;
+        liked: boolean;
+        likeCount: number;
+    }>;
+    hasLikedPost(id: number, user?: any): Promise<{
+        postId: number;
+        userId: any;
+        hasLiked: boolean;
+    }>;
 }

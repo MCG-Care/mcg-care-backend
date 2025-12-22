@@ -20,11 +20,3 @@ export class QueryTimeslotsDto {
   @IsOptional()
   endDate?: string; // For date range queries
 }
-
-
-
-
-
-
-
-

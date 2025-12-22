@@ -143,5 +143,11 @@ export declare class ForumPostsService {
     removeImage(postId: number, imageId: number, userId: number, isAdmin?: boolean): Promise<{
         message: string;
     }>;
+    likePost(postId: number, userId: number): Promise<{
+        message: string;
+        liked: boolean;
+        likeCount: number;
+    }>;
+    hasUserLikedPost(postId: number, userId: number): Promise<boolean>;
     private uploadPostImages;
 }

@@ -182,7 +182,9 @@ __decorate([
 ], TimeslotsController.prototype, "dailyMaintenance", null);
 __decorate([
     (0, common_1.Post)('maintenance/daily-cron'),
-    (0, swagger_1.ApiOperation)({ summary: 'Run daily timeslot maintenance (Cron job endpoint - uses secret token)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Run daily timeslot maintenance (Cron job endpoint - uses secret token)',
+    }),
     (0, swagger_1.ApiHeader)({ name: 'X-Cron-Secret', description: 'Secret token for cron authentication' }),
     __param(0, (0, common_1.Headers)('x-cron-secret')),
     __metadata("design:type", Function),

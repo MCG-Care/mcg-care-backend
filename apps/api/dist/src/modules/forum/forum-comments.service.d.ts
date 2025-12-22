@@ -85,4 +85,10 @@ export declare class ForumCommentsService {
     remove(id: number, userId: number, isAdmin?: boolean): Promise<{
         message: string;
     }>;
+    likeComment(commentId: number, userId: number): Promise<{
+        message: string;
+        liked: boolean;
+        likeCount: number;
+    }>;
+    hasUserLikedComment(commentId: number, userId: number): Promise<boolean>;
 }

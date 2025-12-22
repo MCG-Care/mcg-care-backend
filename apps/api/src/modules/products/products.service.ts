@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { db, schema } from '../../config/database';
 import { eq, ilike, or, and, sql, desc } from 'drizzle-orm';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -18,10 +13,7 @@ export class ProductsService {
   /**
    * Create a new product with images
    */
-  async create(
-    createProductDto: CreateProductDto,
-    imageFiles: Express.Multer.File[],
-  ) {
+  async create(createProductDto: CreateProductDto, imageFiles: Express.Multer.File[]) {
     // Check if product model already exists
     const existingProduct = await db.query.products.findFirst({
       where: eq(schema.products.productModel, createProductDto.productModel),
@@ -152,11 +144,7 @@ export class ProductsService {
   /**
    * Update a product
    */
-  async update(
-    id: number,
-    updateProductDto: UpdateProductDto,
-    imageFiles?: Express.Multer.File[],
-  ) {
+  async update(id: number, updateProductDto: UpdateProductDto, imageFiles?: Express.Multer.File[]) {
     // Check if product exists
     const existingProduct = await this.findOne(id);
 
@@ -237,29 +225,19 @@ export class ProductsService {
       .select()
       .from(schema.productImages)
       .where(
-        and(
-          eq(schema.productImages.id, imageId),
-          eq(schema.productImages.productId, productId),
-        ),
+        and(eq(schema.productImages.id, imageId), eq(schema.productImages.productId, productId)),
       );
 
     if (!image) {
-      throw new NotFoundException(
-        `Image with ID ${imageId} not found for product ${productId}`,
-      );
+      throw new NotFoundException(`Image with ID ${imageId} not found for product ${productId}`);
     }
 
     // Delete from storage
-    const imagePath = this.supabaseService.extractPathFromUrl(
-      image.url,
-      'product-images',
-    );
+    const imagePath = this.supabaseService.extractPathFromUrl(image.url, 'product-images');
     await this.supabaseService.deleteFile('product-images', imagePath);
 
     // Delete from database
-    await db
-      .delete(schema.productImages)
-      .where(eq(schema.productImages.id, imageId));
+    await db.delete(schema.productImages).where(eq(schema.productImages.id, imageId));
 
     return { message: 'Image deleted successfully' };
   }
@@ -280,17 +258,9 @@ export class ProductsService {
       const path = `products/${productId}/${filename}`;
 
       // Upload to Supabase
-      return this.supabaseService.uploadFile(
-        'product-images',
-        path,
-        file.buffer,
-        file.mimetype,
-      );
+      return this.supabaseService.uploadFile('product-images', path, file.buffer, file.mimetype);
     });
 
     return Promise.all(uploadPromises);
   }
 }
-
-
-
