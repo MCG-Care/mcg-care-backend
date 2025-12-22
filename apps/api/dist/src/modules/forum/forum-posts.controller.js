@@ -29,7 +29,12 @@ let ForumPostsController = class ForumPostsController {
     async create(createPostDto, files, user) {
         const userId = user.id;
         if (files && files.length > 0) {
-            const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+            const allowedMimeTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/jpg',
+                'image/webp',
+            ];
             for (const file of files) {
                 if (!allowedMimeTypes.includes(file.mimetype)) {
                     throw new common_1.BadRequestException(`Invalid file type: ${file.mimetype}. Only JPEG, PNG, and WebP images are allowed.`);
@@ -48,7 +53,12 @@ let ForumPostsController = class ForumPostsController {
     async update(id, updatePostDto, files, user) {
         const userId = user.id;
         if (files && files.length > 0) {
-            const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+            const allowedMimeTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/jpg',
+                'image/webp',
+            ];
             for (const file of files) {
                 if (!allowedMimeTypes.includes(file.mimetype)) {
                     throw new common_1.BadRequestException(`Invalid file type: ${file.mimetype}. Only JPEG, PNG, and WebP images are allowed.`);
@@ -66,15 +76,6 @@ let ForumPostsController = class ForumPostsController {
         const userId = user.id;
         const isAdmin = user.role === 'admin';
         return this.forumPostsService.removeImage(postId, imageId, userId, isAdmin);
-    }
-    async likePost(id, user) {
-        const userId = user.id;
-        return this.forumPostsService.likePost(id, userId);
-    }
-    async hasLikedPost(id, user) {
-        const userId = user.id;
-        const hasLiked = await this.forumPostsService.hasUserLikedPost(id, userId);
-        return { postId: id, userId, hasLiked };
     }
 };
 exports.ForumPostsController = ForumPostsController;
@@ -151,30 +152,6 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], ForumPostsController.prototype, "removeImage", null);
-__decorate([
-    (0, common_1.Post)(':id/like'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Like/Unlike a forum post (toggle)' }),
-    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
-    __metadata("design:returntype", Promise)
-], ForumPostsController.prototype, "likePost", null);
-__decorate([
-    (0, common_1.Get)(':id/liked'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Check if current user has liked a post' }),
-    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
-    __metadata("design:returntype", Promise)
-], ForumPostsController.prototype, "hasLikedPost", null);
 exports.ForumPostsController = ForumPostsController = __decorate([
     (0, swagger_1.ApiTags)('forum'),
     (0, common_1.Controller)('forum/posts'),

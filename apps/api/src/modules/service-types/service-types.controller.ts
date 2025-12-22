@@ -28,7 +28,10 @@ export class ServiceTypesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create service type (Admin only)' })
-  async create(@Body() createServiceTypeDto: CreateServiceTypeDto, @CurrentUser() user: any) {
+  async create(
+    @Body() createServiceTypeDto: CreateServiceTypeDto,
+    @CurrentUser() user: any,
+  ) {
     // Only admins can create service types
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can create service types');
@@ -75,7 +78,10 @@ export class ServiceTypesController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete service type (Admin only)' })
   @ApiParam({ name: 'id', description: 'Service Type ID' })
-  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     // Only admins can delete service types
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can delete service types');
@@ -84,3 +90,7 @@ export class ServiceTypesController {
     return this.serviceTypesService.remove(id);
   }
 }
+
+
+
+

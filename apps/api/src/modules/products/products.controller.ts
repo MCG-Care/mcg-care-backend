@@ -112,7 +112,7 @@ export class ProductsController {
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can delete products');
     }
-
+    
     return this.productsService.remove(id);
   }
 
@@ -131,7 +131,10 @@ export class ProductsController {
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can delete product images');
     }
-
+    
     return this.productsService.removeImage(productId, imageId);
   }
 }
+
+
+

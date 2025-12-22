@@ -87,7 +87,9 @@ let UsersService = class UsersService {
             .from(database_1.schema.bookings)
             .innerJoin(database_1.schema.feedbacks, (0, drizzle_orm_1.eq)(database_1.schema.feedbacks.bookingId, database_1.schema.bookings.id))
             .where((0, drizzle_orm_1.eq)(database_1.schema.bookings.technicianId, technicianId));
-        const avgRating = ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.averageRating) ? parseFloat(result[0].averageRating.toString()) : 0;
+        const avgRating = ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.averageRating)
+            ? parseFloat(result[0].averageRating.toString())
+            : 0;
         const totalFeedbacks = ((_b = result[0]) === null || _b === void 0 ? void 0 : _b.totalFeedbacks) || 0;
         return {
             technicianId,

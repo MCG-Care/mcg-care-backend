@@ -153,7 +153,9 @@ let ProductsService = class ProductsService {
         }
         const imagePath = this.supabaseService.extractPathFromUrl(image.url, 'product-images');
         await this.supabaseService.deleteFile('product-images', imagePath);
-        await database_1.db.delete(database_1.schema.productImages).where((0, drizzle_orm_1.eq)(database_1.schema.productImages.id, imageId));
+        await database_1.db
+            .delete(database_1.schema.productImages)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.productImages.id, imageId));
         return { message: 'Image deleted successfully' };
     }
     async uploadProductImages(productId, files) {

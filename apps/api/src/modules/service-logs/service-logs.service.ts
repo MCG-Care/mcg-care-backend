@@ -14,7 +14,11 @@ export class ServiceLogsService {
   /**
    * Create a service log for a booking (technician only, during service)
    */
-  async create(userId: number, userRole: string, createServiceLogDto: CreateServiceLogDto) {
+  async create(
+    userId: number,
+    userRole: string,
+    createServiceLogDto: CreateServiceLogDto,
+  ) {
     const { bookingId, note } = createServiceLogDto;
 
     // Only technicians can create service logs
@@ -40,7 +44,9 @@ export class ServiceLogsService {
 
     // Verify technician is assigned to this booking
     if (booking.technicianId !== userId) {
-      throw new ForbiddenException('You can only create service logs for your assigned bookings');
+      throw new ForbiddenException(
+        'You can only create service logs for your assigned bookings',
+      );
     }
 
     // Technicians can create logs for any booking status (not just inprogress)
@@ -72,7 +78,11 @@ export class ServiceLogsService {
   /**
    * Get service log by booking ID
    */
-  async findByBookingId(bookingId: number, userId: number, userRole: string) {
+  async findByBookingId(
+    bookingId: number,
+    userId: number,
+    userRole: string,
+  ) {
     // Verify booking exists and user has access
     const booking = await db.query.bookings.findFirst({
       where: eq(schema.bookings.id, bookingId),
@@ -92,11 +102,15 @@ export class ServiceLogsService {
     // Authorization check
     if (userRole === 'customer') {
       if (booking.aircon.customerId !== userId) {
-        throw new ForbiddenException('You can only view service logs for your own bookings');
+        throw new ForbiddenException(
+          'You can only view service logs for your own bookings',
+        );
       }
     } else if (userRole === 'technician') {
       if (booking.technicianId !== userId) {
-        throw new ForbiddenException('You can only view service logs for your assigned bookings');
+        throw new ForbiddenException(
+          'You can only view service logs for your assigned bookings',
+        );
       }
     }
 
@@ -123,7 +137,9 @@ export class ServiceLogsService {
     });
 
     if (!serviceLog) {
-      throw new NotFoundException(`Service log not found for booking ${bookingId}`);
+      throw new NotFoundException(
+        `Service log not found for booking ${bookingId}`,
+      );
     }
 
     return serviceLog;
@@ -133,7 +149,11 @@ export class ServiceLogsService {
    * Get all service logs for a specific aircon (customer product)
    * This shows the complete service history of an aircon
    */
-  async findByAirconId(airconId: number, userId: number, userRole: string) {
+  async findByAirconId(
+    airconId: number,
+    userId: number,
+    userRole: string,
+  ) {
     // Verify aircon exists and get ownership info
     const aircon = await db.query.customerProducts.findFirst({
       where: eq(schema.customerProducts.id, airconId),
@@ -143,13 +163,17 @@ export class ServiceLogsService {
     });
 
     if (!aircon) {
-      throw new NotFoundException(`Customer product with ID ${airconId} not found`);
+      throw new NotFoundException(
+        `Customer product with ID ${airconId} not found`,
+      );
     }
 
     // Authorization check
     if (userRole === 'customer') {
       if (aircon.customerId !== userId) {
-        throw new ForbiddenException('You can only view service logs for your own aircons');
+        throw new ForbiddenException(
+          'You can only view service logs for your own aircons',
+        );
       }
     }
     // Technicians and admins can view service logs for any aircon
@@ -225,11 +249,15 @@ export class ServiceLogsService {
     // Authorization check
     if (userRole === 'customer') {
       if (serviceLog.booking.aircon.customerId !== userId) {
-        throw new ForbiddenException('You can only view service logs for your own bookings');
+        throw new ForbiddenException(
+          'You can only view service logs for your own bookings',
+        );
       }
     } else if (userRole === 'technician') {
       if (serviceLog.booking.technicianId !== userId) {
-        throw new ForbiddenException('You can only view service logs for your assigned bookings');
+        throw new ForbiddenException(
+          'You can only view service logs for your assigned bookings',
+        );
       }
     }
 
@@ -249,11 +277,15 @@ export class ServiceLogsService {
 
     // Only technicians who created the log can update
     if (userRole !== 'technician') {
-      throw new ForbiddenException('Only technicians can update service logs');
+      throw new ForbiddenException(
+        'Only technicians can update service logs',
+      );
     }
 
     if (serviceLog.booking.technicianId !== userId) {
-      throw new ForbiddenException('You can only update service logs for your assigned bookings');
+      throw new ForbiddenException(
+        'You can only update service logs for your assigned bookings',
+      );
     }
 
     const updateData: any = {};
@@ -262,7 +294,10 @@ export class ServiceLogsService {
       updateData.note = updateServiceLogDto.note;
     }
 
-    await db.update(schema.serviceLogs).set(updateData).where(eq(schema.serviceLogs.id, id));
+    await db
+      .update(schema.serviceLogs)
+      .set(updateData)
+      .where(eq(schema.serviceLogs.id, id));
 
     return this.findOne(id, userId, userRole);
   }
@@ -275,17 +310,28 @@ export class ServiceLogsService {
 
     // Only technicians who created it or admins can delete
     if (userRole === 'customer') {
-      throw new ForbiddenException('Customers cannot delete service logs');
+      throw new ForbiddenException(
+        'Customers cannot delete service logs',
+      );
     }
 
     if (userRole === 'technician') {
       if (serviceLog.booking.technicianId !== userId) {
-        throw new ForbiddenException('You can only delete service logs for your assigned bookings');
+        throw new ForbiddenException(
+          'You can only delete service logs for your assigned bookings',
+        );
       }
     }
 
-    await db.delete(schema.serviceLogs).where(eq(schema.serviceLogs.id, id));
+    await db
+      .delete(schema.serviceLogs)
+      .where(eq(schema.serviceLogs.id, id));
 
     return { message: 'Service log deleted successfully' };
   }
 }
+
+
+
+
+

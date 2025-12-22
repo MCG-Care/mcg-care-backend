@@ -13,14 +13,7 @@ import {
   UnauthorizedException,
   Headers,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiHeader,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { TimeslotsService } from './timeslots.service';
 import { CreateTimeslotDto } from './dto/create-timeslot.dto';
 import { UpdateTimeslotDto } from './dto/update-timeslot.dto';
@@ -41,7 +34,10 @@ export class TimeslotsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create timeslot (Admin only)' })
-  async create(@Body() createTimeslotDto: CreateTimeslotDto, @CurrentUser() user: any) {
+  async create(
+    @Body() createTimeslotDto: CreateTimeslotDto,
+    @CurrentUser() user: any,
+  ) {
     // Only admins can manually create timeslots
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can create timeslots');
@@ -84,14 +80,21 @@ export class TimeslotsController {
       throw new ForbiddenException('startDate and endDate are required');
     }
 
-    return this.timeslotsService.getTechnicianAvailability(technicianId, startDate, endDate);
+    return this.timeslotsService.getTechnicianAvailability(
+      technicianId,
+      startDate,
+      endDate,
+    );
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get timeslot by ID' })
   @ApiParam({ name: 'id', description: 'Timeslot ID' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     const timeslot = await this.timeslotsService.findOne(id);
 
     // Technicians can only view their own timeslots
@@ -123,7 +126,10 @@ export class TimeslotsController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Delete timeslot (Admin only)' })
   @ApiParam({ name: 'id', description: 'Timeslot ID' })
-  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     // Only admins can delete timeslots
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can delete timeslots');
@@ -142,7 +148,9 @@ export class TimeslotsController {
   ) {
     // Only admins can initialize timeslots
     if (user.role !== 'admin') {
-      throw new ForbiddenException('Only admins can initialize technician timeslots');
+      throw new ForbiddenException(
+        'Only admins can initialize technician timeslots',
+      );
     }
 
     return this.timeslotsService.initializeTechnicianTimeslots(technicianId);
@@ -162,15 +170,13 @@ export class TimeslotsController {
   }
 
   @Post('maintenance/daily-cron')
-  @ApiOperation({
-    summary: 'Run daily timeslot maintenance (Cron job endpoint - uses secret token)',
-  })
+  @ApiOperation({ summary: 'Run daily timeslot maintenance (Cron job endpoint - uses secret token)' })
   @ApiHeader({ name: 'X-Cron-Secret', description: 'Secret token for cron authentication' })
   async dailyMaintenanceCron(@Headers('x-cron-secret') cronSecret: string) {
     // This endpoint is for cron jobs only - uses a secret token instead of JWT
     // This avoids JWT expiration issues
     const expectedSecret = this.configService.get<string>('CRON_SECRET');
-
+    
     if (!expectedSecret) {
       throw new UnauthorizedException('CRON_SECRET not configured');
     }
@@ -182,3 +188,7 @@ export class TimeslotsController {
     return this.timeslotsService.dailyTimeslotMaintenance();
   }
 }
+
+
+
+

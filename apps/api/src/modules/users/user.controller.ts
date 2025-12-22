@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Patch,
-  Delete,
-  UseGuards,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Patch, Delete, UseGuards, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { UsersService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -30,7 +20,7 @@ export class UsersController {
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can view all users');
     }
-
+    
     return this.usersService.getAllUsers();
   }
 
@@ -43,7 +33,7 @@ export class UsersController {
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can view all technician ratings');
     }
-
+    
     return this.usersService.getAllTechnicianRatings();
   }
 
@@ -61,12 +51,12 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User ID' })
   getUser(@Param('id') id: string, @CurrentUser() user?: any) {
     const requestedId = Number(id);
-
+    
     // Users can view their own profile, admins can view any profile
     if (user.role !== 'admin' && user.id !== requestedId) {
       throw new ForbiddenException('You can only view your own profile');
     }
-
+    
     // Include rating for technicians
     return this.usersService.getUserById(requestedId, true);
   }
@@ -77,12 +67,12 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User ID' })
   updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto, @CurrentUser() user?: any) {
     const requestedId = Number(id);
-
+    
     // Users can update their own profile, admins can update any profile
     if (user.role !== 'admin' && user.id !== requestedId) {
       throw new ForbiddenException('You can only update your own profile');
     }
-
+    
     return this.usersService.updateUser(requestedId, dto);
   }
 
@@ -95,7 +85,7 @@ export class UsersController {
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only admins can delete users');
     }
-
+    
     return this.usersService.deleteUser(Number(id));
   }
 }

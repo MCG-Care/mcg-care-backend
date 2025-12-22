@@ -23,3 +23,4 @@ export class QueryPostsDto {
   @Min(1)
   limit?: number = 10;
 }
+

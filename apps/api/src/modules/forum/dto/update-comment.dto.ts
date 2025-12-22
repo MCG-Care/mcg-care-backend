@@ -6,3 +6,4 @@ export class UpdateCommentDto {
   @MinLength(1, { message: 'Comment cannot be empty' })
   content?: string;
 }
+

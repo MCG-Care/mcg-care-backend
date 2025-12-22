@@ -10,3 +10,11 @@ import { AuthModule } from '../auth/auth.module';
   exports: [ServiceTypesService],
 })
 export class ServiceTypesModule {}
+
+
+
+
+
+
+
+

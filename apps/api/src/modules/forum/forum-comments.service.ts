@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { db, schema } from '../../config/database';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -22,7 +26,9 @@ export class ForumCommentsService {
     });
 
     if (!post) {
-      throw new NotFoundException(`Forum post with ID ${createCommentDto.postId} not found`);
+      throw new NotFoundException(
+        `Forum post with ID ${createCommentDto.postId} not found`,
+      );
     }
 
     // Insert comment
@@ -193,86 +199,5 @@ export class ForumCommentsService {
 
     return { message: 'Comment deleted successfully' };
   }
-
-  /**
-   * Like a forum comment
-   */
-  async likeComment(commentId: number, userId: number) {
-    // Check if comment exists
-    const comment = await db.query.forumComments.findFirst({
-      where: eq(schema.forumComments.id, commentId),
-    });
-
-    if (!comment) {
-      throw new NotFoundException(`Comment with ID ${commentId} not found`);
-    }
-
-    // Check if user already liked this comment
-    const existingLike = await db.query.forumCommentLikes.findFirst({
-      where: and(
-        eq(schema.forumCommentLikes.commentId, commentId),
-        eq(schema.forumCommentLikes.userId, userId),
-      ),
-    });
-
-    if (existingLike) {
-      // User already liked this comment, so unlike it
-      await db
-        .delete(schema.forumCommentLikes)
-        .where(
-          and(
-            eq(schema.forumCommentLikes.commentId, commentId),
-            eq(schema.forumCommentLikes.userId, userId),
-          ),
-        );
-
-      // Decrement like count
-      await db
-        .update(schema.forumComments)
-        .set({
-          likeCount: sql`${schema.forumComments.likeCount} - 1`,
-        })
-        .where(eq(schema.forumComments.id, commentId));
-
-      return {
-        message: 'Comment unliked successfully',
-        liked: false,
-        likeCount: comment.likeCount - 1,
-      };
-    } else {
-      // User hasn't liked this comment yet, so like it
-      await db.insert(schema.forumCommentLikes).values({
-        commentId,
-        userId,
-      });
-
-      // Increment like count
-      await db
-        .update(schema.forumComments)
-        .set({
-          likeCount: sql`${schema.forumComments.likeCount} + 1`,
-        })
-        .where(eq(schema.forumComments.id, commentId));
-
-      return {
-        message: 'Comment liked successfully',
-        liked: true,
-        likeCount: comment.likeCount + 1,
-      };
-    }
-  }
-
-  /**
-   * Check if a user has liked a specific comment
-   */
-  async hasUserLikedComment(commentId: number, userId: number): Promise<boolean> {
-    const like = await db.query.forumCommentLikes.findFirst({
-      where: and(
-        eq(schema.forumCommentLikes.commentId, commentId),
-        eq(schema.forumCommentLikes.userId, userId),
-      ),
-    });
-
-    return !!like;
-  }
 }
+

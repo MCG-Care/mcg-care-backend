@@ -27,7 +27,10 @@ export class FeedbacksController {
 
   @Post()
   @ApiOperation({ summary: 'Create feedback' })
-  async create(@Body() createFeedbackDto: CreateFeedbackDto, @CurrentUser() user: any) {
+  async create(
+    @Body() createFeedbackDto: CreateFeedbackDto,
+    @CurrentUser() user: any,
+  ) {
     return this.feedbacksService.create(user.id, user.role, createFeedbackDto);
   }
 
@@ -50,7 +53,10 @@ export class FeedbacksController {
   @Get(':id')
   @ApiOperation({ summary: 'Get feedback by ID' })
   @ApiParam({ name: 'id', description: 'Feedback ID' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     return this.feedbacksService.findOne(id, user.id, user.role);
   }
 
@@ -68,7 +74,12 @@ export class FeedbacksController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete feedback' })
   @ApiParam({ name: 'id', description: 'Feedback ID' })
-  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     return this.feedbacksService.remove(id, user.id, user.role);
   }
 }
+
+
