@@ -138,3 +138,4 @@ export class ServiceTypesService {
     return { message: 'Service type deleted successfully' };
   }
 }
+

@@ -5,3 +5,4 @@ export class UpdateServiceLogDto {
   @IsString()
   note: string;
 }
+

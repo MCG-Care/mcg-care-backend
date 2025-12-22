@@ -8,3 +8,4 @@ import { ServiceLogsController } from './service-logs.controller';
   exports: [ServiceLogsService],
 })
 export class ServiceLogsModule {}
+

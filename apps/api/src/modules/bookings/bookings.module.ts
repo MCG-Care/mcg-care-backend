@@ -9,3 +9,4 @@ import { SupabaseService } from '../../config/supabase.service';
   exports: [BookingsService],
 })
 export class BookingsModule {}
+

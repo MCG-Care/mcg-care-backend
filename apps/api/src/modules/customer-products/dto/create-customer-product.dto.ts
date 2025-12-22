@@ -16,3 +16,4 @@ export class CreateCustomerProductDto {
   @IsOptional()
   purchaseCode?: string; // unique code from receipt (optional)
 }
+

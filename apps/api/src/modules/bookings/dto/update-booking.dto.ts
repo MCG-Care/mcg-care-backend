@@ -14,3 +14,4 @@ export class UpdateBookingDto {
   @Type(() => Number)
   fees?: number; // Technician can add extra fees
 }
+

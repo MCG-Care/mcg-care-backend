@@ -18,3 +18,4 @@ export class QueryServiceTypesDto {
   @IsOptional()
   search?: string; // Search by name or description
 }
+
