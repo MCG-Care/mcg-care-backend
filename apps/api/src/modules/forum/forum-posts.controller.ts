@@ -44,7 +44,12 @@ export class ForumPostsController {
 
     // Validate file types
     if (files && files.length > 0) {
-      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/jpg',
+        'image/webp',
+      ];
       for (const file of files) {
         if (!allowedMimeTypes.includes(file.mimetype)) {
           throw new BadRequestException(
@@ -91,7 +96,12 @@ export class ForumPostsController {
 
     // Validate file types
     if (files && files.length > 0) {
-      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/jpg',
+        'image/webp',
+      ];
       for (const file of files) {
         if (!allowedMimeTypes.includes(file.mimetype)) {
           throw new BadRequestException(
@@ -136,30 +146,5 @@ export class ForumPostsController {
 
     return this.forumPostsService.removeImage(postId, imageId, userId, isAdmin);
   }
-
-  @Post(':id/like')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Like/Unlike a forum post (toggle)' })
-  @ApiParam({ name: 'id', description: 'Post ID' })
-  async likePost(@Param('id', ParseIntPipe) id: number, @CurrentUser() user?: any) {
-    // Get userId from authenticated user
-    const userId = user.id;
-    // Anyone can like/unlike any post
-
-    return this.forumPostsService.likePost(id, userId);
-  }
-
-  @Get(':id/liked')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Check if current user has liked a post' })
-  @ApiParam({ name: 'id', description: 'Post ID' })
-  async hasLikedPost(@Param('id', ParseIntPipe) id: number, @CurrentUser() user?: any) {
-    // Get userId from authenticated user
-    const userId = user.id;
-
-    const hasLiked = await this.forumPostsService.hasUserLikedPost(id, userId);
-    return { postId: id, userId, hasLiked };
-  }
 }
+

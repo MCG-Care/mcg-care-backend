@@ -22,9 +22,7 @@ async function bootstrap() {
   // Swagger/OpenAPI configuration
   const config = new DocumentBuilder()
     .setTitle('MCG Care API')
-    .setDescription(
-      'Backend API for MCG Care - Customer Product Management and Service Booking System',
-    )
+    .setDescription('Backend API for MCG Care - Customer Product Management and Service Booking System')
     .setVersion('1.0')
     .addTag('auth', 'Authentication endpoints')
     .addTag('users', 'User management')

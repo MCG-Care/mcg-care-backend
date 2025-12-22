@@ -25,8 +25,15 @@ export class ServiceLogsController {
 
   @Post()
   @ApiOperation({ summary: 'Create service log' })
-  async create(@Body() createServiceLogDto: CreateServiceLogDto, @CurrentUser() user: any) {
-    return this.serviceLogsService.create(user.id, user.role, createServiceLogDto);
+  async create(
+    @Body() createServiceLogDto: CreateServiceLogDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.serviceLogsService.create(
+      user.id,
+      user.role,
+      createServiceLogDto,
+    );
   }
 
   @Get('booking/:bookingId')
@@ -36,7 +43,11 @@ export class ServiceLogsController {
     @Param('bookingId', ParseIntPipe) bookingId: number,
     @CurrentUser() user: any,
   ) {
-    return this.serviceLogsService.findByBookingId(bookingId, user.id, user.role);
+    return this.serviceLogsService.findByBookingId(
+      bookingId,
+      user.id,
+      user.role,
+    );
   }
 
   @Get('aircon/:airconId')
@@ -46,13 +57,20 @@ export class ServiceLogsController {
     @Param('airconId', ParseIntPipe) airconId: number,
     @CurrentUser() user: any,
   ) {
-    return this.serviceLogsService.findByAirconId(airconId, user.id, user.role);
+    return this.serviceLogsService.findByAirconId(
+      airconId,
+      user.id,
+      user.role,
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get service log by ID' })
   @ApiParam({ name: 'id', description: 'Service Log ID' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     return this.serviceLogsService.findOne(id, user.id, user.role);
   }
 
@@ -64,13 +82,22 @@ export class ServiceLogsController {
     @Body() updateServiceLogDto: UpdateServiceLogDto,
     @CurrentUser() user: any,
   ) {
-    return this.serviceLogsService.update(id, user.id, user.role, updateServiceLogDto);
+    return this.serviceLogsService.update(
+      id,
+      user.id,
+      user.role,
+      updateServiceLogDto,
+    );
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete service log' })
   @ApiParam({ name: 'id', description: 'Service Log ID' })
-  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     return this.serviceLogsService.remove(id, user.id, user.role);
   }
 }
+

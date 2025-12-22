@@ -192,7 +192,10 @@ let ServiceLogsService = class ServiceLogsService {
         if (updateServiceLogDto.note !== undefined) {
             updateData.note = updateServiceLogDto.note;
         }
-        await database_1.db.update(database_1.schema.serviceLogs).set(updateData).where((0, drizzle_orm_1.eq)(database_1.schema.serviceLogs.id, id));
+        await database_1.db
+            .update(database_1.schema.serviceLogs)
+            .set(updateData)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.serviceLogs.id, id));
         return this.findOne(id, userId, userRole);
     }
     async remove(id, userId, userRole) {
@@ -205,7 +208,9 @@ let ServiceLogsService = class ServiceLogsService {
                 throw new common_1.ForbiddenException('You can only delete service logs for your assigned bookings');
             }
         }
-        await database_1.db.delete(database_1.schema.serviceLogs).where((0, drizzle_orm_1.eq)(database_1.schema.serviceLogs.id, id));
+        await database_1.db
+            .delete(database_1.schema.serviceLogs)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.serviceLogs.id, id));
         return { message: 'Service log deleted successfully' };
     }
 };

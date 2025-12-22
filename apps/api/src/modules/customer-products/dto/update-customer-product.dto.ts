@@ -1,4 +1,7 @@
-import { IsString, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+} from 'class-validator';
 
 export class UpdateCustomerProductDto {
   @IsString()
@@ -9,3 +12,4 @@ export class UpdateCustomerProductDto {
   @IsOptional()
   purchaseCode?: string; // can only be added if not already set
 }
+

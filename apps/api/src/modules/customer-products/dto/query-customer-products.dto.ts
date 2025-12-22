@@ -20,3 +20,4 @@ export class QueryCustomerProductsDto {
   @IsOptional()
   customerId?: number; // For admin: filter by specific customer
 }
+

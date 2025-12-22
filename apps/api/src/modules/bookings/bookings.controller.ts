@@ -60,7 +60,10 @@ export class BookingsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get booking by ID' })
   @ApiParam({ name: 'id', description: 'Booking ID' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     return this.bookingsService.findOne(id, user.id, user.role);
   }
 
@@ -78,7 +81,10 @@ export class BookingsController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete booking' })
   @ApiParam({ name: 'id', description: 'Booking ID' })
-  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     return this.bookingsService.remove(id, user.id, user.role);
   }
 
@@ -91,7 +97,12 @@ export class BookingsController {
     @Param('imageId', ParseIntPipe) imageId: number,
     @CurrentUser() user: any,
   ) {
-    return this.bookingsService.removeImage(bookingId, imageId, user.id, user.role);
+    return this.bookingsService.removeImage(
+      bookingId,
+      imageId,
+      user.id,
+      user.role,
+    );
   }
 
   /**
@@ -116,3 +127,5 @@ export class BookingsController {
     }
   }
 }
+
+

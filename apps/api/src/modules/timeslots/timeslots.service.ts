@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { db, schema } from '../../config/database';
 import { eq, and, gte, lte, lt } from 'drizzle-orm';
 import { CreateTimeslotDto } from './dto/create-timeslot.dto';
@@ -36,12 +40,17 @@ export class TimeslotsService {
     }
 
     if (technician.role !== 'technician') {
-      throw new BadRequestException(`User with ID ${technicianId} is not a technician`);
+      throw new BadRequestException(
+        `User with ID ${technicianId} is not a technician`,
+      );
     }
 
     // Check if timeslot already exists for this technician on this date
     const existingTimeslot = await db.query.timeslots.findFirst({
-      where: and(eq(schema.timeslots.technicianId, technicianId), eq(schema.timeslots.date, date)),
+      where: and(
+        eq(schema.timeslots.technicianId, technicianId),
+        eq(schema.timeslots.date, date),
+      ),
     });
 
     if (existingTimeslot) {
@@ -87,7 +96,8 @@ export class TimeslotsService {
       }
     }
 
-    const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
+    const whereCondition =
+      conditions.length > 0 ? and(...conditions) : undefined;
 
     // Get timeslots with technician details
     const timeslots = await db.query.timeslots.findMany({
@@ -99,7 +109,10 @@ export class TimeslotsService {
           },
         },
       },
-      orderBy: (timeslots, { asc }) => [asc(timeslots.date), asc(timeslots.technicianId)],
+      orderBy: (timeslots, { asc }) => [
+        asc(timeslots.date),
+        asc(timeslots.technicianId),
+      ],
     });
 
     return timeslots;
@@ -268,7 +281,11 @@ export class TimeslotsService {
   /**
    * Get timeslots for a specific technician within a date range
    */
-  async getTechnicianAvailability(technicianId: number, startDate: string, endDate: string) {
+  async getTechnicianAvailability(
+    technicianId: number,
+    startDate: string,
+    endDate: string,
+  ) {
     const timeslots = await db.query.timeslots.findMany({
       where: and(
         eq(schema.timeslots.technicianId, technicianId),
@@ -289,7 +306,7 @@ export class TimeslotsService {
   /**
    * Remove slots from a technician's timeslot (for booking system)
    * This is called automatically when a booking is created
-   *
+   * 
    * @param technicianId - Technician ID
    * @param date - Date of the booking (YYYY-MM-DD)
    * @param startHour - Starting hour (e.g., 10 for 10am)
@@ -315,16 +332,23 @@ export class TimeslotsService {
 
     // Find the timeslot for this technician and date
     const timeslot = await db.query.timeslots.findFirst({
-      where: and(eq(schema.timeslots.technicianId, technicianId), eq(schema.timeslots.date, date)),
+      where: and(
+        eq(schema.timeslots.technicianId, technicianId),
+        eq(schema.timeslots.date, date),
+      ),
     });
 
     if (!timeslot) {
-      throw new NotFoundException(`Timeslot not found for technician ${technicianId} on ${date}`);
+      throw new NotFoundException(
+        `Timeslot not found for technician ${technicianId} on ${date}`,
+      );
     }
 
     // Verify all required hours are available
     const availableSlots = timeslot.slots;
-    const missingHours = hoursToRemove.filter((hour) => !availableSlots.includes(hour));
+    const missingHours = hoursToRemove.filter(
+      (hour) => !availableSlots.includes(hour),
+    );
 
     if (missingHours.length > 0) {
       throw new BadRequestException(
@@ -333,7 +357,9 @@ export class TimeslotsService {
     }
 
     // Remove the hours from available slots
-    const updatedSlots = availableSlots.filter((slot) => !hoursToRemove.includes(slot));
+    const updatedSlots = availableSlots.filter(
+      (slot) => !hoursToRemove.includes(slot),
+    );
 
     // Update the timeslot
     const [updatedTimeslot] = await db
@@ -351,7 +377,7 @@ export class TimeslotsService {
   /**
    * Restore slots to a technician's timeslot (for booking cancellation)
    * This is called automatically when a booking is cancelled
-   *
+   * 
    * @param technicianId - Technician ID
    * @param date - Date of the booking (YYYY-MM-DD)
    * @param startHour - Starting hour (e.g., 10 for 10am)
@@ -375,16 +401,23 @@ export class TimeslotsService {
 
     // Find the timeslot
     const timeslot = await db.query.timeslots.findFirst({
-      where: and(eq(schema.timeslots.technicianId, technicianId), eq(schema.timeslots.date, date)),
+      where: and(
+        eq(schema.timeslots.technicianId, technicianId),
+        eq(schema.timeslots.date, date),
+      ),
     });
 
     if (!timeslot) {
-      throw new NotFoundException(`Timeslot not found for technician ${technicianId} on ${date}`);
+      throw new NotFoundException(
+        `Timeslot not found for technician ${technicianId} on ${date}`,
+      );
     }
 
     // Add back the hours (avoid duplicates)
     const currentSlots = timeslot.slots;
-    const updatedSlots = [...new Set([...currentSlots, ...hoursToRestore])].sort((a, b) => a - b);
+    const updatedSlots = [...new Set([...currentSlots, ...hoursToRestore])].sort(
+      (a, b) => a - b,
+    );
 
     // Update the timeslot
     const [updatedTimeslot] = await db
@@ -399,3 +432,4 @@ export class TimeslotsService {
     return updatedTimeslot;
   }
 }
+

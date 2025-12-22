@@ -24,3 +24,9 @@ export class QueryFeedbacksDto {
   @Type(() => Number)
   minRating?: number; // Minimum rating filter
 }
+
+
+
+
+
+

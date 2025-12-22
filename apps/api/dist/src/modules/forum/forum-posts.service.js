@@ -183,58 +183,10 @@ let ForumPostsService = class ForumPostsService {
         }
         const imagePath = this.supabaseService.extractPathFromUrl(image.url, 'forum-images');
         await this.supabaseService.deleteFile('forum-images', imagePath);
-        await database_1.db.delete(database_1.schema.forumPostImages).where((0, drizzle_orm_1.eq)(database_1.schema.forumPostImages.id, imageId));
+        await database_1.db
+            .delete(database_1.schema.forumPostImages)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.forumPostImages.id, imageId));
         return { message: 'Image deleted successfully' };
-    }
-    async likePost(postId, userId) {
-        const post = await database_1.db.query.forumPosts.findFirst({
-            where: (0, drizzle_orm_1.eq)(database_1.schema.forumPosts.id, postId),
-        });
-        if (!post) {
-            throw new common_1.NotFoundException(`Forum post with ID ${postId} not found`);
-        }
-        const existingLike = await database_1.db.query.forumPostLikes.findFirst({
-            where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(database_1.schema.forumPostLikes.postId, postId), (0, drizzle_orm_1.eq)(database_1.schema.forumPostLikes.userId, userId)),
-        });
-        if (existingLike) {
-            await database_1.db
-                .delete(database_1.schema.forumPostLikes)
-                .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(database_1.schema.forumPostLikes.postId, postId), (0, drizzle_orm_1.eq)(database_1.schema.forumPostLikes.userId, userId)));
-            await database_1.db
-                .update(database_1.schema.forumPosts)
-                .set({
-                likeCount: (0, drizzle_orm_1.sql) `${database_1.schema.forumPosts.likeCount} - 1`,
-            })
-                .where((0, drizzle_orm_1.eq)(database_1.schema.forumPosts.id, postId));
-            return {
-                message: 'Post unliked successfully',
-                liked: false,
-                likeCount: post.likeCount - 1,
-            };
-        }
-        else {
-            await database_1.db.insert(database_1.schema.forumPostLikes).values({
-                postId,
-                userId,
-            });
-            await database_1.db
-                .update(database_1.schema.forumPosts)
-                .set({
-                likeCount: (0, drizzle_orm_1.sql) `${database_1.schema.forumPosts.likeCount} + 1`,
-            })
-                .where((0, drizzle_orm_1.eq)(database_1.schema.forumPosts.id, postId));
-            return {
-                message: 'Post liked successfully',
-                liked: true,
-                likeCount: post.likeCount + 1,
-            };
-        }
-    }
-    async hasUserLikedPost(postId, userId) {
-        const like = await database_1.db.query.forumPostLikes.findFirst({
-            where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(database_1.schema.forumPostLikes.postId, postId), (0, drizzle_orm_1.eq)(database_1.schema.forumPostLikes.userId, userId)),
-        });
-        return !!like;
     }
     async uploadPostImages(postId, files) {
         const uploadPromises = files.map(async (file) => {

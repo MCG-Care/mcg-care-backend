@@ -367,44 +367,6 @@ export const forumPostImages = pgTable('forum_post_images', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// Forum Post Likes Table (Junction table for tracking who liked which posts)
-export const forumPostLikes = pgTable(
-  'forum_post_likes',
-  {
-    userId: integer('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    postId: integer('post_id')
-      .notNull()
-      .references(() => forumPosts.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.postId] }),
-    userIdIdx: index('forum_post_likes_user_id_idx').on(table.userId),
-    postIdIdx: index('forum_post_likes_post_id_idx').on(table.postId),
-  }),
-);
-
-// Forum Comment Likes Table (Junction table for tracking who liked which comments)
-export const forumCommentLikes = pgTable(
-  'forum_comment_likes',
-  {
-    userId: integer('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    commentId: integer('comment_id')
-      .notNull()
-      .references(() => forumComments.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.commentId] }),
-    userIdIdx: index('forum_comment_likes_user_id_idx').on(table.userId),
-    commentIdIdx: index('forum_comment_likes_comment_id_idx').on(table.commentId),
-  }),
-);
-
 // ============================================
 // RELATIONS (for Drizzle ORM query builder)
 // ============================================
@@ -424,8 +386,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   timeslots: many(timeslots),
   forumPosts: many(forumPosts),
   forumComments: many(forumComments),
-  forumPostLikes: many(forumPostLikes),
-  forumCommentLikes: many(forumCommentLikes),
 }));
 
 export const productsRelations = relations(products, ({ many }) => ({
@@ -538,10 +498,9 @@ export const forumPostsRelations = relations(forumPosts, ({ one, many }) => ({
   }),
   comments: many(forumComments),
   images: many(forumPostImages),
-  likes: many(forumPostLikes),
 }));
 
-export const forumCommentsRelations = relations(forumComments, ({ one, many }) => ({
+export const forumCommentsRelations = relations(forumComments, ({ one }) => ({
   post: one(forumPosts, {
     fields: [forumComments.postId],
     references: [forumPosts.id],
@@ -550,35 +509,12 @@ export const forumCommentsRelations = relations(forumComments, ({ one, many }) =
     fields: [forumComments.userId],
     references: [users.id],
   }),
-  likes: many(forumCommentLikes),
 }));
 
 export const forumPostImagesRelations = relations(forumPostImages, ({ one }) => ({
   post: one(forumPosts, {
     fields: [forumPostImages.postId],
     references: [forumPosts.id],
-  }),
-}));
-
-export const forumPostLikesRelations = relations(forumPostLikes, ({ one }) => ({
-  user: one(users, {
-    fields: [forumPostLikes.userId],
-    references: [users.id],
-  }),
-  post: one(forumPosts, {
-    fields: [forumPostLikes.postId],
-    references: [forumPosts.id],
-  }),
-}));
-
-export const forumCommentLikesRelations = relations(forumCommentLikes, ({ one }) => ({
-  user: one(users, {
-    fields: [forumCommentLikes.userId],
-    references: [users.id],
-  }),
-  comment: one(forumComments, {
-    fields: [forumCommentLikes.commentId],
-    references: [forumComments.id],
   }),
 }));
 

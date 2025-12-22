@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsInt, IsOptional, Min } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsInt,
+  IsOptional,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateCustomerProductDto {
@@ -16,3 +22,11 @@ export class CreateCustomerProductDto {
   @IsOptional()
   purchaseCode?: string; // unique code from receipt (optional)
 }
+
+
+
+
+
+
+
+

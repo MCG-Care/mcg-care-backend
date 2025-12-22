@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsDateString,
   ArrayMinSize,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -35,3 +36,9 @@ export class CreateBookingDto {
   @IsString()
   description?: string; // Optional description from customer
 }
+
+
+
+
+
+

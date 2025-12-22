@@ -15,3 +15,4 @@ export class CreateCommentDto {
   @IsOptional()
   userId?: number; // TODO: Will be set from auth token when auth is ready
 }
+

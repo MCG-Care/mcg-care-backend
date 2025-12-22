@@ -81,30 +81,5 @@ export class ForumCommentsController {
 
     return this.forumCommentsService.remove(id, userId, isAdmin);
   }
-
-  @Post(':id/like')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Like/Unlike a forum comment (toggle)' })
-  @ApiParam({ name: 'id', description: 'Comment ID' })
-  async likeComment(@Param('id', ParseIntPipe) id: number, @CurrentUser() user?: any) {
-    // Get userId from authenticated user
-    const userId = user.id;
-    // Anyone can like/unlike any comment
-
-    return this.forumCommentsService.likeComment(id, userId);
-  }
-
-  @Get(':id/liked')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Check if current user has liked a comment' })
-  @ApiParam({ name: 'id', description: 'Comment ID' })
-  async hasLikedComment(@Param('id', ParseIntPipe) id: number, @CurrentUser() user?: any) {
-    // Get userId from authenticated user
-    const userId = user.id;
-
-    const hasLiked = await this.forumCommentsService.hasUserLikedComment(id, userId);
-    return { commentId: id, userId, hasLiked };
-  }
 }
+

@@ -132,56 +132,6 @@ let ForumCommentsService = class ForumCommentsService {
         await database_1.db.delete(database_1.schema.forumComments).where((0, drizzle_orm_1.eq)(database_1.schema.forumComments.id, id));
         return { message: 'Comment deleted successfully' };
     }
-    async likeComment(commentId, userId) {
-        const comment = await database_1.db.query.forumComments.findFirst({
-            where: (0, drizzle_orm_1.eq)(database_1.schema.forumComments.id, commentId),
-        });
-        if (!comment) {
-            throw new common_1.NotFoundException(`Comment with ID ${commentId} not found`);
-        }
-        const existingLike = await database_1.db.query.forumCommentLikes.findFirst({
-            where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(database_1.schema.forumCommentLikes.commentId, commentId), (0, drizzle_orm_1.eq)(database_1.schema.forumCommentLikes.userId, userId)),
-        });
-        if (existingLike) {
-            await database_1.db
-                .delete(database_1.schema.forumCommentLikes)
-                .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(database_1.schema.forumCommentLikes.commentId, commentId), (0, drizzle_orm_1.eq)(database_1.schema.forumCommentLikes.userId, userId)));
-            await database_1.db
-                .update(database_1.schema.forumComments)
-                .set({
-                likeCount: (0, drizzle_orm_1.sql) `${database_1.schema.forumComments.likeCount} - 1`,
-            })
-                .where((0, drizzle_orm_1.eq)(database_1.schema.forumComments.id, commentId));
-            return {
-                message: 'Comment unliked successfully',
-                liked: false,
-                likeCount: comment.likeCount - 1,
-            };
-        }
-        else {
-            await database_1.db.insert(database_1.schema.forumCommentLikes).values({
-                commentId,
-                userId,
-            });
-            await database_1.db
-                .update(database_1.schema.forumComments)
-                .set({
-                likeCount: (0, drizzle_orm_1.sql) `${database_1.schema.forumComments.likeCount} + 1`,
-            })
-                .where((0, drizzle_orm_1.eq)(database_1.schema.forumComments.id, commentId));
-            return {
-                message: 'Comment liked successfully',
-                liked: true,
-                likeCount: comment.likeCount + 1,
-            };
-        }
-    }
-    async hasUserLikedComment(commentId, userId) {
-        const like = await database_1.db.query.forumCommentLikes.findFirst({
-            where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(database_1.schema.forumCommentLikes.commentId, commentId), (0, drizzle_orm_1.eq)(database_1.schema.forumCommentLikes.userId, userId)),
-        });
-        return !!like;
-    }
 };
 exports.ForumCommentsService = ForumCommentsService;
 exports.ForumCommentsService = ForumCommentsService = __decorate([

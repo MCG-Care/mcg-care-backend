@@ -88,14 +88,4 @@ export declare class ForumCommentsController {
     remove(id: number, user?: any): Promise<{
         message: string;
     }>;
-    likeComment(id: number, user?: any): Promise<{
-        message: string;
-        liked: boolean;
-        likeCount: number;
-    }>;
-    hasLikedComment(id: number, user?: any): Promise<{
-        commentId: number;
-        userId: any;
-        hasLiked: boolean;
-    }>;
 }
