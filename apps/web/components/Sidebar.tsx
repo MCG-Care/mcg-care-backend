@@ -21,7 +21,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const menuItems = useMemo(() => [
     {
@@ -59,7 +59,7 @@ const Sidebar = () => {
       href: "/dashboard/customers",
       icon: Users,
     },
-  ], [t]);
+  ], [t, language]);
 
   return (
     <>

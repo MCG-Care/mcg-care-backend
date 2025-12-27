@@ -33,7 +33,7 @@ const Navbar = () => {
     router.push("/login");
   };
 
-  const getPageTitle = () => {
+  const pageTitle = React.useMemo(() => {
     if (pathname === "/dashboard") return t("dashboard");
     if (pathname === "/dashboard/bookings") return t("bookings");
     if (pathname === "/dashboard/forum") return t("forum");
@@ -43,14 +43,14 @@ const Navbar = () => {
     if (pathname === "/dashboard/customers") return t("customers");
     if (pathname === "/dashboard/profile") return t("profile");
     return t("dashboard");
-  };
+  }, [pathname, t, language]);
 
   return (
     <nav className="fixed top-0 right-0 left-0 lg:left-64 h-20 bg-card border-b border-border z-30">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold hidden md:block">
-            {getPageTitle()}
+            {pageTitle}
           </h1>
         </div>
 

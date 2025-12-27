@@ -26,3 +26,4 @@ const TechniciansPage = () => {
 
 export default TechniciansPage;
 
+

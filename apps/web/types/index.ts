@@ -95,6 +95,32 @@ export interface ServiceType {
   updatedAt: string;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  productModel: string;
+  brand: string;
+  type: "split" | "window" | "cassette" | "portable" | "central";
+  price: string;
+  description?: string;
+  capacity?: number;
+  energyRating?: number;
+  coolingPower?: number;
+  refrigerant?: string;
+  warranty?: number;
+  tagline?: string;
+  voltageAverage?: number;
+  voltageCount?: number;
+  releaseDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  productImages?: Array<{
+    id: string;
+    productId: string;
+    url: string;
+  }>;
+}
+
 export interface DashboardStats {
   pendingBookings: number;
   inProgressBookings: number;

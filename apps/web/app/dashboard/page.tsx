@@ -487,24 +487,7 @@ const DashboardPage = () => {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </>
-                ) : (
-                  <>
-                    <Button
-                      variant="default"
-                      size="icon"
-                      onClick={handleUpdateBooking}
-                    >
-                      <Save className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setEditingBooking(false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
+                ) : null}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -708,7 +691,26 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              {!editingBooking && (
+              {/* Action Buttons */}
+              {editingBooking ? (
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button
+                    variant="default"
+                    onClick={handleUpdateBooking}
+                    className="flex-1 gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    {t("save")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingBooking(false)}
+                    className="flex-1"
+                  >
+                    {t("cancel")}
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   className="w-full"
                   onClick={() => {
@@ -770,24 +772,7 @@ const DashboardPage = () => {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </>
-                ) : (
-                  <>
-                    <Button
-                      variant="default"
-                      size="icon"
-                      onClick={handleUpdatePost}
-                    >
-                      <Save className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setEditingPost(false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
+                ) : null}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -982,7 +967,26 @@ const DashboardPage = () => {
                 )}
               </div>
 
-              {!editingPost && (
+              {/* Action Buttons */}
+              {editingPost ? (
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button
+                    variant="default"
+                    onClick={handleUpdatePost}
+                    className="flex-1 gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    {t("save")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingPost(false)}
+                    className="flex-1"
+                  >
+                    {t("cancel")}
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   className="w-full"
                   onClick={() => {
@@ -1002,4 +1006,6 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
+
 

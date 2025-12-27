@@ -11,3 +11,4 @@ import { SupabaseService } from '../../config/supabase.service';
 export class BookingsModule {}
 
 
+

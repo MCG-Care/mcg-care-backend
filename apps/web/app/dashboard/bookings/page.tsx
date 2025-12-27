@@ -1,19 +1,55 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, Calendar, ArrowRight } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Loader2,
+  Search,
+  Calendar as CalendarIcon,
+  ArrowRight,
+  X,
+  Edit,
+  Trash2,
+  Save,
+  Image as ImageIcon,
+  Filter,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Booking } from "@/types";
+import Image from "next/image";
+
+type SortBy = "bookingForDate" | "bookingOnDate" | null;
+type SortOrder = "asc" | "desc";
+type DateRangeType = "single" | "range";
 
 const BookingsPage = () => {
   const { t } = useLanguage();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateRangeType, setDateRangeType] = useState<DateRangeType>("single");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  
+  // Sort states
+  const [sortBy, setSortBy] = useState<SortBy>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  
+  // Modal states
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [editingBooking, setEditingBooking] = useState(false);
+  const [bookingFormData, setBookingFormData] = useState<Partial<Booking>>({});
 
   useEffect(() => {
     fetchBookings();
@@ -59,12 +95,136 @@ const BookingsPage = () => {
     return colors[status] || "text-gray-600 bg-gray-100";
   };
 
-  const filteredBookings = bookings.filter(
-    (booking) =>
-      booking.aircon?.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.technician?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const openBookingModal = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setBookingFormData({
+      status: booking.status,
+      fees: booking.fees,
+      description: booking.description,
+      bookingForDate: booking.bookingForDate,
+    });
+    setEditingBooking(false);
+  };
+
+  const handleUpdateBooking = async () => {
+    if (!selectedBooking) return;
+    
+    try {
+      await api.patch(`/bookings/${selectedBooking.id}`, bookingFormData);
+      await fetchBookings();
+      setEditingBooking(false);
+      setSelectedBooking(null);
+    } catch (error) {
+      console.error("Error updating booking:", error);
+      alert("Failed to update booking");
+    }
+  };
+
+  const handleDeleteBooking = async () => {
+    if (!selectedBooking) return;
+    
+    if (!confirm("Are you sure you want to delete this booking?")) return;
+    
+    try {
+      await api.delete(`/bookings/${selectedBooking.id}`);
+      await fetchBookings();
+      setSelectedBooking(null);
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      alert("Failed to delete booking");
+    }
+  };
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setDateRangeType("single");
+    setDateFrom("");
+    setDateTo("");
+  };
+
+  const clearSort = () => {
+    setSortBy(null);
+    setSortOrder("desc");
+  };
+
+  // Filter and sort bookings
+  const filteredAndSortedBookings = useMemo(() => {
+    let result = [...bookings];
+
+    // Search filter
+    if (searchQuery) {
+      result = result.filter(
+        (booking) =>
+          booking.aircon?.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          booking.technician?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          booking.status.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      result = result.filter((booking) => booking.status === statusFilter);
+    }
+
+    // Date filter
+    if (dateRangeType === "single" && dateFrom) {
+      result = result.filter((booking) => {
+        const bookingDate = new Date(booking.bookingForDate).toISOString().split("T")[0];
+        return bookingDate === dateFrom;
+      });
+    } else if (dateRangeType === "range" && dateFrom && dateTo) {
+      result = result.filter((booking) => {
+        const bookingDate = new Date(booking.bookingForDate).toISOString().split("T")[0];
+        return bookingDate >= dateFrom && bookingDate <= dateTo;
+      });
+    }
+
+    // Sorting
+    if (sortBy) {
+      result.sort((a, b) => {
+        let aValue: string | Date;
+        let bValue: string | Date;
+
+        if (sortBy === "bookingForDate") {
+          aValue = new Date(a.bookingForDate);
+          bValue = new Date(b.bookingForDate);
+        } else if (sortBy === "bookingOnDate") {
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
+        } else {
+          return 0;
+        }
+
+        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [bookings, searchQuery, statusFilter, dateRangeType, dateFrom, dateTo, sortBy, sortOrder]);
+
+  const handleSort = (field: SortBy) => {
+    if (sortBy === field) {
+      // Toggle order if same field
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      // Set new field with default desc order
+      setSortBy(field);
+      setSortOrder("desc");
+    }
+  };
+
+  const getSortIcon = (field: SortBy) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="h-4 w-4" />;
+    }
+    return sortOrder === "asc" ? (
+      <ArrowUp className="h-4 w-4" />
+    ) : (
+      <ArrowDown className="h-4 w-4" />
+    );
+  };
 
   if (loading) {
     return (
@@ -77,35 +237,156 @@ const BookingsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t("allBookings")}</h1>
+        <h1 className="text-m font-bold">{t("allBookings")}</h1>
       </div>
 
-      {/* Search Bar */}
+      {/* Filters and Sort */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t("search") + "..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            <CardTitle>Filters & Sort</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search Bar */}
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">
+              {t("bookingsSearchHint")}
+            </p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("search") + "..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Status Filter */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{t("status")}</Label>
+              <select
+                className="w-full px-3 py-2 border rounded-md bg-background"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">{t("pending")}</option>
+                <option value="inprogress">{t("inProgress")}</option>
+                <option value="done">{t("done")}</option>
+                <option value="unsuccessful">{t("unsuccessful")}</option>
+              </select>
+            </div>
+
+            {/* Date Range Type */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Date Type</Label>
+              <select
+                className="w-full px-3 py-2 border rounded-md bg-background"
+                value={dateRangeType}
+                onChange={(e) => {
+                  setDateRangeType(e.target.value as DateRangeType);
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+              >
+                <option value="single">Single Date</option>
+                <option value="range">Date Range</option>
+              </select>
+            </div>
+
+            {/* Date From */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">
+                {dateRangeType === "single" ? "Booking For Date" : "From Date"}
+              </Label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Date To (only show for range) */}
+            {dateRangeType === "range" && (
+              <div>
+                <Label className="text-sm font-medium mb-2 block">To Date</Label>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full"
+                  min={dateFrom}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Sort Options */}
+          <div className="flex items-center gap-4 pt-4 border-t">
+            <Label className="text-sm font-medium">Sort by:</Label>
+            <Button
+              variant={sortBy === "bookingForDate" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleSort("bookingForDate")}
+              className="gap-2"
+            >
+              {getSortIcon("bookingForDate")}
+              Booking For Date
+            </Button>
+            <Button
+              variant={sortBy === "bookingOnDate" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleSort("bookingOnDate")}
+              className="gap-2"
+            >
+              {getSortIcon("bookingOnDate")}
+              Booking On Date
+            </Button>
+            <div className="ml-auto flex gap-2">
+              {sortBy && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSort}
+                >
+                  {t("clearSort")}
+                </Button>
+              )}
+              {(statusFilter !== "all" || dateFrom || dateTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                >
+                  {t("clearFilters")}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Bookings List */}
-      {filteredBookings.length > 0 ? (
+      {filteredAndSortedBookings.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
-          {filteredBookings.map((booking) => (
-            <Card key={booking.id} className="hover:shadow-lg transition-shadow">
+          {filteredAndSortedBookings.map((booking) => (
+            <Card
+              key={booking.id}
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => openBookingModal(booking)}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-white" />
+                        <CalendarIcon className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">
@@ -125,7 +406,7 @@ const BookingsPage = () => {
                         </span>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">{t("date")}</p>
+                        <p className="text-xs text-muted-foreground">Booking For</p>
                         <p className="text-sm font-medium mt-1">
                           {formatDate(booking.bookingForDate)}
                         </p>
@@ -144,7 +425,10 @@ const BookingsPage = () => {
                       </div>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" onClick={(e) => {
+                    e.stopPropagation();
+                    openBookingModal(booking);
+                  }}>
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </div>
@@ -156,13 +440,288 @@ const BookingsPage = () => {
         <Card>
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
-              {searchQuery ? "No bookings found matching your search" : t("noBookingsYet")}
+              {searchQuery || statusFilter !== "all" || dateFrom || dateTo
+                ? "No bookings found matching your filters"
+                : t("noBookingsYet")}
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Booking Detail Modal */}
+      {selectedBooking && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => {
+            setSelectedBooking(null);
+            setEditingBooking(false);
+          }}
+        >
+          <Card
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-background"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="flex flex-row items-center justify-between border-b">
+              <CardTitle className="text-2xl">Booking Details</CardTitle>
+              <div className="flex gap-2">
+                {!editingBooking ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setEditingBooking(true)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={handleDeleteBooking}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : null}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedBooking(null);
+                    setEditingBooking(false);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-6">
+              {/* Customer Information */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h3 className="font-semibold text-lg mb-3">Customer Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Name</Label>
+                    <p className="font-medium">
+                      {selectedBooking.aircon?.customer?.name || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Email</Label>
+                    <p className="font-medium">
+                      {selectedBooking.aircon?.customer?.email || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Phone</Label>
+                    <p className="font-medium">
+                      {selectedBooking.aircon?.customer?.phoneNo || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Product</Label>
+                    <p className="font-medium">
+                      {selectedBooking.aircon?.product?.name || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Services */}
+              <div>
+                <Label className="text-muted-foreground">Requested Services</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedBooking.bookingServices?.map((s: any) => (
+                    <span
+                      key={s.service.id}
+                      className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                    >
+                      {s.service?.name} - {s.service?.serviceFee} Ks
+                    </span>
+                  )) || <p>No services</p>}
+                </div>
+              </div>
+
+              {/* Technician Information */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h3 className="font-semibold text-lg mb-3">Assigned Technician</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Name</Label>
+                    <p className="font-medium">
+                      {selectedBooking.technician?.name || "Not assigned"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Phone</Label>
+                    <p className="font-medium">
+                      {selectedBooking.technician?.phoneNo || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Booking Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  {editingBooking ? (
+                    <select
+                      className="w-full mt-1 px-3 py-2 border rounded-md"
+                      value={bookingFormData.status || selectedBooking.status}
+                      onChange={(e) =>
+                        setBookingFormData({ ...bookingFormData, status: e.target.value as any })
+                      }
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="inprogress">In Progress</option>
+                      <option value="done">Done</option>
+                      <option value="unsuccessful">Unsuccessful</option>
+                    </select>
+                  ) : (
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-sm mt-1 ${getStatusColor(
+                        selectedBooking.status
+                      )}`}
+                    >
+                      {t(selectedBooking.status)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Scheduled Date</Label>
+                  {editingBooking ? (
+                    <Input
+                      type="datetime-local"
+                      value={bookingFormData.bookingForDate?.split('.')[0] || selectedBooking.bookingForDate.split('.')[0]}
+                      onChange={(e) =>
+                        setBookingFormData({ ...bookingFormData, bookingForDate: e.target.value })
+                      }
+                      className="mt-1"
+                    />
+                  ) : (
+                    <p className="font-medium mt-1">
+                      {formatDate(selectedBooking.bookingForDate)}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Booking Time</Label>
+                  <p className="font-medium mt-1">{selectedBooking.bookingTime || "N/A"}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Duration</Label>
+                  <p className="font-medium mt-1">{selectedBooking.duration} minutes</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Fees</Label>
+                  {editingBooking ? (
+                    <Input
+                      type="text"
+                      value={bookingFormData.fees || selectedBooking.fees}
+                      onChange={(e) =>
+                        setBookingFormData({ ...bookingFormData, fees: e.target.value })
+                      }
+                      className="mt-1"
+                    />
+                  ) : (
+                    <p className="font-medium mt-1">{selectedBooking.fees || "0.00"} Ks</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <Label className="text-muted-foreground">Description</Label>
+                {editingBooking ? (
+                  <Textarea
+                    value={bookingFormData.description || selectedBooking.description || ""}
+                    onChange={(e) =>
+                      setBookingFormData({ ...bookingFormData, description: e.target.value })
+                    }
+                    className="mt-1"
+                    rows={4}
+                  />
+                ) : (
+                  <p className="mt-1 whitespace-pre-wrap">
+                    {selectedBooking.description || "No description provided"}
+                  </p>
+                )}
+              </div>
+
+              {/* Photos */}
+              {selectedBooking.bookingImages && selectedBooking.bookingImages.length > 0 && (
+                <div>
+                  <Label className="text-muted-foreground flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4" />
+                    Photos ({selectedBooking.bookingImages.length})
+                  </Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                    {selectedBooking.bookingImages.map((img) => (
+                      <div
+                        key={img.id}
+                        className="relative aspect-video rounded-lg overflow-hidden border bg-muted"
+                      >
+                        <Image
+                          src={img.url}
+                          alt="Booking image"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                <div>
+                  <Label className="text-muted-foreground">Created</Label>
+                  <p className="text-sm">{formatDate(selectedBooking.createdAt)}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Last Updated</Label>
+                  <p className="text-sm">{formatDate(selectedBooking.updatedAt)}</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              {editingBooking ? (
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button
+                    variant="default"
+                    onClick={handleUpdateBooking}
+                    className="flex-1 gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    {t("save")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingBooking(false)}
+                    className="flex-1"
+                  >
+                    {t("cancel")}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setSelectedBooking(null);
+                    setEditingBooking(false);
+                  }}
+                >
+                  Close
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
 };
 
 export default BookingsPage;
+

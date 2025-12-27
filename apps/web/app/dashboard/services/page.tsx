@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,16 +15,30 @@ import {
   Save,
   Search,
   Wrench,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { ServiceType } from "@/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const ServicesPage = () => {
   const { t } = useLanguage();
   const [services, setServices] = useState<ServiceType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"fees-asc" | "fees-desc" | "duration-asc" | "duration-desc" | null>(null);
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
   const [selectedService, setSelectedService] = useState<ServiceType | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -38,6 +52,26 @@ const ServicesPage = () => {
   useEffect(() => {
     fetchServices();
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSortDropdownOpen(false);
+      }
+    };
+
+    if (isSortDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSortDropdownOpen]);
 
   const fetchServices = async () => {
     try {
@@ -132,6 +166,23 @@ const ServicesPage = () => {
       service.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const sortedServices = [...filteredServices].sort((a, b) => {
+    if (!sortBy) return 0;
+    
+    switch (sortBy) {
+      case "fees-asc":
+        return parseFloat(a.serviceFee) - parseFloat(b.serviceFee);
+      case "fees-desc":
+        return parseFloat(b.serviceFee) - parseFloat(a.serviceFee);
+      case "duration-asc":
+        return a.duration - b.duration;
+      case "duration-desc":
+        return b.duration - a.duration;
+      default:
+        return 0;
+    }
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -143,31 +194,103 @@ const ServicesPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t("services")}</h1>
+        <h1 className="text-m font-bold">{t("manageServices")}</h1>
         <Button onClick={handleCreate} className="gap-2">
           <Plus className="h-4 w-4" />
           {t("addServiceType")}
         </Button>
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar and Sort */}
       <Card>
         <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t("searchServices")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("searchServices")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <DropdownMenu>
+              <div ref={sortDropdownRef} className="relative">
+                <DropdownMenuTrigger
+                  className={cn(buttonVariants({ variant: "outline", size: "default" }), "gap-2")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsSortDropdownOpen(!isSortDropdownOpen);
+                  }}
+                >
+                <ArrowUpDown className="h-4 w-4" />
+                {sortBy === "fees-asc"
+                  ? t("sortByFeesAsc")
+                  : sortBy === "fees-desc"
+                  ? t("sortByFeesDesc")
+                  : sortBy === "duration-asc"
+                  ? t("sortByDurationAsc")
+                  : sortBy === "duration-desc"
+                  ? t("sortByDurationDesc")
+                  : t("sortBy")}
+              </DropdownMenuTrigger>
+              {isSortDropdownOpen && (
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => {
+                    setSortBy("fees-asc");
+                    setIsSortDropdownOpen(false);
+                  }}>
+                    <div className="flex items-center gap-2">
+                      <ArrowUp className="h-3 w-3" />
+                      {t("sortByFeesAsc")}
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    setSortBy("fees-desc");
+                    setIsSortDropdownOpen(false);
+                  }}>
+                    <div className="flex items-center gap-2">
+                      <ArrowDown className="h-3 w-3" />
+                      {t("sortByFeesDesc")}
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    setSortBy("duration-asc");
+                    setIsSortDropdownOpen(false);
+                  }}>
+                    <div className="flex items-center gap-2">
+                      <ArrowUp className="h-3 w-3" />
+                      {t("sortByDurationAsc")}
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    setSortBy("duration-desc");
+                    setIsSortDropdownOpen(false);
+                  }}>
+                    <div className="flex items-center gap-2">
+                      <ArrowDown className="h-3 w-3" />
+                      {t("sortByDurationDesc")}
+                    </div>
+                  </DropdownMenuItem>
+                  {sortBy && (
+                    <DropdownMenuItem onClick={() => {
+                      setSortBy(null);
+                      setIsSortDropdownOpen(false);
+                    }}>
+                      {t("clearSort")}
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              )}
+              </div>
+            </DropdownMenu>
           </div>
         </CardContent>
       </Card>
 
       {/* Services Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredServices.map((service) => (
+        {sortedServices.map((service) => (
           <Card key={service.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
               <div className="flex items-center gap-3">
@@ -216,7 +339,7 @@ const ServicesPage = () => {
         ))}
       </div>
 
-      {filteredServices.length === 0 && (
+      {sortedServices.length === 0 && (
         <Card>
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
@@ -331,3 +454,4 @@ const ServicesPage = () => {
 };
 
 export default ServicesPage;
+
