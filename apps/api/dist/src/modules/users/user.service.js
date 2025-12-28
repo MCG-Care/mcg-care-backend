@@ -11,6 +11,17 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
@@ -22,37 +33,113 @@ let UsersService = class UsersService {
         this.db = db;
     }
     async getAllUsers() {
-        return this.db.select().from(database_1.schema.users);
+        const results = await this.db
+            .select({
+            id: database_1.schema.users.id,
+            name: database_1.schema.users.name,
+            email: database_1.schema.users.email,
+            phoneNo: database_1.schema.users.phoneNo,
+            role: database_1.schema.users.role,
+            addressId: database_1.schema.users.addressId,
+            createdAt: database_1.schema.users.createdAt,
+            updatedAt: database_1.schema.users.updatedAt,
+            address: {
+                id: database_1.schema.addresses.id,
+                address: database_1.schema.addresses.address,
+                township: database_1.schema.addresses.township,
+                city: database_1.schema.addresses.city,
+                district: database_1.schema.addresses.district,
+                createdAt: database_1.schema.addresses.createdAt,
+                updatedAt: database_1.schema.addresses.updatedAt,
+            },
+        })
+            .from(database_1.schema.users)
+            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.addressId, database_1.schema.addresses.id));
+        return results.map((result) => {
+            const { address } = result, user = __rest(result, ["address"]);
+            return Object.assign(Object.assign({}, user), { address: address && address.id ? address : null });
+        });
     }
     async getUserById(id, includeRating = false) {
-        const result = await this.db
-            .select()
+        const results = await this.db
+            .select({
+            id: database_1.schema.users.id,
+            name: database_1.schema.users.name,
+            email: database_1.schema.users.email,
+            phoneNo: database_1.schema.users.phoneNo,
+            role: database_1.schema.users.role,
+            addressId: database_1.schema.users.addressId,
+            createdAt: database_1.schema.users.createdAt,
+            updatedAt: database_1.schema.users.updatedAt,
+            address: {
+                id: database_1.schema.addresses.id,
+                address: database_1.schema.addresses.address,
+                township: database_1.schema.addresses.township,
+                city: database_1.schema.addresses.city,
+                district: database_1.schema.addresses.district,
+                createdAt: database_1.schema.addresses.createdAt,
+                updatedAt: database_1.schema.addresses.updatedAt,
+            },
+        })
             .from(database_1.schema.users)
+            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.addressId, database_1.schema.addresses.id))
             .where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id))
             .limit(1);
-        const user = result[0] || null;
-        if (user && includeRating && user.role === 'technician') {
+        const result = results[0] || null;
+        if (!result)
+            return null;
+        const { address } = result, user = __rest(result, ["address"]);
+        const userWithAddress = Object.assign(Object.assign({}, user), { address: address && address.id ? address : null });
+        if (includeRating && user.role === 'technician') {
             try {
                 const ratingData = await this.getTechnicianAverageRating(id);
-                return Object.assign(Object.assign({}, user), { averageRating: ratingData.averageRatingRounded, totalFeedbacks: ratingData.totalFeedbacks });
+                return Object.assign(Object.assign({}, userWithAddress), { averageRating: ratingData.averageRatingRounded, totalFeedbacks: ratingData.totalFeedbacks });
             }
             catch (error) {
-                return user;
+                return userWithAddress;
             }
         }
-        return user;
+        return userWithAddress;
     }
     async getUserByEmail(email) {
-        const result = await this.db
-            .select()
+        const results = await this.db
+            .select({
+            id: database_1.schema.users.id,
+            name: database_1.schema.users.name,
+            email: database_1.schema.users.email,
+            password: database_1.schema.users.password,
+            phoneNo: database_1.schema.users.phoneNo,
+            role: database_1.schema.users.role,
+            addressId: database_1.schema.users.addressId,
+            createdAt: database_1.schema.users.createdAt,
+            updatedAt: database_1.schema.users.updatedAt,
+            address: {
+                id: database_1.schema.addresses.id,
+                address: database_1.schema.addresses.address,
+                township: database_1.schema.addresses.township,
+                city: database_1.schema.addresses.city,
+                district: database_1.schema.addresses.district,
+                createdAt: database_1.schema.addresses.createdAt,
+                updatedAt: database_1.schema.addresses.updatedAt,
+            },
+        })
             .from(database_1.schema.users)
+            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.addressId, database_1.schema.addresses.id))
             .where((0, drizzle_orm_1.eq)(database_1.schema.users.email, email))
             .limit(1);
-        return result[0] || null;
+        const result = results[0] || null;
+        if (!result)
+            return null;
+        const { address } = result, user = __rest(result, ["address"]);
+        return Object.assign(Object.assign({}, user), { address: address && address.id ? address : null });
     }
     async createUser(data) {
         const result = await this.db.insert(database_1.schema.users).values(data).returning();
-        return result[0];
+        const user = result[0];
+        if (user) {
+            return this.getUserById(user.id);
+        }
+        return user;
     }
     async createAddress(dto) {
         const result = await this.db.insert(database_1.schema.addresses).values(dto).returning();
@@ -64,11 +151,15 @@ let UsersService = class UsersService {
             .set(Object.assign(Object.assign({}, data), { updatedAt: new Date() }))
             .where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id))
             .returning();
-        return result[0] || null;
+        if (result[0]) {
+            return this.getUserById(id);
+        }
+        return null;
     }
     async deleteUser(id) {
-        const result = await this.db.delete(database_1.schema.users).where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id)).returning();
-        return result[0] || null;
+        const user = await this.getUserById(id);
+        await this.db.delete(database_1.schema.users).where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id));
+        return user;
     }
     async getTechnicianAverageRating(technicianId) {
         var _a, _b;
