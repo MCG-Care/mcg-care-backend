@@ -6,6 +6,9 @@
 # Documentation
 *.md
 
+# TypeScript build cache
+*.tsbuildinfo
+
 # Logs
 logs
 *.log
