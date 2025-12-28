@@ -22,3 +22,4 @@ export class CreateServiceTypeDto {
   @IsNotEmpty()
   duration!: number; // in minutes
 }
+
