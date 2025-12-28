@@ -41,12 +41,16 @@ export class AuthService {
   }
 
   generateToken(user: any) {
+    // Exclude password from user object
+    const { password, ...userWithoutPassword } = user;
+    
     return {
       access_token: this.jwt.sign({
         sub: user.id,
         email: user.email,
         role: user.role,
       }),
+      user: userWithoutPassword,
     };
   }
 }

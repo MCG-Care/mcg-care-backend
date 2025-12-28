@@ -4,13 +4,21 @@ export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
     getAllUsers(user?: any): Promise<{
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
-        password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -28,48 +36,100 @@ export declare class UsersController {
         averageRatingRounded: number;
     }>;
     getUser(id: string, user?: any): Promise<{
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
-        password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
     } | {
         averageRating: number;
         totalFeedbacks: number;
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
-        password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    } | null>;
     updateUser(id: string, dto: UpdateUserDto, user?: any): Promise<{
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
-        password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    } | null>;
     deleteUser(id: string, user?: any): Promise<{
-        password: string;
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
-    }>;
+        addressId: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | {
+        averageRating: number;
+        totalFeedbacks: number;
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+        id: number;
+        name: string;
+        email: string;
+        phoneNo: string;
+        role: "customer" | "technician" | "admin";
+        addressId: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
 }
