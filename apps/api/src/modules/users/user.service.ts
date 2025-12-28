@@ -13,44 +13,129 @@ export class UsersService {
   constructor(@Inject(DB_PROVIDER) private readonly db: Database) {}
 
   async getAllUsers() {
-    return this.db.select().from(schema.users);
+    const results = await this.db
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        email: schema.users.email,
+        phoneNo: schema.users.phoneNo,
+        role: schema.users.role,
+        addressId: schema.users.addressId,
+        createdAt: schema.users.createdAt,
+        updatedAt: schema.users.updatedAt,
+        address: {
+          id: schema.addresses.id,
+          address: schema.addresses.address,
+          township: schema.addresses.township,
+          city: schema.addresses.city,
+          district: schema.addresses.district,
+          createdAt: schema.addresses.createdAt,
+          updatedAt: schema.addresses.updatedAt,
+        },
+      })
+      .from(schema.users)
+      .leftJoin(schema.addresses, eq(schema.users.addressId, schema.addresses.id));
+
+    // Transform results to match expected format
+    return results.map((result) => {
+      const { address, ...user } = result;
+      return {
+        ...user,
+        address: address && address.id ? address : null,
+      };
+    });
   }
 
   async getUserById(id: number, includeRating: boolean = false) {
-    const result = await this.db
-      .select()
+    const results = await this.db
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        email: schema.users.email,
+        phoneNo: schema.users.phoneNo,
+        role: schema.users.role,
+        addressId: schema.users.addressId,
+        createdAt: schema.users.createdAt,
+        updatedAt: schema.users.updatedAt,
+        address: {
+          id: schema.addresses.id,
+          address: schema.addresses.address,
+          township: schema.addresses.township,
+          city: schema.addresses.city,
+          district: schema.addresses.district,
+          createdAt: schema.addresses.createdAt,
+          updatedAt: schema.addresses.updatedAt,
+        },
+      })
       .from(schema.users)
+      .leftJoin(schema.addresses, eq(schema.users.addressId, schema.addresses.id))
       .where(eq(schema.users.id, id))
       .limit(1);
 
-    const user = result[0] || null;
+    const result = results[0] || null;
+    if (!result) return null;
+
+    // Transform result to match expected format
+    const { address, ...user } = result;
+    const userWithAddress = {
+      ...user,
+      address: address && address.id ? address : null,
+    };
 
     // If user is a technician and rating is requested, include average rating
-    if (user && includeRating && user.role === 'technician') {
+    if (includeRating && user.role === 'technician') {
       try {
         const ratingData = await this.getTechnicianAverageRating(id);
         return {
-          ...user,
+          ...userWithAddress,
           averageRating: ratingData.averageRatingRounded,
           totalFeedbacks: ratingData.totalFeedbacks,
         };
       } catch (error) {
         // If rating calculation fails, just return user without rating
-        return user;
+        return userWithAddress;
       }
     }
 
-    return user;
+    return userWithAddress;
   }
 
   async getUserByEmail(email: string) {
-    const result = await this.db
-      .select()
+    const results = await this.db
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        email: schema.users.email,
+        password: schema.users.password,
+        phoneNo: schema.users.phoneNo,
+        role: schema.users.role,
+        addressId: schema.users.addressId,
+        createdAt: schema.users.createdAt,
+        updatedAt: schema.users.updatedAt,
+        address: {
+          id: schema.addresses.id,
+          address: schema.addresses.address,
+          township: schema.addresses.township,
+          city: schema.addresses.city,
+          district: schema.addresses.district,
+          createdAt: schema.addresses.createdAt,
+          updatedAt: schema.addresses.updatedAt,
+        },
+      })
       .from(schema.users)
+      .leftJoin(schema.addresses, eq(schema.users.addressId, schema.addresses.id))
       .where(eq(schema.users.email, email))
       .limit(1);
 
-    return result[0] || null;
+    const result = results[0] || null;
+    if (!result) return null;
+
+    // Transform result to match expected format
+    const { address, ...user } = result;
+    return {
+      ...user,
+      address: address && address.id ? address : null,
+    };
   }
 
   async createUser(data: {
@@ -62,8 +147,14 @@ export class UsersService {
     addressId: number;
   }) {
     const result = await this.db.insert(schema.users).values(data).returning();
+    const user = result[0];
 
-    return result[0];
+    // Fetch user with address
+    if (user) {
+      return this.getUserById(user.id);
+    }
+
+    return user;
   }
 
   async createAddress(dto: AddressDto) {
@@ -79,13 +170,21 @@ export class UsersService {
       .where(eq(schema.users.id, id))
       .returning();
 
-    return result[0] || null;
+    // Fetch updated user with address
+    if (result[0]) {
+      return this.getUserById(id);
+    }
+
+    return null;
   }
 
   async deleteUser(id: number) {
-    const result = await this.db.delete(schema.users).where(eq(schema.users.id, id)).returning();
+    // Get user with address before deleting
+    const user = await this.getUserById(id);
+    
+    await this.db.delete(schema.users).where(eq(schema.users.id, id));
 
-    return result[0] || null;
+    return user;
   }
 
   /**
