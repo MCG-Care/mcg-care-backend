@@ -28,9 +28,11 @@ const common_1 = require("@nestjs/common");
 const database_module_1 = require("../../config/database.module");
 const database_1 = require("../../config/database");
 const drizzle_orm_1 = require("drizzle-orm");
+const timeslots_service_1 = require("../timeslots/timeslots.service");
 let UsersService = class UsersService {
-    constructor(db) {
+    constructor(db, timeslotsService) {
         this.db = db;
+        this.timeslotsService = timeslotsService;
     }
     async getAllUsers() {
         const results = await this.db
@@ -136,6 +138,22 @@ let UsersService = class UsersService {
     async createUser(data) {
         const result = await this.db.insert(database_1.schema.users).values(data).returning();
         const user = result[0];
+        if (user && user.role === 'technician') {
+            try {
+                if (!this.timeslotsService) {
+                    console.error('TimeslotsService is not injected!');
+                    throw new Error('TimeslotsService is not available');
+                }
+                console.log(`Initializing timeslots for technician ${user.id}...`);
+                const result = await this.timeslotsService.initializeTechnicianTimeslots(user.id);
+                console.log(`Successfully initialized timeslots:`, result);
+            }
+            catch (error) {
+                console.error(`Failed to initialize timeslots for technician ${user.id}:`, error);
+                console.error('Error details:', error instanceof Error ? error.message : error);
+                console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+            }
+        }
         if (user) {
             return this.getUserById(user.id);
         }
@@ -158,6 +176,14 @@ let UsersService = class UsersService {
     }
     async deleteUser(id) {
         const user = await this.getUserById(id);
+        if (user && user.role === 'technician') {
+            try {
+                await this.timeslotsService.deleteTechnicianTimeslots(id);
+            }
+            catch (error) {
+                console.error(`Failed to delete timeslots for technician ${id}:`, error);
+            }
+        }
         await this.db.delete(database_1.schema.users).where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id));
         return user;
     }
@@ -221,6 +247,6 @@ exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(database_module_1.DB_PROVIDER)),
-    __metadata("design:paramtypes", [Object])
+    __metadata("design:paramtypes", [Object, timeslots_service_1.TimeslotsService])
 ], UsersService);
 //# sourceMappingURL=user.service.js.map

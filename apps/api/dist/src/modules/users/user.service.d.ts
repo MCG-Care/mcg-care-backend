@@ -1,9 +1,11 @@
 import { Database } from '../../config/database';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AddressDto } from './dto/address.dto';
+import { TimeslotsService } from '../timeslots/timeslots.service';
 export declare class UsersService {
     private readonly db;
-    constructor(db: Database);
+    private readonly timeslotsService;
+    constructor(db: Database, timeslotsService: TimeslotsService);
     getAllUsers(): Promise<{
         address: {
             id: number;

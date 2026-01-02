@@ -7,10 +7,14 @@ import { eq, sql } from 'drizzle-orm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AddressDto } from './dto/address.dto';
+import { TimeslotsService } from '../timeslots/timeslots.service';
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(DB_PROVIDER) private readonly db: Database) {}
+  constructor(
+    @Inject(DB_PROVIDER) private readonly db: Database,
+    private readonly timeslotsService: TimeslotsService,
+  ) {}
 
   async getAllUsers() {
     const results = await this.db
@@ -149,6 +153,24 @@ export class UsersService {
     const result = await this.db.insert(schema.users).values(data).returning();
     const user = result[0];
 
+    // If user is a technician, initialize timeslots
+    if (user && user.role === 'technician') {
+      try {
+        if (!this.timeslotsService) {
+          console.error('TimeslotsService is not injected!');
+          throw new Error('TimeslotsService is not available');
+        }
+        console.log(`Initializing timeslots for technician ${user.id}...`);
+        const result = await this.timeslotsService.initializeTechnicianTimeslots(user.id);
+        console.log(`Successfully initialized timeslots:`, result);
+      } catch (error) {
+        // Log error but don't fail user creation if timeslot initialization fails
+        console.error(`Failed to initialize timeslots for technician ${user.id}:`, error);
+        console.error('Error details:', error instanceof Error ? error.message : error);
+        console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+      }
+    }
+
     // Fetch user with address
     if (user) {
       return this.getUserById(user.id);
@@ -181,6 +203,16 @@ export class UsersService {
   async deleteUser(id: number) {
     // Get user with address before deleting
     const user = await this.getUserById(id);
+    
+    // If user is a technician, delete all their timeslots
+    if (user && user.role === 'technician') {
+      try {
+        await this.timeslotsService.deleteTechnicianTimeslots(id);
+      } catch (error) {
+        // Log error but continue with user deletion
+        console.error(`Failed to delete timeslots for technician ${id}:`, error);
+      }
+    }
     
     await this.db.delete(schema.users).where(eq(schema.users.id, id));
 

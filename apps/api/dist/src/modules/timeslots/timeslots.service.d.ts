@@ -118,4 +118,8 @@ export declare class TimeslotsService {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    deleteTechnicianTimeslots(technicianId: number): Promise<{
+        message: string;
+        count: number;
+    }>;
 }

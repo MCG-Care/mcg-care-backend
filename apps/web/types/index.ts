@@ -128,6 +128,24 @@ export interface DashboardStats {
   upcomingBookings: number;
 }
 
+export interface Technician {
+  id: string;
+  name: string;
+  email: string;
+  phoneNo: string;
+  role: "technician";
+  address?: {
+    address: string;
+    township: string;
+    city: string;
+    district: string;
+  };
+  averageRating?: number;
+  totalFeedbacks?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type Language = "en" | "my";
 
 export interface Translations {

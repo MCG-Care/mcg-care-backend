@@ -164,13 +164,25 @@ export class TimeslotsService {
    * Initialize timeslots for a new technician (30 days)
    */
   async initializeTechnicianTimeslots(technicianId: number) {
-    // Check if technician exists
-    const technician = await db.query.users.findFirst({
+    // Check if technician exists (with a retry in case of timing issues)
+    let technician = await db.query.users.findFirst({
       where: eq(schema.users.id, technicianId),
     });
 
-    if (!technician || technician.role !== 'technician') {
-      throw new BadRequestException(`Invalid technician ID: ${technicianId}`);
+    // If not found immediately, wait a bit and retry (in case of transaction timing)
+    if (!technician) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      technician = await db.query.users.findFirst({
+        where: eq(schema.users.id, technicianId),
+      });
+    }
+
+    if (!technician) {
+      throw new BadRequestException(`Technician with ID ${technicianId} not found`);
+    }
+
+    if (technician.role !== 'technician') {
+      throw new BadRequestException(`User with ID ${technicianId} is not a technician`);
     }
 
     const today = new Date();
@@ -397,5 +409,24 @@ export class TimeslotsService {
       .returning();
 
     return updatedTimeslot;
+  }
+
+  /**
+   * Delete all timeslots for a technician
+   * This is called automatically when a technician account is deleted
+   *
+   * @param technicianId - Technician ID
+   * @returns Number of deleted timeslots
+   */
+  async deleteTechnicianTimeslots(technicianId: number) {
+    const deletedResult = await db
+      .delete(schema.timeslots)
+      .where(eq(schema.timeslots.technicianId, technicianId))
+      .returning();
+
+    return {
+      message: `Deleted ${deletedResult.length} timeslots for technician ${technicianId}`,
+      count: deletedResult.length,
+    };
   }
 }

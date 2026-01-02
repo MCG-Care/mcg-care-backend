@@ -245,6 +245,16 @@ let TimeslotsService = class TimeslotsService {
             .returning();
         return updatedTimeslot;
     }
+    async deleteTechnicianTimeslots(technicianId) {
+        const deletedResult = await database_1.db
+            .delete(database_1.schema.timeslots)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.timeslots.technicianId, technicianId))
+            .returning();
+        return {
+            message: `Deleted ${deletedResult.length} timeslots for technician ${technicianId}`,
+            count: deletedResult.length,
+        };
+    }
 };
 exports.TimeslotsService = TimeslotsService;
 exports.TimeslotsService = TimeslotsService = __decorate([
