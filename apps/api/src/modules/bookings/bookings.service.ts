@@ -73,16 +73,42 @@ export class BookingsService {
     const serviceHours = Math.ceil(serviceDuration / 60);
 
     // 3. Validate booking date and time
-    const bookingDate = new Date(bookingForDate);
-    const today = new Date();
+    // Get current time in Bangkok timezone (UTC+7)
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    
+    const parts = formatter.formatToParts(now);
+    const bangkokNow = new Date(
+      parseInt(parts.find(p => p.type === 'year')!.value),
+      parseInt(parts.find(p => p.type === 'month')!.value) - 1,
+      parseInt(parts.find(p => p.type === 'day')!.value),
+      parseInt(parts.find(p => p.type === 'hour')!.value),
+      parseInt(parts.find(p => p.type === 'minute')!.value),
+      parseInt(parts.find(p => p.type === 'second')!.value),
+    );
+    
+    // Get today's date in Bangkok timezone (set to midnight)
+    const today = new Date(bangkokNow);
     today.setHours(0, 0, 0, 0);
+    
+    const bookingDate = new Date(bookingForDate);
+    bookingDate.setHours(0, 0, 0, 0);
 
     if (bookingDate < today) {
       throw new BadRequestException('Cannot book for past dates');
     }
 
     // Check if booking date is within 30 days
-    const maxDate = new Date();
+    const maxDate = new Date(today);
     maxDate.setDate(maxDate.getDate() + 30);
     if (bookingDate > maxDate) {
       throw new BadRequestException('Cannot book more than 30 days in advance');
@@ -91,6 +117,19 @@ export class BookingsService {
     // Validate booking time (must be between 9-16)
     if (bookingTime < 9 || bookingTime > 16) {
       throw new BadRequestException('Booking time must be between 9 and 16');
+    }
+
+    // If booking is for today, check if the booking time has already passed
+    if (bookingDate.getTime() === today.getTime()) {
+      const currentHour = bangkokNow.getHours();
+      const currentMinute = bangkokNow.getMinutes();
+      // Reject if booking time is less than or equal to current hour
+      // (if it's 9:00 or later, the 9:00 slot has already started)
+      if (bookingTime <= currentHour) {
+        throw new BadRequestException(
+          `Cannot book for ${bookingTime}:00 as this time has already passed. Current time in Bangkok is ${currentHour}:${currentMinute.toString().padStart(2, '0')}`,
+        );
+      }
     }
 
     // Check if service would extend beyond working hours (5 PM)

@@ -50,19 +50,40 @@ let BookingsService = class BookingsService {
         const serviceDuration = services.reduce((sum, service) => sum + service.duration, 0);
         const totalFees = services.reduce((sum, service) => sum + parseFloat(service.serviceFee), 0);
         const serviceHours = Math.ceil(serviceDuration / 60);
-        const bookingDate = new Date(bookingForDate);
-        const today = new Date();
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+        const parts = formatter.formatToParts(now);
+        const bangkokNow = new Date(parseInt(parts.find(p => p.type === 'year').value), parseInt(parts.find(p => p.type === 'month').value) - 1, parseInt(parts.find(p => p.type === 'day').value), parseInt(parts.find(p => p.type === 'hour').value), parseInt(parts.find(p => p.type === 'minute').value), parseInt(parts.find(p => p.type === 'second').value));
+        const today = new Date(bangkokNow);
         today.setHours(0, 0, 0, 0);
+        const bookingDate = new Date(bookingForDate);
+        bookingDate.setHours(0, 0, 0, 0);
         if (bookingDate < today) {
             throw new common_1.BadRequestException('Cannot book for past dates');
         }
-        const maxDate = new Date();
+        const maxDate = new Date(today);
         maxDate.setDate(maxDate.getDate() + 30);
         if (bookingDate > maxDate) {
             throw new common_1.BadRequestException('Cannot book more than 30 days in advance');
         }
         if (bookingTime < 9 || bookingTime > 16) {
             throw new common_1.BadRequestException('Booking time must be between 9 and 16');
+        }
+        if (bookingDate.getTime() === today.getTime()) {
+            const currentHour = bangkokNow.getHours();
+            const currentMinute = bangkokNow.getMinutes();
+            if (bookingTime <= currentHour) {
+                throw new common_1.BadRequestException(`Cannot book for ${bookingTime}:00 as this time has already passed. Current time in Bangkok is ${currentHour}:${currentMinute.toString().padStart(2, '0')}`);
+            }
         }
         const serviceEndTime = bookingTime + serviceHours;
         if (serviceEndTime > 17) {

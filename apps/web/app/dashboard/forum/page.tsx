@@ -43,8 +43,8 @@ const ForumPage = () => {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   
-  // Sort states
-  const [sortBy, setSortBy] = useState<SortBy>(null);
+  // Sort states - default to newest first (by createdAt)
+  const [sortBy, setSortBy] = useState<SortBy>("postedDate");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   
   // Modal states
@@ -301,7 +301,7 @@ const ForumPage = () => {
   };
 
   const clearSort = () => {
-    setSortBy(null);
+    setSortBy("postedDate"); // Reset to default: newest first
     setSortOrder("desc");
   };
 
@@ -332,27 +332,27 @@ const ForumPage = () => {
       });
     }
 
-    // Sorting
-    if (sortBy) {
-      result.sort((a, b) => {
-        let aValue: number | Date;
-        let bValue: number | Date;
+    // Sorting - always sort (default to newest first by createdAt)
+    result.sort((a, b) => {
+      let aValue: number | Date;
+      let bValue: number | Date;
 
-        if (sortBy === "postedDate") {
-          aValue = new Date(a.createdAt);
-          bValue = new Date(b.createdAt);
-        } else if (sortBy === "likes") {
-          aValue = a.likeCount || 0;
-          bValue = b.likeCount || 0;
-        } else {
-          return 0;
-        }
+      if (sortBy === "postedDate") {
+        aValue = new Date(a.createdAt);
+        bValue = new Date(b.createdAt);
+      } else if (sortBy === "likes") {
+        aValue = a.likeCount || 0;
+        bValue = b.likeCount || 0;
+      } else {
+        // Default: sort by createdAt (newest first)
+        aValue = new Date(a.createdAt);
+        bValue = new Date(b.createdAt);
+      }
 
-        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
 
     return result;
   }, [posts, searchQuery, dateRangeType, dateFrom, dateTo, sortBy, sortOrder]);

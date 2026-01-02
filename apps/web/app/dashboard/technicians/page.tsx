@@ -19,10 +19,13 @@ import {
   Phone,
   MapPin,
   Eye,
+  Wrench,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
-import { Technician } from "@/types";
+import { Technician, TechnicianService, Timeslot, ServiceType } from "@/types";
 
 const TechniciansPage = () => {
   const { t } = useLanguage();
@@ -35,6 +38,14 @@ const TechniciansPage = () => {
   const [isViewing, setIsViewing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [technicianServices, setTechnicianServices] = useState<ServiceType[]>([]);
+  const [timeslots, setTimeslots] = useState<Timeslot[]>([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [loadingTimeslots, setLoadingTimeslots] = useState(false);
+  const [updatingTimeslot, setUpdatingTimeslot] = useState<string | null>(null);
+  const [allServices, setAllServices] = useState<ServiceType[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [loadingAllServices, setLoadingAllServices] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -51,6 +62,7 @@ const TechniciansPage = () => {
   useEffect(() => {
     checkAdmin();
     fetchTechnicians();
+    fetchAllServices();
   }, []);
 
   const checkAdmin = () => {
@@ -98,6 +110,13 @@ const TechniciansPage = () => {
         })
       );
 
+      // Sort by createdAt descending (newest first)
+      techniciansWithRatings.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA; // Descending order (newest first)
+      });
+
       setTechnicians(techniciansWithRatings);
     } catch (error: any) {
       console.error("Error fetching technicians:", error);
@@ -117,6 +136,7 @@ const TechniciansPage = () => {
     setIsEditing(false);
     setIsViewing(false);
     setSelectedTechnician(null);
+    setSelectedServiceIds([]);
     resetForm();
   };
 
@@ -143,6 +163,12 @@ const TechniciansPage = () => {
       setIsViewing(true);
       setIsEditing(false);
       setIsCreating(false);
+
+      // Fetch technician services
+      fetchTechnicianServices(technician.id);
+      
+      // Fetch all timeslots for this technician
+      fetchTechnicianTimeslots(technician.id);
     } catch (error) {
       console.error("Error fetching technician details:", error);
       setSelectedTechnician(technician);
@@ -152,7 +178,89 @@ const TechniciansPage = () => {
     }
   };
 
-  const handleEdit = (technician: Technician) => {
+  const fetchAllServices = async () => {
+    try {
+      setLoadingAllServices(true);
+      const response = await api.get("/service-types");
+      const servicesData = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
+      setAllServices(servicesData);
+    } catch (error) {
+      console.error("Error fetching all services:", error);
+      setAllServices([]);
+    } finally {
+      setLoadingAllServices(false);
+    }
+  };
+
+  const fetchTechnicianServices = async (technicianId: string) => {
+    try {
+      setLoadingServices(true);
+      const response = await api.get(`/technician-services/technician/${technicianId}`);
+      // API returns { technicianId, technicianName, services: ServiceType[] }
+      const services = response.data?.services || [];
+      setTechnicianServices(Array.isArray(services) ? services : []);
+    } catch (error) {
+      console.error("Error fetching technician services:", error);
+      setTechnicianServices([]);
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
+  const fetchTechnicianTimeslots = async (technicianId: string) => {
+    try {
+      setLoadingTimeslots(true);
+      const response = await api.get(`/timeslots?technicianId=${technicianId}`);
+      const timeslotsData = Array.isArray(response.data) ? response.data : [];
+      // Sort by date
+      timeslotsData.sort((a: Timeslot, b: Timeslot) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      setTimeslots(timeslotsData);
+    } catch (error) {
+      console.error("Error fetching timeslots:", error);
+      setTimeslots([]);
+    } finally {
+      setLoadingTimeslots(false);
+    }
+  };
+
+  const handleToggleSlot = async (timeslotId: string, hour: number, currentSlots: number[]) => {
+    if (updatingTimeslot === timeslotId) return; // Prevent double clicks
+
+    try {
+      setUpdatingTimeslot(timeslotId);
+      
+      // Toggle the slot
+      const isSlotAvailable = currentSlots.includes(hour);
+      const updatedSlots = isSlotAvailable
+        ? currentSlots.filter((s) => s !== hour) // Remove slot (block it)
+        : [...currentSlots, hour].sort((a, b) => a - b); // Add slot (unblock it)
+
+      // Update the timeslot
+      await api.patch(`/timeslots/${timeslotId}`, { slots: updatedSlots });
+
+      // Update local state
+      setTimeslots((prev) =>
+        prev.map((ts) =>
+          ts.id === timeslotId ? { ...ts, slots: updatedSlots } : ts
+        )
+      );
+    } catch (error: any) {
+      console.error("Error updating timeslot:", error);
+      alert(error.response?.data?.message || "Failed to update timeslot");
+    } finally {
+      setUpdatingTimeslot(null);
+    }
+  };
+
+  const formatHour = (hour: number) => {
+    return `${hour}:00`;
+  };
+
+  const handleEdit = async (technician: Technician) => {
     setSelectedTechnician(technician);
     setIsEditing(true);
     setIsViewing(false);
@@ -169,6 +277,16 @@ const TechniciansPage = () => {
         district: "",
       },
     });
+    
+    // Fetch current services for this technician
+    try {
+      const response = await api.get(`/technician-services/technician/${technician.id}`);
+      const services = response.data?.services || [];
+      setSelectedServiceIds(services.map((s: ServiceType) => s.id.toString()));
+    } catch (error) {
+      console.error("Error fetching technician services for edit:", error);
+      setSelectedServiceIds([]);
+    }
   };
 
   const resetForm = () => {
@@ -205,12 +323,69 @@ const TechniciansPage = () => {
         }
 
         await api.patch(`/users/${selectedTechnician.id}`, updateData);
+        
+        // Update services
+        try {
+          // Get current services
+          const currentServicesResponse = await api.get(
+            `/technician-services/technician/${selectedTechnician.id}`
+          );
+          const currentServices = currentServicesResponse.data?.services || [];
+          const currentServiceIds = currentServices.map((s: ServiceType) => s.id.toString());
+          
+          // Find services to remove (in current but not in selected)
+          const servicesToRemove = currentServiceIds.filter(
+            (id: string) => !selectedServiceIds.includes(id)
+          );
+          
+          // Find services to add (in selected but not in current)
+          const servicesToAdd = selectedServiceIds.filter(
+            (id: string) => !currentServiceIds.includes(id)
+          );
+          
+          // Remove services
+          for (const serviceId of servicesToRemove) {
+            try {
+              await api.delete(
+                `/technician-services/technician/${selectedTechnician.id}/service/${serviceId}`
+              );
+            } catch (error) {
+              console.error(`Error removing service ${serviceId}:`, error);
+            }
+          }
+          
+          // Add new services
+          if (servicesToAdd.length > 0) {
+            await api.post("/technician-services/assign", {
+              technicianId: parseInt(selectedTechnician.id),
+              serviceIds: servicesToAdd.map((id) => parseInt(id)),
+            });
+          }
+        } catch (error) {
+          console.error("Error updating services:", error);
+          // Don't fail the whole operation if service update fails
+        }
       } else {
         // Create technician
-        await api.post("/auth/register", {
+        const createResponse = await api.post("/auth/register", {
           ...formData,
           role: "technician",
         });
+        
+        // Assign services if any are selected
+        // The register endpoint returns { access_token, user: {...} }
+        const newTechnicianId = createResponse.data?.user?.id;
+        if (selectedServiceIds.length > 0 && newTechnicianId) {
+          try {
+            await api.post("/technician-services/assign", {
+              technicianId: typeof newTechnicianId === 'string' ? parseInt(newTechnicianId) : newTechnicianId,
+              serviceIds: selectedServiceIds.map((id) => parseInt(id)),
+            });
+          } catch (error) {
+            console.error("Error assigning services:", error);
+            // Don't fail the whole operation if service assignment fails
+          }
+        }
       }
 
       await fetchTechnicians();
@@ -243,6 +418,9 @@ const TechniciansPage = () => {
     setIsEditing(false);
     setIsViewing(false);
     setSelectedTechnician(null);
+    setTechnicianServices([]);
+    setTimeslots([]);
+    setSelectedServiceIds([]);
     resetForm();
   };
 
@@ -397,7 +575,7 @@ const TechniciansPage = () => {
           onClick={handleCancel}
         >
           <Card
-            className="w-full max-w-4xl bg-background my-8"
+            className="w-full max-w-5xl bg-background my-8"
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader className="flex flex-row items-center justify-between border-b">
@@ -490,6 +668,117 @@ const TechniciansPage = () => {
                           {new Date(selectedTechnician.createdAt).toLocaleDateString()}
                         </p>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Services Section */}
+                  <div className="border-t pt-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Wrench className="h-5 w-5" />
+                      <Label className="text-lg font-semibold">Offering Services</Label>
+                    </div>
+                    {loadingServices ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : technicianServices.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {technicianServices.map((service) => (
+                          <Card key={service.id} className="p-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-medium">{service.name || "Unknown Service"}</p>
+                                {service.description && (
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {service.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                  <span>Fee: {service.serviceFee || "N/A"} Ks</span>
+                                  <span>Duration: {service.duration || "N/A"} min</span>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">
+                        No services assigned to this technician
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Timeslots Section */}
+                  <div className="border-t pt-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Calendar className="h-5 w-5" />
+                      <Label className="text-lg font-semibold">Availability Schedule</Label>
+                    </div>
+                    {loadingTimeslots ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : timeslots.length > 0 ? (
+                      <div className="space-y-4">
+                        {timeslots.map((timeslot) => (
+                          <Card key={timeslot.id} className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">
+                                  {new Date(timeslot.date).toLocaleDateString("en-US", {
+                                    weekday: "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {timeslot.slots.length} slots available
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {[9, 10, 11, 12, 13, 14, 15, 16].map((hour) => {
+                                const isAvailable = timeslot.slots.includes(hour);
+                                const isUpdating = updatingTimeslot === timeslot.id;
+                                return (
+                                  <button
+                                    key={hour}
+                                    onClick={() =>
+                                      handleToggleSlot(timeslot.id, hour, timeslot.slots)
+                                    }
+                                    disabled={isUpdating}
+                                    className={`
+                                      px-3 py-2 rounded-md text-sm font-medium transition-all
+                                      ${
+                                        isAvailable
+                                          ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-200"
+                                          : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
+                                      }
+                                      ${isUpdating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                                    `}
+                                  >
+                                    {isUpdating ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {formatHour(hour)}
+                                      </div>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">
+                        No timeslots available for this technician
+                      </p>
                     )}
                   </div>
                 </div>
@@ -615,6 +904,62 @@ const TechniciansPage = () => {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Services Assignment Section */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Wrench className="h-5 w-5" />
+                      <Label className="text-lg font-semibold">Assign Services</Label>
+                    </div>
+                    {loadingAllServices ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : allServices.length > 0 ? (
+                      <div className="space-y-2">
+                        {allServices.map((service) => (
+                          <label
+                            key={service.id}
+                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedServiceIds.includes(service.id.toString())}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedServiceIds([
+                                    ...selectedServiceIds,
+                                    service.id.toString(),
+                                  ]);
+                                } else {
+                                  setSelectedServiceIds(
+                                    selectedServiceIds.filter((id) => id !== service.id.toString())
+                                  );
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <p className="font-medium">{service.name}</p>
+                              {service.description && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {service.description}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <span>Fee: {service.serviceFee} Ks</span>
+                                <span>Duration: {service.duration} min</span>
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">
+                        No services available. Please create services first.
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex gap-2 pt-4">

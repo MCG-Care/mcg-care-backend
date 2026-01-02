@@ -42,8 +42,8 @@ const BookingsPage = () => {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   
-  // Sort states
-  const [sortBy, setSortBy] = useState<SortBy>(null);
+  // Sort states - default to newest first (by createdAt)
+  const [sortBy, setSortBy] = useState<SortBy>("bookingOnDate");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   
   // Modal states
@@ -143,7 +143,7 @@ const BookingsPage = () => {
   };
 
   const clearSort = () => {
-    setSortBy(null);
+    setSortBy("bookingOnDate"); // Reset to default: newest first
     setSortOrder("desc");
   };
 
@@ -179,27 +179,27 @@ const BookingsPage = () => {
       });
     }
 
-    // Sorting
-    if (sortBy) {
-      result.sort((a, b) => {
-        let aValue: string | Date;
-        let bValue: string | Date;
+    // Sorting - always sort (default to newest first by createdAt)
+    result.sort((a, b) => {
+      let aValue: string | Date;
+      let bValue: string | Date;
 
-        if (sortBy === "bookingForDate") {
-          aValue = new Date(a.bookingForDate);
-          bValue = new Date(b.bookingForDate);
-        } else if (sortBy === "bookingOnDate") {
-          aValue = new Date(a.createdAt);
-          bValue = new Date(b.createdAt);
-        } else {
-          return 0;
-        }
+      if (sortBy === "bookingForDate") {
+        aValue = new Date(a.bookingForDate);
+        bValue = new Date(b.bookingForDate);
+      } else if (sortBy === "bookingOnDate") {
+        aValue = new Date(a.createdAt);
+        bValue = new Date(b.createdAt);
+      } else {
+        // Default: sort by createdAt (newest first)
+        aValue = new Date(a.createdAt);
+        bValue = new Date(b.createdAt);
+      }
 
-        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
 
     return result;
   }, [bookings, searchQuery, statusFilter, dateRangeType, dateFrom, dateTo, sortBy, sortOrder]);
@@ -523,6 +523,14 @@ const BookingsPage = () => {
                       {selectedBooking.aircon?.product?.name || "N/A"}
                     </p>
                   </div>
+                  {selectedBooking.aircon?.name && (
+                    <div>
+                      <Label className="text-muted-foreground">Product Nickname</Label>
+                      <p className="font-medium">
+                        {selectedBooking.aircon.name}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -529,6 +529,14 @@ const DashboardPage = () => {
                       {selectedBooking.aircon?.product?.name || "N/A"}
                     </p>
                   </div>
+                  {selectedBooking.aircon?.name && (
+                    <div>
+                      <Label className="text-muted-foreground">Product Nickname</Label>
+                      <p className="font-medium">
+                        {selectedBooking.aircon.name}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -146,6 +146,22 @@ export interface Technician {
   updatedAt?: string;
 }
 
+export interface TechnicianService {
+  id: string;
+  technicianId: string;
+  serviceId: string;
+  service?: ServiceType;
+}
+
+export interface Timeslot {
+  id: string;
+  technicianId: string;
+  date: string;
+  slots: number[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type Language = "en" | "my";
 
 export interface Translations {
