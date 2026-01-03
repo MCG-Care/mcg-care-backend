@@ -128,6 +128,24 @@ export interface DashboardStats {
   upcomingBookings: number;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phoneNo: string;
+  role: "customer" | "technician" | "admin";
+  addressId?: string;
+  address?: {
+    id: string;
+    address: string;
+    township: string;
+    city: string;
+    district: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Technician {
   id: string;
   name: string;
@@ -144,6 +162,19 @@ export interface Technician {
   totalFeedbacks?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface CustomerProduct {
+  id: string;
+  customerId: string;
+  productId: string;
+  name: string;
+  qrUrl: string;
+  purchaseDate?: string;
+  warrantyEndDate?: string;
+  purchaseCode?: string;
+  product?: Product;
+  customer?: User;
 }
 
 export interface TechnicianService {

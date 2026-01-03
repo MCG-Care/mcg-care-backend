@@ -245,7 +245,7 @@ const BookingsPage = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            <CardTitle>Filters & Sort</CardTitle>
+            <CardTitle>{t("filtersAndSort")}</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -274,7 +274,7 @@ const BookingsPage = () => {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <option value="all">All Statuses</option>
+                <option value="all">{t("allStatuses")}</option>
                 <option value="pending">{t("pending")}</option>
                 <option value="inprogress">{t("inProgress")}</option>
                 <option value="done">{t("done")}</option>
@@ -284,7 +284,7 @@ const BookingsPage = () => {
 
             {/* Date Range Type */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Date Type</Label>
+              <Label className="text-sm font-medium mb-2 block">{t("dateType")}</Label>
               <select
                 className="w-full px-3 py-2 border rounded-md bg-background"
                 value={dateRangeType}
@@ -294,15 +294,15 @@ const BookingsPage = () => {
                   setDateTo("");
                 }}
               >
-                <option value="single">Single Date</option>
-                <option value="range">Date Range</option>
+                <option value="single">{t("singleDate")}</option>
+                <option value="range">{t("dateRange")}</option>
               </select>
             </div>
 
             {/* Date From */}
             <div>
               <Label className="text-sm font-medium mb-2 block">
-                {dateRangeType === "single" ? "Booking For Date" : "From Date"}
+                {dateRangeType === "single" ? t("bookingForDate") : t("fromDate")}
               </Label>
               <Input
                 type="date"
@@ -315,7 +315,7 @@ const BookingsPage = () => {
             {/* Date To (only show for range) */}
             {dateRangeType === "range" && (
               <div>
-                <Label className="text-sm font-medium mb-2 block">To Date</Label>
+                <Label className="text-sm font-medium mb-2 block">{t("toDate")}</Label>
                 <Input
                   type="date"
                   value={dateTo}
@@ -329,7 +329,7 @@ const BookingsPage = () => {
 
           {/* Sort Options */}
           <div className="flex items-center gap-4 pt-4 border-t">
-            <Label className="text-sm font-medium">Sort by:</Label>
+            <Label className="text-sm font-medium">{t("sortBy")}</Label>
             <Button
               variant={sortBy === "bookingForDate" ? "default" : "outline"}
               size="sm"
@@ -337,7 +337,7 @@ const BookingsPage = () => {
               className="gap-2"
             >
               {getSortIcon("bookingForDate")}
-              Booking For Date
+              {t("bookingForDate")}
             </Button>
             <Button
               variant={sortBy === "bookingOnDate" ? "default" : "outline"}
@@ -346,7 +346,7 @@ const BookingsPage = () => {
               className="gap-2"
             >
               {getSortIcon("bookingOnDate")}
-              Booking On Date
+              {t("bookingOnDate")}
             </Button>
             <div className="ml-auto flex gap-2">
               {sortBy && (
@@ -406,21 +406,21 @@ const BookingsPage = () => {
                         </span>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Booking For</p>
+                        <p className="text-xs text-muted-foreground">{t("bookingFor")}</p>
                         <p className="text-sm font-medium mt-1">
                           {formatDate(booking.bookingForDate)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Technician</p>
+                        <p className="text-xs text-muted-foreground">{t("technician")}</p>
                         <p className="text-sm font-medium mt-1">
-                          {booking.technician?.name || "Not assigned"}
+                          {booking.technician?.name || t("notAssigned")}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Services</p>
+                        <p className="text-xs text-muted-foreground">{t("services")}</p>
                         <p className="text-sm font-medium mt-1">
-                          {booking.bookingServices?.length || 0} service(s)
+                          {booking.bookingServices?.length || 0} {t("serviceCount")}
                         </p>
                       </div>
                     </div>
@@ -441,7 +441,7 @@ const BookingsPage = () => {
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
               {searchQuery || statusFilter !== "all" || dateFrom || dateTo
-                ? "No bookings found matching your filters"
+                ? t("noBookingsFoundMatchingFilters")
                 : t("noBookingsYet")}
             </p>
           </CardContent>
@@ -462,7 +462,7 @@ const BookingsPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader className="flex flex-row items-center justify-between border-b">
-              <CardTitle className="text-2xl">Booking Details</CardTitle>
+              <CardTitle className="text-2xl">{t("bookingDetails")}</CardTitle>
               <div className="flex gap-2">
                 {!editingBooking ? (
                   <>
@@ -497,35 +497,35 @@ const BookingsPage = () => {
             <CardContent className="space-y-6 pt-6">
               {/* Customer Information */}
               <div className="p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-semibold text-lg mb-3">Customer Information</h3>
+                <h3 className="font-semibold text-lg mb-3">{t("customerInformation")}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Name</Label>
+                    <Label className="text-muted-foreground">{t("name")}</Label>
                     <p className="font-medium">
                       {selectedBooking.aircon?.customer?.name || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Email</Label>
+                    <Label className="text-muted-foreground">{t("email")}</Label>
                     <p className="font-medium">
                       {selectedBooking.aircon?.customer?.email || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Phone</Label>
+                    <Label className="text-muted-foreground">{t("phone")}</Label>
                     <p className="font-medium">
                       {selectedBooking.aircon?.customer?.phoneNo || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Product</Label>
+                    <Label className="text-muted-foreground">{t("product")}</Label>
                     <p className="font-medium">
                       {selectedBooking.aircon?.product?.name || "N/A"}
                     </p>
                   </div>
                   {selectedBooking.aircon?.name && (
                     <div>
-                      <Label className="text-muted-foreground">Product Nickname</Label>
+                      <Label className="text-muted-foreground">{t("productNickname")}</Label>
                       <p className="font-medium">
                         {selectedBooking.aircon.name}
                       </p>
@@ -536,7 +536,7 @@ const BookingsPage = () => {
 
               {/* Services */}
               <div>
-                <Label className="text-muted-foreground">Requested Services</Label>
+                <Label className="text-muted-foreground">{t("requestedServices")}</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {selectedBooking.bookingServices?.map((s: any) => (
                     <span
@@ -545,22 +545,22 @@ const BookingsPage = () => {
                     >
                       {s.service?.name} - {s.service?.serviceFee} Ks
                     </span>
-                  )) || <p>No services</p>}
+                  )) || <p>{t("noServices")}</p>}
                 </div>
               </div>
 
               {/* Technician Information */}
               <div className="p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-semibold text-lg mb-3">Assigned Technician</h3>
+                <h3 className="font-semibold text-lg mb-3">{t("assignedTechnician")}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Name</Label>
+                    <Label className="text-muted-foreground">{t("name")}</Label>
                     <p className="font-medium">
-                      {selectedBooking.technician?.name || "Not assigned"}
+                      {selectedBooking.technician?.name || t("notAssigned")}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Phone</Label>
+                    <Label className="text-muted-foreground">{t("phone")}</Label>
                     <p className="font-medium">
                       {selectedBooking.technician?.phoneNo || "N/A"}
                     </p>
@@ -571,7 +571,7 @@ const BookingsPage = () => {
               {/* Booking Details */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Status</Label>
+                  <Label className="text-muted-foreground">{t("status")}</Label>
                   {editingBooking ? (
                     <select
                       className="w-full mt-1 px-3 py-2 border rounded-md"
@@ -580,10 +580,10 @@ const BookingsPage = () => {
                         setBookingFormData({ ...bookingFormData, status: e.target.value as any })
                       }
                     >
-                      <option value="pending">Pending</option>
-                      <option value="inprogress">In Progress</option>
-                      <option value="done">Done</option>
-                      <option value="unsuccessful">Unsuccessful</option>
+                      <option value="pending">{t("pending")}</option>
+                      <option value="inprogress">{t("inProgress")}</option>
+                      <option value="done">{t("done")}</option>
+                      <option value="unsuccessful">{t("unsuccessful")}</option>
                     </select>
                   ) : (
                     <span
@@ -596,7 +596,7 @@ const BookingsPage = () => {
                   )}
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Scheduled Date</Label>
+                  <Label className="text-muted-foreground">{t("scheduledDate")}</Label>
                   {editingBooking ? (
                     <Input
                       type="datetime-local"
@@ -613,15 +613,15 @@ const BookingsPage = () => {
                   )}
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Booking Time</Label>
+                  <Label className="text-muted-foreground">{t("bookingTime")}</Label>
                   <p className="font-medium mt-1">{selectedBooking.bookingTime || "N/A"}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Duration</Label>
-                  <p className="font-medium mt-1">{selectedBooking.duration} minutes</p>
+                  <Label className="text-muted-foreground">{t("duration")}</Label>
+                  <p className="font-medium mt-1">{selectedBooking.duration} {t("minutes")}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Fees</Label>
+                  <Label className="text-muted-foreground">{t("fees")}</Label>
                   {editingBooking ? (
                     <Input
                       type="text"
@@ -639,7 +639,7 @@ const BookingsPage = () => {
 
               {/* Description */}
               <div>
-                <Label className="text-muted-foreground">Description</Label>
+                <Label className="text-muted-foreground">{t("description")}</Label>
                 {editingBooking ? (
                   <Textarea
                     value={bookingFormData.description || selectedBooking.description || ""}
@@ -651,7 +651,7 @@ const BookingsPage = () => {
                   />
                 ) : (
                   <p className="mt-1 whitespace-pre-wrap">
-                    {selectedBooking.description || "No description provided"}
+                    {selectedBooking.description || t("noDescriptionProvided")}
                   </p>
                 )}
               </div>
@@ -661,7 +661,7 @@ const BookingsPage = () => {
                 <div>
                   <Label className="text-muted-foreground flex items-center gap-2">
                     <ImageIcon className="h-4 w-4" />
-                    Photos ({selectedBooking.bookingImages.length})
+                    {t("photos")} ({selectedBooking.bookingImages.length})
                   </Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                     {selectedBooking.bookingImages.map((img) => (
@@ -684,11 +684,11 @@ const BookingsPage = () => {
               {/* Timestamps */}
               <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                 <div>
-                  <Label className="text-muted-foreground">Created</Label>
+                  <Label className="text-muted-foreground">{t("created")}</Label>
                   <p className="text-sm">{formatDate(selectedBooking.createdAt)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Last Updated</Label>
+                  <Label className="text-muted-foreground">{t("lastUpdated")}</Label>
                   <p className="text-sm">{formatDate(selectedBooking.updatedAt)}</p>
                 </div>
               </div>
@@ -720,7 +720,7 @@ const BookingsPage = () => {
                     setEditingBooking(false);
                   }}
                 >
-                  Close
+                  {t("close")}
                 </Button>
               )}
             </CardContent>

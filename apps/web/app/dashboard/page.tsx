@@ -406,7 +406,7 @@ const DashboardPage = () => {
                 ))
               ) : (
                 <p className="text-center text-muted-foreground py-8">
-                  No bookings yet
+                  {t("noBookingsYet")}
                 </p>
               )}
             </div>
@@ -446,7 +446,7 @@ const DashboardPage = () => {
                 ))
               ) : (
                 <p className="text-center text-muted-foreground py-8">
-                  No forum posts yet
+                  {t("noPostsYet")}
                 </p>
               )}
             </div>
@@ -468,7 +468,7 @@ const DashboardPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader className="flex flex-row items-center justify-between border-b">
-              <CardTitle className="text-2xl">Booking Details</CardTitle>
+              <CardTitle className="text-2xl">{t("bookingDetails")}</CardTitle>
               <div className="flex gap-2">
                 {!editingBooking ? (
                   <>
@@ -503,35 +503,35 @@ const DashboardPage = () => {
             <CardContent className="space-y-6 pt-6">
               {/* Customer Information */}
               <div className="p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-semibold text-lg mb-3">Customer Information</h3>
+                <h3 className="font-semibold text-lg mb-3">{t("customerInformation")}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Name</Label>
+                    <Label className="text-muted-foreground">{t("name")}</Label>
                     <p className="font-medium">
                       {selectedBooking.aircon?.customer?.name || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Email</Label>
+                    <Label className="text-muted-foreground">{t("email")}</Label>
                     <p className="font-medium">
                       {selectedBooking.aircon?.customer?.email || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Phone</Label>
+                    <Label className="text-muted-foreground">{t("phone")}</Label>
                     <p className="font-medium">
                       {selectedBooking.aircon?.customer?.phoneNo || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Product</Label>
+                    <Label className="text-muted-foreground">{t("product")}</Label>
                     <p className="font-medium">
                       {selectedBooking.aircon?.product?.name || "N/A"}
                     </p>
                   </div>
                   {selectedBooking.aircon?.name && (
                     <div>
-                      <Label className="text-muted-foreground">Product Nickname</Label>
+                      <Label className="text-muted-foreground">{t("productNickname")}</Label>
                       <p className="font-medium">
                         {selectedBooking.aircon.name}
                       </p>
@@ -542,7 +542,7 @@ const DashboardPage = () => {
 
               {/* Services */}
               <div>
-                <Label className="text-muted-foreground">Requested Services</Label>
+                <Label className="text-muted-foreground">{t("requestedServices")}</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {selectedBooking.bookingServices?.map((s: any) => (
                     <span
@@ -551,22 +551,22 @@ const DashboardPage = () => {
                     >
                       {s.service?.name} - {s.service?.serviceFee} Ks
                     </span>
-                  )) || <p>No services</p>}
+                  )) || <p>{t("noServices")}</p>}
                 </div>
               </div>
 
               {/* Technician Information */}
               <div className="p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-semibold text-lg mb-3">Assigned Technician</h3>
+                <h3 className="font-semibold text-lg mb-3">{t("assignedTechnician")}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Name</Label>
+                    <Label className="text-muted-foreground">{t("name")}</Label>
                     <p className="font-medium">
-                      {selectedBooking.technician?.name || "Not assigned"}
+                      {selectedBooking.technician?.name || t("notAssigned")}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Phone</Label>
+                    <Label className="text-muted-foreground">{t("phone")}</Label>
                     <p className="font-medium">
                       {selectedBooking.technician?.phoneNo || "N/A"}
                     </p>
@@ -577,7 +577,7 @@ const DashboardPage = () => {
               {/* Booking Details */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Status</Label>
+                  <Label className="text-muted-foreground">{t("status")}</Label>
                   {editingBooking ? (
                     <select
                       className="w-full mt-1 px-3 py-2 border rounded-md"
@@ -586,10 +586,10 @@ const DashboardPage = () => {
                         setBookingFormData({ ...bookingFormData, status: e.target.value as any })
                       }
                     >
-                      <option value="pending">Pending</option>
-                      <option value="inprogress">In Progress</option>
-                      <option value="done">Done</option>
-                      <option value="unsuccessful">Unsuccessful</option>
+                      <option value="pending">{t("pending")}</option>
+                      <option value="inprogress">{t("inProgress")}</option>
+                      <option value="done">{t("done")}</option>
+                      <option value="unsuccessful">{t("unsuccessful")}</option>
                     </select>
                   ) : (
                     <span
@@ -602,7 +602,7 @@ const DashboardPage = () => {
                   )}
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Scheduled Date</Label>
+                  <Label className="text-muted-foreground">{t("scheduledDate")}</Label>
                   {editingBooking ? (
                     <Input
                       type="datetime-local"
@@ -619,15 +619,15 @@ const DashboardPage = () => {
                   )}
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Booking Time</Label>
+                  <Label className="text-muted-foreground">{t("bookingTime")}</Label>
                   <p className="font-medium mt-1">{selectedBooking.bookingTime || "N/A"}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Duration</Label>
-                  <p className="font-medium mt-1">{selectedBooking.duration} minutes</p>
+                  <Label className="text-muted-foreground">{t("duration")}</Label>
+                  <p className="font-medium mt-1">{selectedBooking.duration} {t("minutes")}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Fees</Label>
+                  <Label className="text-muted-foreground">{t("fees")}</Label>
                   {editingBooking ? (
                     <Input
                       type="text"
@@ -645,7 +645,7 @@ const DashboardPage = () => {
 
               {/* Description */}
               <div>
-                <Label className="text-muted-foreground">Description</Label>
+                <Label className="text-muted-foreground">{t("description")}</Label>
                 {editingBooking ? (
                   <Textarea
                     value={bookingFormData.description || selectedBooking.description || ""}
@@ -657,7 +657,7 @@ const DashboardPage = () => {
                   />
                 ) : (
                   <p className="mt-1 whitespace-pre-wrap">
-                    {selectedBooking.description || "No description provided"}
+                    {selectedBooking.description || t("noDescriptionProvided")}
                   </p>
                 )}
               </div>
@@ -667,7 +667,7 @@ const DashboardPage = () => {
                 <div>
                   <Label className="text-muted-foreground flex items-center gap-2">
                     <ImageIcon className="h-4 w-4" />
-                    Photos ({selectedBooking.bookingImages.length})
+                    {t("photos")} ({selectedBooking.bookingImages.length})
                   </Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                     {selectedBooking.bookingImages.map((img) => (
@@ -690,11 +690,11 @@ const DashboardPage = () => {
               {/* Timestamps */}
               <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                 <div>
-                  <Label className="text-muted-foreground">Created</Label>
+                  <Label className="text-muted-foreground">{t("created")}</Label>
                   <p className="text-sm">{formatDate(selectedBooking.createdAt)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Last Updated</Label>
+                  <Label className="text-muted-foreground">{t("lastUpdated")}</Label>
                   <p className="text-sm">{formatDate(selectedBooking.updatedAt)}</p>
                 </div>
               </div>
@@ -726,7 +726,7 @@ const DashboardPage = () => {
                     setEditingBooking(false);
                   }}
                 >
-                  Close
+                  {t("close")}
                 </Button>
               )}
             </CardContent>
@@ -756,7 +756,7 @@ const DashboardPage = () => {
                       setPostFormData({ ...postFormData, title: e.target.value })
                     }
                     className="text-2xl font-bold"
-                    placeholder="Post title"
+                    placeholder={t("postTitle")}
                   />
                 ) : (
                   selectedPost.title
@@ -802,13 +802,13 @@ const DashboardPage = () => {
                   </span>
                 </div>
                 <div className="flex-1">
-                  <Label className="text-muted-foreground">Posted by</Label>
+                  <Label className="text-muted-foreground">{t("postedBy")}</Label>
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-lg">
-                      {selectedPost.user?.name || "Anonymous"}
+                      {selectedPost.user?.name || t("anonymous")}
                     </p>
                     <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary capitalize">
-                      {selectedPost.user?.role || "Customer"}
+                      {selectedPost.user?.role || t("customer")}
                     </span>
                   </div>
                   {selectedPost.user?.email && (
@@ -818,11 +818,11 @@ const DashboardPage = () => {
                   )}
                 </div>
                 <div className="text-right">
-                  <Label className="text-muted-foreground">Posted on</Label>
+                  <Label className="text-muted-foreground">{t("postedOn")}</Label>
                   <p className="text-sm">{formatDate(selectedPost.createdAt)}</p>
                   {selectedPost.updatedAt !== selectedPost.createdAt && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Updated: {formatDate(selectedPost.updatedAt)}
+                      {t("updated")}: {formatDate(selectedPost.updatedAt)}
                     </p>
                   )}
                 </div>
@@ -830,7 +830,7 @@ const DashboardPage = () => {
 
               {/* Content */}
               <div>
-                <Label className="text-muted-foreground">Content</Label>
+                <Label className="text-muted-foreground">{t("content")}</Label>
                 {editingPost ? (
                   <Textarea
                     value={postFormData.content || selectedPost.content}
@@ -839,7 +839,7 @@ const DashboardPage = () => {
                     }
                     className="mt-2"
                     rows={10}
-                    placeholder="Post content"
+                    placeholder={t("postContent")}
                   />
                 ) : (
                   <div className="mt-2 p-4 bg-muted/30 rounded-lg">
@@ -853,7 +853,7 @@ const DashboardPage = () => {
                 <div>
                   <Label className="text-muted-foreground flex items-center gap-2">
                     <ImageIcon className="h-4 w-4" />
-                    Photos ({selectedPost.images.length})
+                    {t("photos")} ({selectedPost.images.length})
                   </Label>
                   <div className="grid grid-cols-2 gap-4 mt-2">
                     {selectedPost.images.map((img, idx) => (
@@ -883,7 +883,7 @@ const DashboardPage = () => {
                     className="gap-2"
                   >
                     <Heart className={`h-4 w-4 ${postLiked ? "fill-current" : ""}`} />
-                    {postLiked ? "Liked" : "Like"} ({selectedPost.likeCount || 0})
+                    {postLiked ? t("liked") : t("like")} ({selectedPost.likeCount || 0})
                   </Button>
                 </div>
               )}
@@ -892,14 +892,14 @@ const DashboardPage = () => {
               <div className="border-t pt-6">
                 <Label className="text-lg font-semibold flex items-center gap-2 mb-4">
                   <MessageSquare className="h-5 w-5" />
-                  Comments ({selectedPost.comments?.length || 0})
+                  {t("comments")} ({selectedPost.comments?.length || 0})
                 </Label>
 
                 {/* Add Comment Input */}
                 {!editingPost && (
                   <div className="flex gap-2 mb-4">
                     <Input
-                      placeholder="Write a comment..."
+                      placeholder={t("writeAComment")}
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       onKeyPress={(e) => {
@@ -970,7 +970,7 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-4 text-sm">
-                    No comments yet. Be the first to comment!
+                    {t("noCommentsYetBeFirst")}
                   </p>
                 )}
               </div>
@@ -1002,7 +1002,7 @@ const DashboardPage = () => {
                     setEditingPost(false);
                   }}
                 >
-                  Close
+                  {t("close")}
                 </Button>
               )}
             </CardContent>

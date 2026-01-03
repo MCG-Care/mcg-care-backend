@@ -122,9 +122,9 @@ const TechniciansPage = () => {
       console.error("Error fetching technicians:", error);
       if (error.response?.status === 403) {
         setIsAdmin(false);
-        alert("Only admins can view technicians");
+        alert(t("onlyAdminsCanViewTechnicians"));
       } else {
-        alert("Failed to fetch technicians");
+        alert(t("failedToFetchTechnicians"));
       }
     } finally {
       setLoading(false);
@@ -250,7 +250,7 @@ const TechniciansPage = () => {
       );
     } catch (error: any) {
       console.error("Error updating timeslot:", error);
-      alert(error.response?.data?.message || "Failed to update timeslot");
+      alert(error.response?.data?.message || t("failedToUpdateTimeslot"));
     } finally {
       setUpdatingTimeslot(null);
     }
@@ -392,14 +392,14 @@ const TechniciansPage = () => {
       handleCancel();
     } catch (error: any) {
       console.error("Error saving technician:", error);
-      alert(error.response?.data?.message || "Failed to save technician");
+      alert(error.response?.data?.message || t("failedToSaveTechnician"));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this technician?")) return;
+    if (!confirm(t("areYouSureDeleteTechnician"))) return;
 
     try {
       await api.delete(`/users/${id}`);
@@ -409,7 +409,7 @@ const TechniciansPage = () => {
       }
     } catch (error: any) {
       console.error("Error deleting technician:", error);
-      alert(error.response?.data?.message || "Failed to delete technician");
+      alert(error.response?.data?.message || t("failedToDeleteTechnician"));
     }
   };
 
@@ -446,11 +446,11 @@ const TechniciansPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t("technicians")}</h1>
+        <h1 className="text-m font-bold">{t("manageTechnicians")}</h1>
         {isAdmin && (
           <Button onClick={handleCreate} className="gap-2">
             <Plus className="h-4 w-4" />
-            Add Technician
+            {t("addTechnician")}
           </Button>
         )}
       </div>
@@ -461,7 +461,7 @@ const TechniciansPage = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search technicians by name, email, phone, city, or district..."
+              placeholder={t("searchTechnicians")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -511,7 +511,7 @@ const TechniciansPage = () => {
                     {technician.averageRating?.toFixed(1) || "0.0"}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    ({technician.totalFeedbacks || 0} reviews)
+                    ({technician.totalFeedbacks || 0} {t("reviews")})
                   </span>
                 </div>
               </div>
@@ -527,7 +527,7 @@ const TechniciansPage = () => {
                     }}
                   >
                     <Eye className="h-4 w-4" />
-                    View
+                    {t("view")}
                   </Button>
                   <Button
                     variant="outline"
@@ -561,8 +561,8 @@ const TechniciansPage = () => {
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
               {searchQuery
-                ? "No technicians found matching your search"
-                : "No technicians available"}
+                ? t("noTechniciansFound")
+                : t("noTechniciansAvailable")}
             </p>
           </CardContent>
         </Card>
@@ -581,9 +581,9 @@ const TechniciansPage = () => {
             <CardHeader className="flex flex-row items-center justify-between border-b">
               <CardTitle>
                 {isCreating
-                  ? "Create Technician"
+                  ? t("createTechnician")
                   : isEditing
-                  ? "Edit Technician"
+                  ? t("editTechnician")
                   : selectedTechnician?.name || ""}
               </CardTitle>
               <div className="flex gap-2">
@@ -596,7 +596,7 @@ const TechniciansPage = () => {
                     }}
                   >
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit
+                    {t("edit")}
                   </Button>
                 )}
                 <Button variant="ghost" size="icon" onClick={handleCancel}>
@@ -617,25 +617,25 @@ const TechniciansPage = () => {
                       </span>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {selectedTechnician.totalFeedbacks || 0} reviews
+                      {selectedTechnician.totalFeedbacks || 0} {t("reviews")}
                     </div>
                   </div>
 
                   {/* Technician Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm text-muted-foreground">Name</Label>
+                      <Label className="text-sm text-muted-foreground">{t("name")}</Label>
                       <p className="font-medium">{selectedTechnician.name || ""}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-muted-foreground">Email</Label>
+                      <Label className="text-sm text-muted-foreground">{t("email")}</Label>
                       <p className="font-medium flex items-center gap-2">
                         <Mail className="h-4 w-4" />
                         {selectedTechnician.email}
                       </p>
                     </div>
                     <div>
-                      <Label className="text-sm text-muted-foreground">Phone</Label>
+                      <Label className="text-sm text-muted-foreground">{t("phone")}</Label>
                       <p className="font-medium flex items-center gap-2">
                         <Phone className="h-4 w-4" />
                         {selectedTechnician.phoneNo}
@@ -644,26 +644,26 @@ const TechniciansPage = () => {
                     {selectedTechnician.address && (
                       <>
                         <div>
-                          <Label className="text-sm text-muted-foreground">Address</Label>
+                          <Label className="text-sm text-muted-foreground">{t("address")}</Label>
                           <p className="font-medium">{selectedTechnician.address.address}</p>
                         </div>
                         <div>
-                          <Label className="text-sm text-muted-foreground">Township</Label>
+                          <Label className="text-sm text-muted-foreground">{t("township")}</Label>
                           <p className="font-medium">{selectedTechnician.address.township}</p>
                         </div>
                         <div>
-                          <Label className="text-sm text-muted-foreground">City</Label>
+                          <Label className="text-sm text-muted-foreground">{t("city")}</Label>
                           <p className="font-medium">{selectedTechnician.address.city}</p>
                         </div>
                         <div>
-                          <Label className="text-sm text-muted-foreground">District</Label>
+                          <Label className="text-sm text-muted-foreground">{t("district")}</Label>
                           <p className="font-medium">{selectedTechnician.address.district}</p>
                         </div>
                       </>
                     )}
                     {selectedTechnician.createdAt && (
                       <div>
-                        <Label className="text-sm text-muted-foreground">Created At</Label>
+                        <Label className="text-sm text-muted-foreground">{t("createdAt")}</Label>
                         <p className="font-medium">
                           {new Date(selectedTechnician.createdAt).toLocaleDateString()}
                         </p>
@@ -675,7 +675,7 @@ const TechniciansPage = () => {
                   <div className="border-t pt-6">
                     <div className="flex items-center gap-2 mb-4">
                       <Wrench className="h-5 w-5" />
-                      <Label className="text-lg font-semibold">Offering Services</Label>
+                      <Label className="text-lg font-semibold">{t("offeringServices")}</Label>
                     </div>
                     {loadingServices ? (
                       <div className="flex items-center justify-center py-4">
@@ -687,15 +687,15 @@ const TechniciansPage = () => {
                           <Card key={service.id} className="p-3">
                             <div className="flex items-start justify-between">
                               <div>
-                                <p className="font-medium">{service.name || "Unknown Service"}</p>
+                                <p className="font-medium">{service.name || t("unknownService")}</p>
                                 {service.description && (
                                   <p className="text-sm text-muted-foreground mt-1">
                                     {service.description}
                                   </p>
                                 )}
                                 <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                  <span>Fee: {service.serviceFee || "N/A"} Ks</span>
-                                  <span>Duration: {service.duration || "N/A"} min</span>
+                                  <span>{t("fee")}: {service.serviceFee || "N/A"} Ks</span>
+                                  <span>{t("durationMin")}: {service.duration || "N/A"} {t("min")}</span>
                                 </div>
                               </div>
                             </div>
@@ -704,7 +704,7 @@ const TechniciansPage = () => {
                       </div>
                     ) : (
                       <p className="text-muted-foreground text-center py-4">
-                        No services assigned to this technician
+                        {t("noServicesAssigned")}
                       </p>
                     )}
                   </div>
@@ -713,7 +713,7 @@ const TechniciansPage = () => {
                   <div className="border-t pt-6">
                     <div className="flex items-center gap-2 mb-4">
                       <Calendar className="h-5 w-5" />
-                      <Label className="text-lg font-semibold">Availability Schedule</Label>
+                      <Label className="text-lg font-semibold">{t("availabilitySchedule")}</Label>
                     </div>
                     {loadingTimeslots ? (
                       <div className="flex items-center justify-center py-4">
@@ -736,7 +736,7 @@ const TechniciansPage = () => {
                                 </span>
                               </div>
                               <span className="text-sm text-muted-foreground">
-                                {timeslot.slots.length} slots available
+                                {timeslot.slots.length} {t("slotsAvailable")}
                               </span>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -777,7 +777,7 @@ const TechniciansPage = () => {
                       </div>
                     ) : (
                       <p className="text-muted-foreground text-center py-4">
-                        No timeslots available for this technician
+                        {t("noTimeslotsAvailable")}
                       </p>
                     )}
                   </div>
@@ -787,7 +787,7 @@ const TechniciansPage = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="name">Name *</Label>
+                      <Label htmlFor="name">{t("name")} *</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -799,7 +799,7 @@ const TechniciansPage = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email">{t("email")} *</Label>
                       <Input
                         id="email"
                         type="email"
@@ -812,7 +812,7 @@ const TechniciansPage = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phoneNo">Phone Number *</Label>
+                      <Label htmlFor="phoneNo">{t("phoneNumber")} *</Label>
                       <Input
                         id="phoneNo"
                         value={formData.phoneNo}
@@ -825,7 +825,7 @@ const TechniciansPage = () => {
                     </div>
                     <div>
                       <Label htmlFor="password">
-                        Password {isEditing ? "(leave blank to keep current)" : "*"}
+                        {t("password")} {isEditing ? `(${t("passwordLeaveBlank")})` : "*"}
                       </Label>
                       <Input
                         id="password"
@@ -834,17 +834,17 @@ const TechniciansPage = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, password: e.target.value })
                         }
-                        placeholder={isEditing ? "Enter new password" : "Enter password"}
+                        placeholder={isEditing ? t("enterNewPassword") : t("enterPassword")}
                         className="mt-1"
                       />
                     </div>
                   </div>
 
                   <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-4">Address</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t("address")}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
-                        <Label htmlFor="address">Street Address *</Label>
+                        <Label htmlFor="address">{t("streetAddress")} *</Label>
                         <Input
                           id="address"
                           value={formData.address.address}
@@ -859,7 +859,7 @@ const TechniciansPage = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="township">Township *</Label>
+                        <Label htmlFor="township">{t("township")} *</Label>
                         <Input
                           id="township"
                           value={formData.address.township}
@@ -874,7 +874,7 @@ const TechniciansPage = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="city">City *</Label>
+                        <Label htmlFor="city">{t("city")} *</Label>
                         <Input
                           id="city"
                           value={formData.address.city}
@@ -889,7 +889,7 @@ const TechniciansPage = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="district">District *</Label>
+                        <Label htmlFor="district">{t("district")} *</Label>
                         <Input
                           id="district"
                           value={formData.address.district}
@@ -910,7 +910,7 @@ const TechniciansPage = () => {
                   <div className="border-t pt-4">
                     <div className="flex items-center gap-2 mb-4">
                       <Wrench className="h-5 w-5" />
-                      <Label className="text-lg font-semibold">Assign Services</Label>
+                      <Label className="text-lg font-semibold">{t("assignServices")}</Label>
                     </div>
                     {loadingAllServices ? (
                       <div className="flex items-center justify-center py-4">
@@ -948,8 +948,8 @@ const TechniciansPage = () => {
                                 </p>
                               )}
                               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                <span>Fee: {service.serviceFee} Ks</span>
-                                <span>Duration: {service.duration} min</span>
+                                <span>{t("fee")}: {service.serviceFee} Ks</span>
+                                <span>{t("durationMin")}: {service.duration} {t("min")}</span>
                               </div>
                             </div>
                           </label>
@@ -957,7 +957,7 @@ const TechniciansPage = () => {
                       </div>
                     ) : (
                       <p className="text-muted-foreground text-center py-4">
-                        No services available. Please create services first.
+                        {t("noServicesAvailableCreate")}
                       </p>
                     )}
                   </div>
@@ -983,10 +983,10 @@ const TechniciansPage = () => {
                       ) : (
                         <Save className="h-4 w-4" />
                       )}
-                      {isEditing ? "Update" : "Create"}
+                      {isEditing ? t("update") : t("create")}
                     </Button>
                     <Button variant="outline" onClick={handleCancel} className="flex-1">
-                      Cancel
+                      {t("cancel")}
                     </Button>
                   </div>
                 </div>
