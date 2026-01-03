@@ -13,12 +13,17 @@ const user_controller_1 = require("./user.controller");
 const database_module_1 = require("../../config/database.module");
 const database_1 = require("../../config/database");
 const auth_module_1 = require("../auth/auth.module");
+const timeslots_module_1 = require("../timeslots/timeslots.module");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
-        imports: [database_module_1.DatabaseModule, (0, common_1.forwardRef)(() => auth_module_1.AuthModule)],
+        imports: [
+            database_module_1.DatabaseModule,
+            (0, common_1.forwardRef)(() => auth_module_1.AuthModule),
+            (0, common_1.forwardRef)(() => timeslots_module_1.TimeslotsModule),
+        ],
         controllers: [user_controller_1.UsersController],
         providers: [
             user_service_1.UsersService,

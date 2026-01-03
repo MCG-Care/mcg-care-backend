@@ -128,6 +128,71 @@ export interface DashboardStats {
   upcomingBookings: number;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phoneNo: string;
+  role: "customer" | "technician" | "admin";
+  addressId?: string;
+  address?: {
+    id: string;
+    address: string;
+    township: string;
+    city: string;
+    district: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Technician {
+  id: string;
+  name: string;
+  email: string;
+  phoneNo: string;
+  role: "technician";
+  address?: {
+    address: string;
+    township: string;
+    city: string;
+    district: string;
+  };
+  averageRating?: number;
+  totalFeedbacks?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CustomerProduct {
+  id: string;
+  customerId: string;
+  productId: string;
+  name: string;
+  qrUrl: string;
+  purchaseDate?: string;
+  warrantyEndDate?: string;
+  purchaseCode?: string;
+  product?: Product;
+  customer?: User;
+}
+
+export interface TechnicianService {
+  id: string;
+  technicianId: string;
+  serviceId: string;
+  service?: ServiceType;
+}
+
+export interface Timeslot {
+  id: string;
+  technicianId: string;
+  date: string;
+  slots: number[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type Language = "en" | "my";
 
 export interface Translations {

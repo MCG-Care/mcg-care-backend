@@ -300,7 +300,12 @@ const ProductsPage = () => {
   );
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (!sortBy) return 0;
+    // Default sorting: newest first (by createdAt)
+    if (!sortBy) {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA; // Descending order (newest first)
+    }
     
     switch (sortBy) {
       case "price-asc":

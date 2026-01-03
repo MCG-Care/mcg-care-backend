@@ -112,11 +112,20 @@ let TimeslotsService = class TimeslotsService {
         return { message: 'Timeslot deleted successfully' };
     }
     async initializeTechnicianTimeslots(technicianId) {
-        const technician = await database_1.db.query.users.findFirst({
+        let technician = await database_1.db.query.users.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.users.id, technicianId),
         });
-        if (!technician || technician.role !== 'technician') {
-            throw new common_1.BadRequestException(`Invalid technician ID: ${technicianId}`);
+        if (!technician) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            technician = await database_1.db.query.users.findFirst({
+                where: (0, drizzle_orm_1.eq)(database_1.schema.users.id, technicianId),
+            });
+        }
+        if (!technician) {
+            throw new common_1.BadRequestException(`Technician with ID ${technicianId} not found`);
+        }
+        if (technician.role !== 'technician') {
+            throw new common_1.BadRequestException(`User with ID ${technicianId} is not a technician`);
         }
         const today = new Date();
         const timeslots = [];
@@ -244,6 +253,16 @@ let TimeslotsService = class TimeslotsService {
             .where((0, drizzle_orm_1.eq)(database_1.schema.timeslots.id, timeslot.id))
             .returning();
         return updatedTimeslot;
+    }
+    async deleteTechnicianTimeslots(technicianId) {
+        const deletedResult = await database_1.db
+            .delete(database_1.schema.timeslots)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.timeslots.technicianId, technicianId))
+            .returning();
+        return {
+            message: `Deleted ${deletedResult.length} timeslots for technician ${technicianId}`,
+            count: deletedResult.length,
+        };
     }
 };
 exports.TimeslotsService = TimeslotsService;

@@ -43,8 +43,8 @@ const ForumPage = () => {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   
-  // Sort states
-  const [sortBy, setSortBy] = useState<SortBy>(null);
+  // Sort states - default to newest first (by createdAt)
+  const [sortBy, setSortBy] = useState<SortBy>("postedDate");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   
   // Modal states
@@ -301,7 +301,7 @@ const ForumPage = () => {
   };
 
   const clearSort = () => {
-    setSortBy(null);
+    setSortBy("postedDate"); // Reset to default: newest first
     setSortOrder("desc");
   };
 
@@ -332,27 +332,27 @@ const ForumPage = () => {
       });
     }
 
-    // Sorting
-    if (sortBy) {
-      result.sort((a, b) => {
-        let aValue: number | Date;
-        let bValue: number | Date;
+    // Sorting - always sort (default to newest first by createdAt)
+    result.sort((a, b) => {
+      let aValue: number | Date;
+      let bValue: number | Date;
 
-        if (sortBy === "postedDate") {
-          aValue = new Date(a.createdAt);
-          bValue = new Date(b.createdAt);
-        } else if (sortBy === "likes") {
-          aValue = a.likeCount || 0;
-          bValue = b.likeCount || 0;
-        } else {
-          return 0;
-        }
+      if (sortBy === "postedDate") {
+        aValue = new Date(a.createdAt);
+        bValue = new Date(b.createdAt);
+      } else if (sortBy === "likes") {
+        aValue = a.likeCount || 0;
+        bValue = b.likeCount || 0;
+      } else {
+        // Default: sort by createdAt (newest first)
+        aValue = new Date(a.createdAt);
+        bValue = new Date(b.createdAt);
+      }
 
-        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
 
     return result;
   }, [posts, searchQuery, dateRangeType, dateFrom, dateTo, sortBy, sortOrder]);
@@ -398,7 +398,7 @@ const ForumPage = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            <CardTitle>Filters & Sort</CardTitle>
+            <CardTitle>{t("filtersAndSort")}</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -421,7 +421,7 @@ const ForumPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Date Range Type */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Date Type</Label>
+              <Label className="text-sm font-medium mb-2 block">{t("dateType")}</Label>
               <select
                 className="w-full px-3 py-2 border rounded-md bg-background"
                 value={dateRangeType}
@@ -431,15 +431,15 @@ const ForumPage = () => {
                   setDateTo("");
                 }}
               >
-                <option value="single">Single Date</option>
-                <option value="range">Date Range</option>
+                <option value="single">{t("singleDate")}</option>
+                <option value="range">{t("dateRange")}</option>
               </select>
             </div>
 
             {/* Date From */}
             <div>
               <Label className="text-sm font-medium mb-2 block">
-                {dateRangeType === "single" ? "Posted On Date" : "From Date"}
+                {dateRangeType === "single" ? t("postedOnDate") : t("fromDate")}
               </Label>
               <Input
                 type="date"
@@ -452,7 +452,7 @@ const ForumPage = () => {
             {/* Date To (only show for range) */}
             {dateRangeType === "range" && (
               <div>
-                <Label className="text-sm font-medium mb-2 block">To Date</Label>
+                <Label className="text-sm font-medium mb-2 block">{t("toDate")}</Label>
                 <Input
                   type="date"
                   value={dateTo}
@@ -466,7 +466,7 @@ const ForumPage = () => {
 
           {/* Sort Options */}
           <div className="flex items-center gap-4 pt-4 border-t">
-            <Label className="text-sm font-medium">Sort by:</Label>
+            <Label className="text-sm font-medium">{t("sortBy")}</Label>
             <Button
               variant={sortBy === "postedDate" ? "default" : "outline"}
               size="sm"
@@ -474,7 +474,7 @@ const ForumPage = () => {
               className="gap-2"
             >
               {getSortIcon("postedDate")}
-              Posted Date
+              {t("postedOnDate")}
             </Button>
             <Button
               variant={sortBy === "likes" ? "default" : "outline"}
@@ -483,7 +483,7 @@ const ForumPage = () => {
               className="gap-2"
             >
               {getSortIcon("likes")}
-              Number of Likes
+              {t("numberOfLikes")}
             </Button>
             <div className="ml-auto flex gap-2">
               {sortBy && (
@@ -558,7 +558,7 @@ const ForumPage = () => {
                       </div>
                       {post.images && post.images.length > 0 && (
                         <span className="text-xs">
-                          📷 {post.images.length} photo(s)
+                          📷 {post.images.length} {t("photoCount")}
                         </span>
                       )}
                     </div>
@@ -573,7 +573,7 @@ const ForumPage = () => {
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
               {searchQuery || dateFrom || dateTo
-                ? "No posts found matching your filters"
+                ? t("noPostsFoundMatchingFilters")
                 : t("noPostsYet")}
             </p>
           </CardContent>
@@ -602,7 +602,7 @@ const ForumPage = () => {
                       setPostFormData({ ...postFormData, title: e.target.value })
                     }
                     className="text-2xl font-bold"
-                    placeholder="Post title"
+                    placeholder={t("postTitle")}
                   />
                 ) : (
                   selectedPost.title
@@ -648,13 +648,13 @@ const ForumPage = () => {
                   </span>
                 </div>
                 <div className="flex-1">
-                  <Label className="text-muted-foreground">Posted by</Label>
+                  <Label className="text-muted-foreground">{t("postedBy")}</Label>
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-lg">
-                      {selectedPost.user?.name || "Anonymous"}
+                      {selectedPost.user?.name || t("anonymous")}
                     </p>
                     <span className={`text-xs px-2 py-1 rounded-full capitalize ${getRoleColors(selectedPost.user?.role || "customer")}`}>
-                      {selectedPost.user?.role || "Customer"}
+                      {selectedPost.user?.role || t("customer")}
                     </span>
                   </div>
                   {selectedPost.user?.email && (
@@ -664,11 +664,11 @@ const ForumPage = () => {
                   )}
                 </div>
                 <div className="text-right">
-                  <Label className="text-muted-foreground">Posted on</Label>
+                  <Label className="text-muted-foreground">{t("postedOn")}</Label>
                   <p className="text-sm">{formatDate(selectedPost.createdAt)}</p>
                   {selectedPost.updatedAt !== selectedPost.createdAt && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Updated: {formatDate(selectedPost.updatedAt)}
+                      {t("updated")}: {formatDate(selectedPost.updatedAt)}
                     </p>
                   )}
                 </div>
@@ -676,7 +676,7 @@ const ForumPage = () => {
 
               {/* Content */}
               <div>
-                <Label className="text-muted-foreground">Content</Label>
+                <Label className="text-muted-foreground">{t("content")}</Label>
                 {editingPost ? (
                   <Textarea
                     value={postFormData.content || selectedPost.content}
@@ -685,7 +685,7 @@ const ForumPage = () => {
                     }
                     className="mt-2"
                     rows={10}
-                    placeholder="Post content"
+                    placeholder={t("postContent")}
                   />
                 ) : (
                   <div className="mt-2 p-4 bg-muted/30 rounded-lg">
@@ -699,7 +699,7 @@ const ForumPage = () => {
                 <div>
                   <Label className="text-muted-foreground flex items-center gap-2">
                     <ImageIcon className="h-4 w-4" />
-                    Photos ({selectedPost.images.length})
+                    {t("photos")} ({selectedPost.images.length})
                   </Label>
                   <div className="grid grid-cols-2 gap-4 mt-2">
                     {selectedPost.images.map((img, idx) => (
@@ -729,7 +729,7 @@ const ForumPage = () => {
                     className="gap-2"
                   >
                     <Heart className={`h-4 w-4 ${postLiked ? "fill-current" : ""}`} />
-                    {postLiked ? "Liked" : "Like"} ({selectedPost.likeCount || 0})
+                    {postLiked ? t("liked") : t("like")} ({selectedPost.likeCount || 0})
                   </Button>
                 </div>
               )}
@@ -738,14 +738,14 @@ const ForumPage = () => {
               <div className="border-t pt-6">
                 <Label className="text-lg font-semibold flex items-center gap-2 mb-4">
                   <MessageSquare className="h-5 w-5" />
-                  Comments ({selectedPost.comments?.length || 0})
+                  {t("comments")} ({selectedPost.comments?.length || 0})
                 </Label>
 
                 {/* Add Comment Input */}
                 {!editingPost && (
                   <div className="flex gap-2 mb-4">
                     <Input
-                      placeholder="Write a comment..."
+                      placeholder={t("writeAComment")}
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       onKeyPress={(e) => {
@@ -782,10 +782,10 @@ const ForumPage = () => {
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center gap-2">
                                 <p className="font-medium text-sm">
-                                  {comment.user?.name || "Anonymous"}
+                                  {comment.user?.name || t("anonymous")}
                                 </p>
                                 <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${getRoleColors(comment.user?.role || "customer")}`}>
-                                  {comment.user?.role || "Customer"}
+                                  {comment.user?.role || t("customer")}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -826,7 +826,7 @@ const ForumPage = () => {
                   </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-4 text-sm">
-                    No comments yet. Be the first to comment!
+                    {t("noCommentsYetBeFirst")}
                   </p>
                 )}
               </div>
@@ -858,7 +858,7 @@ const ForumPage = () => {
                     setEditingPost(false);
                   }}
                 >
-                  Close
+                  {t("close")}
                 </Button>
               )}
             </CardContent>

@@ -1,54 +1,89 @@
 import { Database } from '../../config/database';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AddressDto } from './dto/address.dto';
+import { TimeslotsService } from '../timeslots/timeslots.service';
 export declare class UsersService {
     private readonly db;
-    constructor(db: Database);
+    private readonly timeslotsService;
+    constructor(db: Database, timeslotsService: TimeslotsService);
     getAllUsers(): Promise<{
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
-        password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
     getUserById(id: number, includeRating?: boolean): Promise<{
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
-        password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
     } | {
         averageRating: number;
         totalFeedbacks: number;
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
-        password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    } | null>;
     getUserByEmail(email: string): Promise<{
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
         password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    } | null>;
     createUser(data: {
         name: string;
         email: string;
@@ -57,16 +92,24 @@ export declare class UsersService {
         role: 'customer' | 'technician' | 'admin';
         addressId: number;
     }): Promise<{
-        password: string;
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
-    }>;
+        addressId: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
     createAddress(dto: AddressDto): Promise<{
         id: number;
         address: string | null;
@@ -77,27 +120,63 @@ export declare class UsersService {
         updatedAt: Date;
     }>;
     updateUser(id: number, data: UpdateUserDto): Promise<{
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
         email: string;
-        password: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
+        addressId: number | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    } | null>;
     deleteUser(id: number): Promise<{
-        password: string;
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
         id: number;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         phoneNo: string;
-        addressId: number | null;
         role: "customer" | "technician" | "admin";
-    }>;
+        addressId: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | {
+        averageRating: number;
+        totalFeedbacks: number;
+        address: {
+            id: number;
+            address: string | null;
+            township: string;
+            city: string;
+            district: string;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+        id: number;
+        name: string;
+        email: string;
+        phoneNo: string;
+        role: "customer" | "technician" | "admin";
+        addressId: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
     getTechnicianAverageRating(technicianId: number): Promise<{
         technicianId: number;
         averageRating: number;
