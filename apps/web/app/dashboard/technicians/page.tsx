@@ -22,10 +22,11 @@ import {
   Wrench,
   Calendar,
   Clock,
+  ListChecks,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
-import { Technician, TechnicianService, Timeslot, ServiceType } from "@/types";
+import { Technician, TechnicianService, Timeslot, ServiceType, Booking } from "@/types";
 
 const TechniciansPage = () => {
   const { t } = useLanguage();
@@ -46,6 +47,9 @@ const TechniciansPage = () => {
   const [allServices, setAllServices] = useState<ServiceType[]>([]);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [loadingAllServices, setLoadingAllServices] = useState(false);
+  const [showBookingsModal, setShowBookingsModal] = useState(false);
+  const [technicianBookings, setTechnicianBookings] = useState<Booking[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -421,7 +425,60 @@ const TechniciansPage = () => {
     setTechnicianServices([]);
     setTimeslots([]);
     setSelectedServiceIds([]);
+    setShowBookingsModal(false);
+    setTechnicianBookings([]);
     resetForm();
+  };
+
+  const fetchTechnicianBookings = async (technicianId: string) => {
+    try {
+      setLoadingBookings(true);
+      const response = await api.get(`/bookings?technicianId=${technicianId}`);
+      const bookingsData = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
+      // Sort by bookingForDate descending (newest first)
+      bookingsData.sort((a: Booking, b: Booking) => 
+        new Date(b.bookingForDate).getTime() - new Date(a.bookingForDate).getTime()
+      );
+      setTechnicianBookings(bookingsData);
+    } catch (error) {
+      console.error("Error fetching technician bookings:", error);
+      alert(t("failedToFetchBookings") || "Failed to fetch bookings");
+      setTechnicianBookings([]);
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
+
+  const handleViewBookings = async () => {
+    if (selectedTechnician) {
+      await fetchTechnicianBookings(selectedTechnician.id);
+      setShowBookingsModal(true);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20",
+      confirmed: "text-blue-600 bg-blue-100 dark:bg-blue-900/20",
+      in_progress: "text-purple-600 bg-purple-100 dark:bg-purple-900/20",
+      inprogress: "text-purple-600 bg-purple-100 dark:bg-purple-900/20",
+      completed: "text-green-600 bg-green-100 dark:bg-green-900/20",
+      done: "text-green-600 bg-green-100 dark:bg-green-900/20",
+      cancelled: "text-red-600 bg-red-100 dark:bg-red-900/20",
+      unsuccessful: "text-red-600 bg-red-100 dark:bg-red-900/20",
+    };
+    return colors[status] || "text-gray-600 bg-gray-100";
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   const filteredTechnicians = technicians.filter((technician) => {
@@ -588,16 +645,27 @@ const TechniciansPage = () => {
               </CardTitle>
               <div className="flex gap-2">
                 {isViewing && isAdmin && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (selectedTechnician) handleEdit(selectedTechnician);
-                    }}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    {t("edit")}
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleViewBookings}
+                      className="gap-2"
+                    >
+                      <ListChecks className="h-4 w-4" />
+                      {t("viewBookings") || "View Bookings"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (selectedTechnician) handleEdit(selectedTechnician);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      {t("edit")}
+                    </Button>
+                  </>
                 )}
                 <Button variant="ghost" size="icon" onClick={handleCancel}>
                   <X className="h-4 w-4" />
@@ -989,6 +1057,142 @@ const TechniciansPage = () => {
                       {t("cancel")}
                     </Button>
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Bookings Modal */}
+      {showBookingsModal && selectedTechnician && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setShowBookingsModal(false)}
+        >
+          <Card
+            className="w-full max-w-6xl bg-background my-8 max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
+              <CardTitle>
+                {t("bookingsFor") || "Bookings for"} {selectedTechnician.name}
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setShowBookingsModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-6 overflow-y-auto flex-1">
+              {loadingBookings ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : technicianBookings.length > 0 ? (
+                <div className="space-y-4">
+                  {technicianBookings.map((booking) => (
+                    <Card key={booking.id} className="p-4 hover:shadow-md transition-shadow">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span
+                              className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(
+                                booking.status
+                              )}`}
+                            >
+                              {booking.status}
+                            </span>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                              <span>{formatDate(booking.bookingForDate)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Clock className="h-4 w-4" />
+                              <span>{booking.bookingTime}</span>
+                            </div>
+                          </div>
+                          
+                          {booking.aircon && (
+                            <div className="space-y-1">
+                              <p className="font-medium">
+                                {t("aircon") || "Aircon"}: {booking.aircon.name}
+                              </p>
+                              {booking.aircon.customer && (
+                                <p className="text-sm text-muted-foreground">
+                                  {t("customer") || "Customer"}: {booking.aircon.customer.name} ({booking.aircon.customer.phoneNo})
+                                </p>
+                              )}
+                              {booking.aircon.product && (
+                                <p className="text-sm text-muted-foreground">
+                                  {t("product") || "Product"}: {booking.aircon.product.name}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {booking.bookingServices && booking.bookingServices.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-sm font-medium mb-1">
+                                {t("services") || "Services"}:
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {booking.bookingServices.map((bs, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-2 py-1 bg-muted rounded-md text-xs"
+                                  >
+                                    {bs.service.name} ({bs.service.serviceFee} Ks)
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {booking.description && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              {booking.description}
+                            </p>
+                          )}
+
+                          <div className="flex items-center gap-4 text-sm mt-2">
+                            <span className="text-muted-foreground">
+                              {t("duration") || "Duration"}: {booking.duration} {t("min") || "min"}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {t("fees") || "Fees"}: {booking.fees} Ks
+                            </span>
+                          </div>
+                        </div>
+
+                        {booking.bookingImages && booking.bookingImages.length > 0 && (
+                          <div className="flex gap-2 flex-wrap">
+                            {booking.bookingImages.slice(0, 3).map((image) => (
+                              <div
+                                key={image.id}
+                                className="w-20 h-20 rounded-md overflow-hidden border bg-muted"
+                              >
+                                <img
+                                  src={image.url}
+                                  alt="Booking"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
+                            {booking.bookingImages.length > 3 && (
+                              <div className="w-20 h-20 rounded-md border bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                                +{booking.bookingImages.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    {t("noBookingsFound") || "No bookings found for this technician"}
+                  </p>
                 </div>
               )}
             </CardContent>
