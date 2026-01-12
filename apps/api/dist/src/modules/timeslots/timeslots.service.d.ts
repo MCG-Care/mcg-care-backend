@@ -20,25 +20,10 @@ export declare class TimeslotsService {
         technicianId: number;
         slots: number[];
         technician: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
     }[]>;
     findOne(id: number): Promise<{
         date: string;
@@ -48,25 +33,10 @@ export declare class TimeslotsService {
         technicianId: number;
         slots: number[];
         technician: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
     }>;
     update(id: number, updateTimeslotDto: UpdateTimeslotDto): Promise<{
         id: number;

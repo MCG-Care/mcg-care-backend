@@ -22,7 +22,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:drop": "drizzle-kit drop"
+    "db:drop": "drizzle-kit drop",
+    "db:fix-addresses": "ts-node scripts/fix-address-relationships.ts",
+    "db:recreate-addresses": "ts-node scripts/batch-recreate-addresses.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

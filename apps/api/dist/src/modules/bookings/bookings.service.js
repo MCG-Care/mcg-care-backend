@@ -19,13 +19,14 @@ let BookingsService = class BookingsService {
         this.supabaseService = supabaseService;
     }
     async create(customerId, createBookingDto, imageFiles) {
+        var _a;
         const { airconId, serviceIds, bookingForDate, bookingTime, description } = createBookingDto;
         const aircon = await database_1.db.query.customerProducts.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
             with: {
                 customer: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
                 product: true,
@@ -37,10 +38,10 @@ let BookingsService = class BookingsService {
         if (aircon.customerId !== customerId) {
             throw new common_1.ForbiddenException('You can only book services for your own aircons');
         }
-        if (!aircon.customer.address) {
+        if (!((_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress)) {
             throw new common_1.BadRequestException('Customer address is required for booking. Please update your profile.');
         }
-        const customerDistrict = aircon.customer.address.district;
+        const customerDistrict = aircon.customer.primaryAddress.district;
         const services = await database_1.db.query.serviceTypes.findMany({
             where: (0, drizzle_orm_1.inArray)(database_1.schema.serviceTypes.id, serviceIds),
         });
@@ -132,7 +133,7 @@ let BookingsService = class BookingsService {
         const technicians = await database_1.db.query.users.findMany({
             where: (0, drizzle_orm_1.eq)(database_1.schema.users.role, 'technician'),
             with: {
-                address: true,
+                primaryAddress: true,
                 technicianServices: {
                     with: {
                         service: true,
@@ -140,7 +141,7 @@ let BookingsService = class BookingsService {
                 },
             },
         });
-        const techsInDistrict = technicians.filter((tech) => { var _a; return ((_a = tech.address) === null || _a === void 0 ? void 0 : _a.district) === customerDistrict; });
+        const techsInDistrict = technicians.filter((tech) => { var _a; return ((_a = tech.primaryAddress) === null || _a === void 0 ? void 0 : _a.district) === customerDistrict; });
         if (techsInDistrict.length === 0) {
             return null;
         }
@@ -248,7 +249,7 @@ let BookingsService = class BookingsService {
             with: {
                 technician: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
                 aircon: {
@@ -286,14 +287,14 @@ let BookingsService = class BookingsService {
             with: {
                 technician: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
                 aircon: {
                     with: {
                         customer: {
                             with: {
-                                address: true,
+                                primaryAddress: true,
                             },
                         },
                         product: true,

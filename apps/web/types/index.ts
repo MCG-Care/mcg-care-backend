@@ -134,14 +134,17 @@ export interface User {
   email: string;
   phoneNo: string;
   role: "customer" | "technician" | "admin";
-  addressId?: string;
+  primaryAddressId?: number | null;
   address?: {
-    id: string;
+    id: number;
+    name?: string;
     address: string;
     township: string;
     city: string;
     district: string;
-  };
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -152,12 +155,17 @@ export interface Technician {
   email: string;
   phoneNo: string;
   role: "technician";
+  primaryAddressId?: number | null;
   address?: {
+    id: number;
+    name?: string;
     address: string;
     township: string;
     city: string;
     district: string;
-  };
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
   averageRating?: number;
   totalFeedbacks?: number;
   createdAt?: string;

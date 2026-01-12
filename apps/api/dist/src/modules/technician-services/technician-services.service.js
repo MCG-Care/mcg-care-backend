@@ -109,7 +109,7 @@ let TechnicianServicesService = class TechnicianServicesService {
                         service: true,
                     },
                 },
-                address: true,
+                primaryAddress: true,
             },
         });
         return technicians.map((tech) => ({
@@ -117,7 +117,7 @@ let TechnicianServicesService = class TechnicianServicesService {
             name: tech.name,
             email: tech.email,
             phoneNo: tech.phoneNo,
-            address: tech.address,
+            address: tech.primaryAddress,
             services: tech.technicianServices.map((ts) => ts.service),
         }));
     }

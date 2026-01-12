@@ -3,6 +3,10 @@ import { Type } from 'class-transformer';
 
 export class AddressDto {
   @IsString()
+  @IsOptional()
+  name?: string; // Optional nickname (e.g., "Home", "Office", "Mom's House")
+
+  @IsString()
   @IsNotEmpty()
   address: string;
 

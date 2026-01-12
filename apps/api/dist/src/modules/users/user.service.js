@@ -42,11 +42,12 @@ let UsersService = class UsersService {
             email: database_1.schema.users.email,
             phoneNo: database_1.schema.users.phoneNo,
             role: database_1.schema.users.role,
-            addressId: database_1.schema.users.addressId,
+            primaryAddressId: database_1.schema.users.primaryAddressId,
             createdAt: database_1.schema.users.createdAt,
             updatedAt: database_1.schema.users.updatedAt,
-            address: {
+            primaryAddress: {
                 id: database_1.schema.addresses.id,
+                name: database_1.schema.addresses.name,
                 address: database_1.schema.addresses.address,
                 township: database_1.schema.addresses.township,
                 city: database_1.schema.addresses.city,
@@ -56,10 +57,10 @@ let UsersService = class UsersService {
             },
         })
             .from(database_1.schema.users)
-            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.addressId, database_1.schema.addresses.id));
+            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.primaryAddressId, database_1.schema.addresses.id));
         return results.map((result) => {
-            const { address } = result, user = __rest(result, ["address"]);
-            return Object.assign(Object.assign({}, user), { address: address && address.id ? address : null });
+            const { primaryAddress } = result, user = __rest(result, ["primaryAddress"]);
+            return Object.assign(Object.assign({}, user), { address: primaryAddress && primaryAddress.id ? primaryAddress : null });
         });
     }
     async getUserById(id, includeRating = false) {
@@ -70,11 +71,12 @@ let UsersService = class UsersService {
             email: database_1.schema.users.email,
             phoneNo: database_1.schema.users.phoneNo,
             role: database_1.schema.users.role,
-            addressId: database_1.schema.users.addressId,
+            primaryAddressId: database_1.schema.users.primaryAddressId,
             createdAt: database_1.schema.users.createdAt,
             updatedAt: database_1.schema.users.updatedAt,
-            address: {
+            primaryAddress: {
                 id: database_1.schema.addresses.id,
+                name: database_1.schema.addresses.name,
                 address: database_1.schema.addresses.address,
                 township: database_1.schema.addresses.township,
                 city: database_1.schema.addresses.city,
@@ -84,14 +86,14 @@ let UsersService = class UsersService {
             },
         })
             .from(database_1.schema.users)
-            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.addressId, database_1.schema.addresses.id))
+            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.primaryAddressId, database_1.schema.addresses.id))
             .where((0, drizzle_orm_1.eq)(database_1.schema.users.id, id))
             .limit(1);
         const result = results[0] || null;
         if (!result)
             return null;
-        const { address } = result, user = __rest(result, ["address"]);
-        const userWithAddress = Object.assign(Object.assign({}, user), { address: address && address.id ? address : null });
+        const { primaryAddress } = result, user = __rest(result, ["primaryAddress"]);
+        const userWithAddress = Object.assign(Object.assign({}, user), { address: primaryAddress && primaryAddress.id ? primaryAddress : null });
         if (includeRating && user.role === 'technician') {
             try {
                 const ratingData = await this.getTechnicianAverageRating(id);
@@ -112,11 +114,12 @@ let UsersService = class UsersService {
             password: database_1.schema.users.password,
             phoneNo: database_1.schema.users.phoneNo,
             role: database_1.schema.users.role,
-            addressId: database_1.schema.users.addressId,
+            primaryAddressId: database_1.schema.users.primaryAddressId,
             createdAt: database_1.schema.users.createdAt,
             updatedAt: database_1.schema.users.updatedAt,
-            address: {
+            primaryAddress: {
                 id: database_1.schema.addresses.id,
+                name: database_1.schema.addresses.name,
                 address: database_1.schema.addresses.address,
                 township: database_1.schema.addresses.township,
                 city: database_1.schema.addresses.city,
@@ -126,17 +129,27 @@ let UsersService = class UsersService {
             },
         })
             .from(database_1.schema.users)
-            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.addressId, database_1.schema.addresses.id))
+            .leftJoin(database_1.schema.addresses, (0, drizzle_orm_1.eq)(database_1.schema.users.primaryAddressId, database_1.schema.addresses.id))
             .where((0, drizzle_orm_1.eq)(database_1.schema.users.email, email))
             .limit(1);
         const result = results[0] || null;
         if (!result)
             return null;
-        const { address } = result, user = __rest(result, ["address"]);
-        return Object.assign(Object.assign({}, user), { address: address && address.id ? address : null });
+        const { primaryAddress } = result, user = __rest(result, ["primaryAddress"]);
+        return Object.assign(Object.assign({}, user), { address: primaryAddress && primaryAddress.id ? primaryAddress : null });
     }
     async createUser(data) {
-        const result = await this.db.insert(database_1.schema.users).values(data).returning();
+        const userData = {
+            name: data.name,
+            email: data.email,
+            password: data.password,
+            phoneNo: data.phoneNo,
+            role: data.role,
+        };
+        if (data.primaryAddressId !== undefined) {
+            userData.primaryAddressId = data.primaryAddressId;
+        }
+        const result = await this.db.insert(database_1.schema.users).values(userData).returning();
         const user = result[0];
         if (user && user.role === 'technician') {
             try {
@@ -159,9 +172,94 @@ let UsersService = class UsersService {
         }
         return user;
     }
-    async createAddress(dto) {
-        const result = await this.db.insert(database_1.schema.addresses).values(dto).returning();
+    async createAddress(userId, dto) {
+        let addressName = dto.name;
+        if (!addressName || addressName.trim() === '') {
+            if (dto.address && dto.address.trim()) {
+                addressName = dto.address.trim().substring(0, 30);
+                if (dto.address.length > 30) {
+                    addressName += '...';
+                }
+            }
+            else {
+                addressName = dto.township;
+            }
+        }
+        const result = await this.db
+            .insert(database_1.schema.addresses)
+            .values(Object.assign(Object.assign({}, dto), { name: addressName, userId }))
+            .returning();
         return result[0];
+    }
+    async getUserAddresses(userId) {
+        const addresses = await this.db
+            .select()
+            .from(database_1.schema.addresses)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.addresses.userId, userId))
+            .orderBy((0, drizzle_orm_1.asc)(database_1.schema.addresses.createdAt));
+        return addresses;
+    }
+    async getAddressById(addressId) {
+        const results = await this.db
+            .select()
+            .from(database_1.schema.addresses)
+            .where((0, drizzle_orm_1.eq)(database_1.schema.addresses.id, addressId))
+            .limit(1);
+        return results[0] || null;
+    }
+    async updateAddress(addressId, userId, dto) {
+        const address = await this.getAddressById(addressId);
+        if (!address) {
+            throw new common_1.NotFoundException(`Address with ID ${addressId} not found`);
+        }
+        if (address.userId !== userId) {
+            throw new common_1.ForbiddenException('You can only update your own addresses');
+        }
+        const result = await this.db
+            .update(database_1.schema.addresses)
+            .set(Object.assign(Object.assign({}, dto), { updatedAt: new Date() }))
+            .where((0, drizzle_orm_1.eq)(database_1.schema.addresses.id, addressId))
+            .returning();
+        return result[0];
+    }
+    async deleteAddress(addressId, userId) {
+        var _a;
+        const address = await this.getAddressById(addressId);
+        if (!address) {
+            throw new common_1.NotFoundException(`Address with ID ${addressId} not found`);
+        }
+        if (address.userId !== userId) {
+            throw new common_1.ForbiddenException('You can only delete your own addresses');
+        }
+        const user = await this.getUserById(userId);
+        if (user && user.primaryAddressId === addressId) {
+            const remainingAddresses = await this.db
+                .select()
+                .from(database_1.schema.addresses)
+                .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(database_1.schema.addresses.userId, userId), (0, drizzle_orm_1.sql) `${database_1.schema.addresses.id} != ${addressId}`))
+                .limit(1);
+            const newPrimaryAddressId = ((_a = remainingAddresses[0]) === null || _a === void 0 ? void 0 : _a.id) || null;
+            await this.db
+                .update(database_1.schema.users)
+                .set({ primaryAddressId: newPrimaryAddressId, updatedAt: new Date() })
+                .where((0, drizzle_orm_1.eq)(database_1.schema.users.id, userId));
+        }
+        await this.db.delete(database_1.schema.addresses).where((0, drizzle_orm_1.eq)(database_1.schema.addresses.id, addressId));
+        return { message: 'Address deleted successfully' };
+    }
+    async setPrimaryAddress(userId, addressId) {
+        const address = await this.getAddressById(addressId);
+        if (!address) {
+            throw new common_1.NotFoundException(`Address with ID ${addressId} not found`);
+        }
+        if (address.userId !== userId) {
+            throw new common_1.ForbiddenException('You can only set your own addresses as primary');
+        }
+        await this.db
+            .update(database_1.schema.users)
+            .set({ primaryAddressId: addressId, updatedAt: new Date() })
+            .where((0, drizzle_orm_1.eq)(database_1.schema.users.id, userId));
+        return this.getAddressById(addressId);
     }
     async updateUser(id, data) {
         const result = await this.db

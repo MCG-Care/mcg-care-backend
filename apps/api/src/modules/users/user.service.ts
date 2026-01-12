@@ -1,9 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { DB_PROVIDER } from '../../config/database.module';
 import { db, Database } from '../../config/database';
 import { schema } from '../../config/database';
 import * as bcrypt from 'bcryptjs';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and, asc } from 'drizzle-orm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AddressDto } from './dto/address.dto';
@@ -24,11 +24,12 @@ export class UsersService {
         email: schema.users.email,
         phoneNo: schema.users.phoneNo,
         role: schema.users.role,
-        addressId: schema.users.addressId,
+        primaryAddressId: schema.users.primaryAddressId,
         createdAt: schema.users.createdAt,
         updatedAt: schema.users.updatedAt,
-        address: {
+        primaryAddress: {
           id: schema.addresses.id,
+          name: schema.addresses.name,
           address: schema.addresses.address,
           township: schema.addresses.township,
           city: schema.addresses.city,
@@ -38,14 +39,14 @@ export class UsersService {
         },
       })
       .from(schema.users)
-      .leftJoin(schema.addresses, eq(schema.users.addressId, schema.addresses.id));
+      .leftJoin(schema.addresses, eq(schema.users.primaryAddressId, schema.addresses.id));
 
     // Transform results to match expected format
     return results.map((result) => {
-      const { address, ...user } = result;
+      const { primaryAddress, ...user } = result;
       return {
         ...user,
-        address: address && address.id ? address : null,
+        address: primaryAddress && primaryAddress.id ? primaryAddress : null,
       };
     });
   }
@@ -58,11 +59,12 @@ export class UsersService {
         email: schema.users.email,
         phoneNo: schema.users.phoneNo,
         role: schema.users.role,
-        addressId: schema.users.addressId,
+        primaryAddressId: schema.users.primaryAddressId,
         createdAt: schema.users.createdAt,
         updatedAt: schema.users.updatedAt,
-        address: {
+        primaryAddress: {
           id: schema.addresses.id,
+          name: schema.addresses.name,
           address: schema.addresses.address,
           township: schema.addresses.township,
           city: schema.addresses.city,
@@ -72,7 +74,7 @@ export class UsersService {
         },
       })
       .from(schema.users)
-      .leftJoin(schema.addresses, eq(schema.users.addressId, schema.addresses.id))
+      .leftJoin(schema.addresses, eq(schema.users.primaryAddressId, schema.addresses.id))
       .where(eq(schema.users.id, id))
       .limit(1);
 
@@ -80,10 +82,10 @@ export class UsersService {
     if (!result) return null;
 
     // Transform result to match expected format
-    const { address, ...user } = result;
+    const { primaryAddress, ...user } = result;
     const userWithAddress = {
       ...user,
-      address: address && address.id ? address : null,
+      address: primaryAddress && primaryAddress.id ? primaryAddress : null,
     };
 
     // If user is a technician and rating is requested, include average rating
@@ -113,11 +115,12 @@ export class UsersService {
         password: schema.users.password,
         phoneNo: schema.users.phoneNo,
         role: schema.users.role,
-        addressId: schema.users.addressId,
+        primaryAddressId: schema.users.primaryAddressId,
         createdAt: schema.users.createdAt,
         updatedAt: schema.users.updatedAt,
-        address: {
+        primaryAddress: {
           id: schema.addresses.id,
+          name: schema.addresses.name,
           address: schema.addresses.address,
           township: schema.addresses.township,
           city: schema.addresses.city,
@@ -127,7 +130,7 @@ export class UsersService {
         },
       })
       .from(schema.users)
-      .leftJoin(schema.addresses, eq(schema.users.addressId, schema.addresses.id))
+      .leftJoin(schema.addresses, eq(schema.users.primaryAddressId, schema.addresses.id))
       .where(eq(schema.users.email, email))
       .limit(1);
 
@@ -135,10 +138,10 @@ export class UsersService {
     if (!result) return null;
 
     // Transform result to match expected format
-    const { address, ...user } = result;
+    const { primaryAddress, ...user } = result;
     return {
       ...user,
-      address: address && address.id ? address : null,
+      address: primaryAddress && primaryAddress.id ? primaryAddress : null,
     };
   }
 
@@ -148,9 +151,21 @@ export class UsersService {
     password: string;
     phoneNo: string;
     role: 'customer' | 'technician' | 'admin';
-    addressId: number;
+    primaryAddressId?: number | null;
   }) {
-    const result = await this.db.insert(schema.users).values(data).returning();
+    const userData: any = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      phoneNo: data.phoneNo,
+      role: data.role,
+    };
+    
+    if (data.primaryAddressId !== undefined) {
+      userData.primaryAddressId = data.primaryAddressId;
+    }
+    
+    const result = await this.db.insert(schema.users).values(userData).returning();
     const user = result[0];
 
     // If user is a technician, initialize timeslots
@@ -179,10 +194,127 @@ export class UsersService {
     return user;
   }
 
-  async createAddress(dto: AddressDto) {
-    const result = await this.db.insert(schema.addresses).values(dto).returning();
+  async createAddress(userId: number, dto: AddressDto) {
+    // Generate default name from address if not provided
+    let addressName = dto.name;
+    if (!addressName || addressName.trim() === '') {
+      // Use first part of address (up to 30 chars) or township as fallback
+      if (dto.address && dto.address.trim()) {
+        addressName = dto.address.trim().substring(0, 30);
+        if (dto.address.length > 30) {
+          addressName += '...';
+        }
+      } else {
+        // Fallback to township if address is empty
+        addressName = dto.township;
+      }
+    }
+
+    const result = await this.db
+      .insert(schema.addresses)
+      .values({
+        ...dto,
+        name: addressName,
+        userId,
+      })
+      .returning();
 
     return result[0];
+  }
+
+  async getUserAddresses(userId: number) {
+    const addresses = await this.db
+      .select()
+      .from(schema.addresses)
+      .where(eq(schema.addresses.userId, userId))
+      .orderBy(asc(schema.addresses.createdAt));
+
+    return addresses;
+  }
+
+  async getAddressById(addressId: number) {
+    const results = await this.db
+      .select()
+      .from(schema.addresses)
+      .where(eq(schema.addresses.id, addressId))
+      .limit(1);
+
+    return results[0] || null;
+  }
+
+  async updateAddress(addressId: number, userId: number, dto: Partial<AddressDto>) {
+    // Verify address belongs to user
+    const address = await this.getAddressById(addressId);
+    if (!address) {
+      throw new NotFoundException(`Address with ID ${addressId} not found`);
+    }
+    if (address.userId !== userId) {
+      throw new ForbiddenException('You can only update your own addresses');
+    }
+
+    const result = await this.db
+      .update(schema.addresses)
+      .set({ ...dto, updatedAt: new Date() })
+      .where(eq(schema.addresses.id, addressId))
+      .returning();
+
+    return result[0];
+  }
+
+  async deleteAddress(addressId: number, userId: number) {
+    // Verify address belongs to user
+    const address = await this.getAddressById(addressId);
+    if (!address) {
+      throw new NotFoundException(`Address with ID ${addressId} not found`);
+    }
+    if (address.userId !== userId) {
+      throw new ForbiddenException('You can only delete your own addresses');
+    }
+
+    // Check if this is the primary address
+    const user = await this.getUserById(userId);
+    if (user && user.primaryAddressId === addressId) {
+      // If deleting primary address, set primaryAddressId to null or first available address
+      const remainingAddresses = await this.db
+        .select()
+        .from(schema.addresses)
+        .where(
+          and(
+            eq(schema.addresses.userId, userId),
+            sql`${schema.addresses.id} != ${addressId}`,
+          ),
+        )
+        .limit(1);
+
+      const newPrimaryAddressId = remainingAddresses[0]?.id || null;
+
+      await this.db
+        .update(schema.users)
+        .set({ primaryAddressId: newPrimaryAddressId, updatedAt: new Date() })
+        .where(eq(schema.users.id, userId));
+    }
+
+    await this.db.delete(schema.addresses).where(eq(schema.addresses.id, addressId));
+
+    return { message: 'Address deleted successfully' };
+  }
+
+  async setPrimaryAddress(userId: number, addressId: number) {
+    // Verify address belongs to user
+    const address = await this.getAddressById(addressId);
+    if (!address) {
+      throw new NotFoundException(`Address with ID ${addressId} not found`);
+    }
+    if (address.userId !== userId) {
+      throw new ForbiddenException('You can only set your own addresses as primary');
+    }
+
+    await this.db
+      .update(schema.users)
+      .set({ primaryAddressId: addressId, updatedAt: new Date() })
+      .where(eq(schema.users.id, userId));
+
+    return this.getAddressById(addressId);
   }
 
   async updateUser(id: number, data: UpdateUserDto) {
@@ -201,7 +333,7 @@ export class UsersService {
   }
 
   async deleteUser(id: number) {
-    // Get user with address before deleting
+    // Get user before deleting
     const user = await this.getUserById(id);
     
     // If user is a technician, delete all their timeslots
@@ -214,6 +346,7 @@ export class UsersService {
       }
     }
     
+    // Delete user - addresses will be cascade deleted due to foreign key constraint
     await this.db.delete(schema.users).where(eq(schema.users.id, id));
 
     return user;

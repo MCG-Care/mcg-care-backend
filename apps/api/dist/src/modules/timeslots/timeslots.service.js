@@ -70,7 +70,7 @@ let TimeslotsService = class TimeslotsService {
             with: {
                 technician: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
             },
@@ -84,7 +84,7 @@ let TimeslotsService = class TimeslotsService {
             with: {
                 technician: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
             },

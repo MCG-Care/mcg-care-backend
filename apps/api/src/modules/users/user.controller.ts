@@ -13,6 +13,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger'
 import { UsersService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AddressDto } from './dto/address.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -97,5 +98,100 @@ export class UsersController {
     }
 
     return this.usersService.deleteUser(Number(id));
+  }
+
+  @Get(':id/addresses')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get all addresses for a user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  getUserAddresses(@Param('id') id: string, @CurrentUser() user?: any) {
+    const requestedId = Number(id);
+
+    // Users can view their own addresses, admins can view any user's addresses
+    if (user.role !== 'admin' && user.id !== requestedId) {
+      throw new ForbiddenException('You can only view your own addresses');
+    }
+
+    return this.usersService.getUserAddresses(requestedId);
+  }
+
+  @Post(':id/addresses')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Add a new address for a user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  addAddress(
+    @Param('id') id: string,
+    @Body() dto: AddressDto,
+    @CurrentUser() user?: any,
+  ) {
+    const requestedId = Number(id);
+
+    // Users can add addresses to their own account, admins can add to any account
+    if (user.role !== 'admin' && user.id !== requestedId) {
+      throw new ForbiddenException('You can only add addresses to your own account');
+    }
+
+    return this.usersService.createAddress(requestedId, dto);
+  }
+
+  @Patch(':id/addresses/:addressId')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update an address' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiParam({ name: 'addressId', description: 'Address ID' })
+  updateAddress(
+    @Param('id') id: string,
+    @Param('addressId') addressId: string,
+    @Body() dto: Partial<AddressDto>,
+    @CurrentUser() user?: any,
+  ) {
+    const requestedId = Number(id);
+
+    // Users can update their own addresses, admins can update any address
+    if (user.role !== 'admin' && user.id !== requestedId) {
+      throw new ForbiddenException('You can only update your own addresses');
+    }
+
+    return this.usersService.updateAddress(Number(addressId), requestedId, dto);
+  }
+
+  @Delete(':id/addresses/:addressId')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Delete an address' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiParam({ name: 'addressId', description: 'Address ID' })
+  deleteAddress(
+    @Param('id') id: string,
+    @Param('addressId') addressId: string,
+    @CurrentUser() user?: any,
+  ) {
+    const requestedId = Number(id);
+
+    // Users can delete their own addresses, admins can delete any address
+    if (user.role !== 'admin' && user.id !== requestedId) {
+      throw new ForbiddenException('You can only delete your own addresses');
+    }
+
+    return this.usersService.deleteAddress(Number(addressId), requestedId);
+  }
+
+  @Patch(':id/primary-address/:addressId')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Set primary address' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiParam({ name: 'addressId', description: 'Address ID' })
+  setPrimaryAddress(
+    @Param('id') id: string,
+    @Param('addressId') addressId: string,
+    @CurrentUser() user?: any,
+  ) {
+    const requestedId = Number(id);
+
+    // Users can set their own primary address, admins can set for any user
+    if (user.role !== 'admin' && user.id !== requestedId) {
+      throw new ForbiddenException('You can only set your own primary address');
+    }
+
+    return this.usersService.setPrimaryAddress(requestedId, Number(addressId));
   }
 }

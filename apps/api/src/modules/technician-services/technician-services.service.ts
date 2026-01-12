@@ -169,7 +169,7 @@ export class TechnicianServicesService {
             service: true,
           },
         },
-        address: true,
+        primaryAddress: true,
       },
     });
 
@@ -178,8 +178,8 @@ export class TechnicianServicesService {
       name: tech.name,
       email: tech.email,
       phoneNo: tech.phoneNo,
-      address: tech.address,
-      services: tech.technicianServices.map((ts) => ts.service),
+      address: tech.primaryAddress,
+      services: tech.technicianServices.map((ts: any) => ts.service),
     }));
   }
 }

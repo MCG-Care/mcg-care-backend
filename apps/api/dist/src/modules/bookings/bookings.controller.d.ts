@@ -19,111 +19,31 @@ export declare class BookingsController {
         fees: string;
         status: "pending" | "inprogress" | "done" | "unsuccessful";
         technician: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         bookingServices: {
-            createdAt: Date;
-            serviceId: number;
-            bookingId: number;
-            service: {
-                duration: number;
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                description: string | null;
-                serviceFee: string;
-            };
+            [x: string]: any;
         }[];
         aircon: {
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            productId: number;
-            customerId: number;
-            purchaseDate: string | null;
-            qrUrl: string | null;
-            purchaseCode: string | null;
-            customer: {
-                password: string;
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                email: string;
-                phoneNo: string;
-                addressId: number | null;
-                role: "customer" | "technician" | "admin";
-                address: {
-                    id: number;
-                    address: string | null;
-                    township: string;
-                    city: string;
-                    district: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                } | null;
-            };
-            product: {
-                id: number;
-                brand: string;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                productModel: string;
-                price: string | null;
-                description: string | null;
-                capacity: string | null;
-                type: "split" | "window" | "cassette" | "portable" | "central";
-                energyRating: number | null;
-                coolingPower: number | null;
-                refrigerant: string | null;
-                warranty: number | null;
-                tagline: string | null;
-                voltageAverage: number | null;
-                voltageCount: number | null;
-                releaseDate: string | null;
-            };
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         bookingImages: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            bookingId: number;
+            [x: string]: any;
         }[];
         serviceLog: {
-            id: number;
-            createdAt: Date;
-            bookingId: number;
-            note: string;
-        } | null;
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[] | null;
         feedback: {
-            id: number;
-            createdAt: Date;
-            bookingId: number;
-            note: string | null;
-            rating: number;
-            satisfaction: number | null;
-            issueResolved: boolean | null;
-        } | null;
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[] | null;
     }>;
     findAll(query: QueryBookingsDto, user: any): Promise<{
         data: {
@@ -140,102 +60,31 @@ export declare class BookingsController {
             fees: string;
             status: "pending" | "inprogress" | "done" | "unsuccessful";
             technician: {
-                password: string;
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                email: string;
-                phoneNo: string;
-                addressId: number | null;
-                role: "customer" | "technician" | "admin";
-                address: {
-                    id: number;
-                    address: string | null;
-                    township: string;
-                    city: string;
-                    district: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                } | null;
-            };
+                [x: string]: any;
+            } | {
+                [x: string]: any;
+            }[];
             bookingServices: {
-                createdAt: Date;
-                serviceId: number;
-                bookingId: number;
-                service: {
-                    duration: number;
-                    id: number;
-                    name: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    description: string | null;
-                    serviceFee: string;
-                };
+                [x: string]: any;
             }[];
             aircon: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                productId: number;
-                customerId: number;
-                purchaseDate: string | null;
-                qrUrl: string | null;
-                purchaseCode: string | null;
-                customer: {
-                    password: string;
-                    id: number;
-                    name: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    email: string;
-                    phoneNo: string;
-                    addressId: number | null;
-                    role: "customer" | "technician" | "admin";
-                };
-                product: {
-                    id: number;
-                    brand: string;
-                    name: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    productModel: string;
-                    price: string | null;
-                    description: string | null;
-                    capacity: string | null;
-                    type: "split" | "window" | "cassette" | "portable" | "central";
-                    energyRating: number | null;
-                    coolingPower: number | null;
-                    refrigerant: string | null;
-                    warranty: number | null;
-                    tagline: string | null;
-                    voltageAverage: number | null;
-                    voltageCount: number | null;
-                    releaseDate: string | null;
-                };
-            };
+                [x: string]: any;
+            } | {
+                [x: string]: any;
+            }[];
             bookingImages: {
-                url: string;
-                id: number;
-                createdAt: Date;
-                bookingId: number;
+                [x: string]: any;
             }[];
             serviceLog: {
-                id: number;
-                createdAt: Date;
-                bookingId: number;
-                note: string;
-            } | null;
+                [x: string]: any;
+            } | {
+                [x: string]: any;
+            }[] | null;
             feedback: {
-                id: number;
-                createdAt: Date;
-                bookingId: number;
-                note: string | null;
-                rating: number;
-                satisfaction: number | null;
-                issueResolved: boolean | null;
-            } | null;
+                [x: string]: any;
+            } | {
+                [x: string]: any;
+            }[] | null;
         }[];
         pagination: {
             page: number;
@@ -258,111 +107,31 @@ export declare class BookingsController {
         fees: string;
         status: "pending" | "inprogress" | "done" | "unsuccessful";
         technician: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         bookingServices: {
-            createdAt: Date;
-            serviceId: number;
-            bookingId: number;
-            service: {
-                duration: number;
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                description: string | null;
-                serviceFee: string;
-            };
+            [x: string]: any;
         }[];
         aircon: {
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            productId: number;
-            customerId: number;
-            purchaseDate: string | null;
-            qrUrl: string | null;
-            purchaseCode: string | null;
-            customer: {
-                password: string;
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                email: string;
-                phoneNo: string;
-                addressId: number | null;
-                role: "customer" | "technician" | "admin";
-                address: {
-                    id: number;
-                    address: string | null;
-                    township: string;
-                    city: string;
-                    district: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                } | null;
-            };
-            product: {
-                id: number;
-                brand: string;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                productModel: string;
-                price: string | null;
-                description: string | null;
-                capacity: string | null;
-                type: "split" | "window" | "cassette" | "portable" | "central";
-                energyRating: number | null;
-                coolingPower: number | null;
-                refrigerant: string | null;
-                warranty: number | null;
-                tagline: string | null;
-                voltageAverage: number | null;
-                voltageCount: number | null;
-                releaseDate: string | null;
-            };
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         bookingImages: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            bookingId: number;
+            [x: string]: any;
         }[];
         serviceLog: {
-            id: number;
-            createdAt: Date;
-            bookingId: number;
-            note: string;
-        } | null;
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[] | null;
         feedback: {
-            id: number;
-            createdAt: Date;
-            bookingId: number;
-            note: string | null;
-            rating: number;
-            satisfaction: number | null;
-            issueResolved: boolean | null;
-        } | null;
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[] | null;
     }>;
     update(id: number, updateBookingDto: UpdateBookingDto, user: any): Promise<{
         duration: number;
@@ -378,111 +147,31 @@ export declare class BookingsController {
         fees: string;
         status: "pending" | "inprogress" | "done" | "unsuccessful";
         technician: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         bookingServices: {
-            createdAt: Date;
-            serviceId: number;
-            bookingId: number;
-            service: {
-                duration: number;
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                description: string | null;
-                serviceFee: string;
-            };
+            [x: string]: any;
         }[];
         aircon: {
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            productId: number;
-            customerId: number;
-            purchaseDate: string | null;
-            qrUrl: string | null;
-            purchaseCode: string | null;
-            customer: {
-                password: string;
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                email: string;
-                phoneNo: string;
-                addressId: number | null;
-                role: "customer" | "technician" | "admin";
-                address: {
-                    id: number;
-                    address: string | null;
-                    township: string;
-                    city: string;
-                    district: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                } | null;
-            };
-            product: {
-                id: number;
-                brand: string;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                productModel: string;
-                price: string | null;
-                description: string | null;
-                capacity: string | null;
-                type: "split" | "window" | "cassette" | "portable" | "central";
-                energyRating: number | null;
-                coolingPower: number | null;
-                refrigerant: string | null;
-                warranty: number | null;
-                tagline: string | null;
-                voltageAverage: number | null;
-                voltageCount: number | null;
-                releaseDate: string | null;
-            };
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         bookingImages: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            bookingId: number;
+            [x: string]: any;
         }[];
         serviceLog: {
-            id: number;
-            createdAt: Date;
-            bookingId: number;
-            note: string;
-        } | null;
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[] | null;
         feedback: {
-            id: number;
-            createdAt: Date;
-            bookingId: number;
-            note: string | null;
-            rating: number;
-            satisfaction: number | null;
-            issueResolved: boolean | null;
-        } | null;
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[] | null;
     }>;
     remove(id: number, user: any): Promise<{
         message: string;
