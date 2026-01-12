@@ -41,6 +41,17 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -55,16 +66,17 @@ let AuthService = class AuthService {
     async register(data) {
         try {
             const hashed = await bcrypt.hash(data.password, 10);
-            const address = await this.usersService.createAddress(data.address);
             const user = await this.usersService.createUser({
                 name: data.name,
                 email: data.email,
                 phoneNo: data.phoneNo,
                 role: data.role,
                 password: hashed,
-                addressId: address.id,
             });
-            return this.generateToken(user);
+            const address = await this.usersService.createAddress(user.id, data.address);
+            await this.usersService.setPrimaryAddress(user.id, address.id);
+            const userWithAddress = await this.usersService.getUserById(user.id);
+            return this.generateToken(userWithAddress);
         }
         catch (err) {
             console.error(err);
@@ -72,22 +84,86 @@ let AuthService = class AuthService {
         }
     }
     async login(email, password) {
-        const user = await this.usersService.getUserByEmail(email);
-        if (!user)
-            throw new common_1.UnauthorizedException('Invalid email or password');
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch)
-            throw new common_1.UnauthorizedException('Invalid credentials');
-        return this.generateToken(user);
+        try {
+            const user = await this.usersService.getUserByEmail(email);
+            if (!user) {
+                throw new common_1.UnauthorizedException('Invalid email or password');
+            }
+            if (!user.password) {
+                console.error('User found but password is missing:', email);
+                throw new common_1.UnauthorizedException('Invalid credentials');
+            }
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                throw new common_1.UnauthorizedException('Invalid credentials');
+            }
+            const result = this.generateToken(user);
+            return result;
+        }
+        catch (err) {
+            if (err instanceof common_1.UnauthorizedException) {
+                throw err;
+            }
+            console.error('Login error:', err);
+            console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+            throw new common_1.InternalServerErrorException('An error occurred during login. Please try again.');
+        }
     }
     generateToken(user) {
-        return {
-            access_token: this.jwt.sign({
-                sub: user.id,
-                email: user.email,
-                role: user.role,
-            }),
-        };
+        var _a, _b, _c, _d, _e, _f, _g;
+        try {
+            const { password } = user, userWithoutPassword = __rest(user, ["password"]);
+            const toISOString = (date) => {
+                if (!date)
+                    return null;
+                try {
+                    const dateObj = date instanceof Date ? date : new Date(date);
+                    if (isNaN(dateObj.getTime()))
+                        return null;
+                    return dateObj.toISOString();
+                }
+                catch (_a) {
+                    return null;
+                }
+            };
+            const sanitizedUser = {
+                id: userWithoutPassword.id,
+                name: userWithoutPassword.name,
+                email: userWithoutPassword.email,
+                phoneNo: userWithoutPassword.phoneNo,
+                role: userWithoutPassword.role,
+                primaryAddressId: (_a = userWithoutPassword.primaryAddressId) !== null && _a !== void 0 ? _a : null,
+                createdAt: toISOString(userWithoutPassword.createdAt),
+                updatedAt: toISOString(userWithoutPassword.updatedAt),
+            };
+            if (userWithoutPassword.address && typeof userWithoutPassword.address === 'object') {
+                sanitizedUser.address = {
+                    id: (_b = userWithoutPassword.address.id) !== null && _b !== void 0 ? _b : null,
+                    name: (_c = userWithoutPassword.address.name) !== null && _c !== void 0 ? _c : null,
+                    address: (_d = userWithoutPassword.address.address) !== null && _d !== void 0 ? _d : null,
+                    township: (_e = userWithoutPassword.address.township) !== null && _e !== void 0 ? _e : null,
+                    city: (_f = userWithoutPassword.address.city) !== null && _f !== void 0 ? _f : null,
+                    district: (_g = userWithoutPassword.address.district) !== null && _g !== void 0 ? _g : null,
+                    createdAt: toISOString(userWithoutPassword.address.createdAt),
+                    updatedAt: toISOString(userWithoutPassword.address.updatedAt),
+                };
+            }
+            else {
+                sanitizedUser.address = null;
+            }
+            return {
+                access_token: this.jwt.sign({
+                    sub: user.id,
+                    email: user.email,
+                    role: user.role,
+                }),
+                user: sanitizedUser,
+            };
+        }
+        catch (error) {
+            console.error('Error in generateToken:', error);
+            throw new common_1.InternalServerErrorException('Failed to generate authentication token');
+        }
     }
 };
 exports.AuthService = AuthService;

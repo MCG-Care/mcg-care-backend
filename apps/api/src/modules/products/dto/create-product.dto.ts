@@ -90,4 +90,3 @@ export class CreateProductDto {
   @IsOptional()
   releaseDate?: string;
 }
-

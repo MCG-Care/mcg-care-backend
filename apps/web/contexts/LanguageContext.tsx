@@ -1,0 +1,594 @@
+"use client";
+
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { Language } from "@/types";
+
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined
+);
+
+type TranslationKeys = {
+  [key: string]: string;
+};
+
+type Translations = {
+  [K in Language]: TranslationKeys;
+};
+
+const translations: Translations = {
+  en: {
+    // Auth
+    login: "Login",
+    email: "Email",
+    password: "Password",
+    rememberMe: "Remember me",
+    forgotPassword: "Forgot password?",
+    welcomeBack: "Welcome Back!",
+    adminLogin: "Admin Login",
+    pleaseLogin: "Please login to access your dashboard",
+    
+    // Dashboard
+    dashboard: "Dashboard",
+    pendingBookings: "Pending Bookings",
+    inProgressBookings: "In Progress",
+    todayBookings: "Today's Bookings",
+    upcomingBookings: "Upcoming Bookings",
+    latestBookings: "Latest Bookings",
+    latestForumPosts: "Latest Forum Posts",
+    viewAll: "View All",
+    
+    // Navigation
+    bookings: "Bookings",
+    forum: "Forum",
+    services: "Services",
+    products: "Products",
+    technicians: "Technicians",
+    customers: "Customers",
+    profile: "Profile",
+    logout: "Logout",
+    settings: "Settings",
+    
+    // Common
+    loading: "Loading...",
+    error: "Error",
+    success: "Success",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    view: "View",
+    search: "Search",
+    filter: "Filter",
+    status: "Status",
+    date: "Date",
+    actions: "Actions",
+    create: "Create",
+    update: "Update",
+    close: "Close",
+    clearFilters: "Clear Filters",
+    clearSort: "Clear Sort",
+    
+    // Services
+    manageServices: "Manage Services here...",
+    addServiceType: "Add Service Type",
+    createServiceType: "Create Service Type",
+    editServiceType: "Edit Service Type",
+    serviceName: "Service Name",
+    description: "Description",
+    serviceFee: "Service Fee (Ks)",
+    duration: "Duration (minutes)",
+    searchServices: "Search services...",
+    noServicesFound: "No services found matching your search",
+    noServicesAvailable: "No service types available. Create one to get started!",
+    sortBy: "Sort By",
+    sortByFeesAsc: "Fees: Low to High",
+    sortByFeesDesc: "Fees: High to Low",
+    sortByDurationAsc: "Duration: Short to Long",
+    sortByDurationDesc: "Duration: Long to Short",
+    sortByPriceAsc: "Price: Low to High",
+    sortByPriceDesc: "Price: High to Low",
+    sortByCapacityAsc: "Capacity: Low to High",
+    sortByCapacityDesc: "Capacity: High to Low",
+    sortByDateAsc: "Date: Oldest First",
+    sortByDateDesc: "Date: Newest First",
+    filterByType: "Filter by Type",
+    allTypes: "All Types",
+    clearFilter: "Clear Filter",
+    
+    // Forum
+    forumPosts: "Manage Forum Posts here...",
+    noPostsYet: "No forum posts yet",
+    forumSearchHint: "Type in Post Title or Content or Username to search...",
+    
+    // Bookings
+    allBookings: "Manage All Bookings here...",
+    noBookingsYet: "No bookings yet",
+    bookingsSearchHint: "Type in Customer Name or Technician Name to search...",
+    
+    // Products
+    manageProducts: "Manage Products here...",
+    addProduct: "Add Product",
+    createProduct: "Create Product",
+    editProduct: "Edit Product",
+    productName: "Product Name",
+    productModel: "Product Model",
+    brand: "Brand",
+    type: "Type",
+    price: "Price",
+    capacity: "Capacity (HP)",
+    energyRating: "Energy Rating",
+    coolingPower: "Cooling Power (BTU)",
+    refrigerant: "Refrigerant",
+    warranty: "Warranty (years)",
+    years: "years",
+    tagline: "Tagline",
+    voltageAverage: "Voltage Average (V)",
+    voltageCount: "Voltage Count",
+    releaseDate: "Release Date",
+    productImages: "Product Images",
+    uploadImages: "Upload Images",
+    searchProducts: "Search products...(type in Product Name or Model or Brand to search)",
+    noProductsFound: "No products found matching your search",
+    noProductsAvailable: "No products available. Create one to get started!",
+    viewDetails: "View Details",
+    deleteProduct: "Delete Product",
+    deleteImage: "Delete Image",
+    areYouSureDeleteProduct: "Are you sure you want to delete this product?",
+    areYouSureDeleteImage: "Are you sure you want to delete this image?",
+    selectImages: "Select Images",
+    imagesSelected: "images selected",
+    split: "Split",
+    window: "Window",
+    cassette: "Cassette",
+    portable: "Portable",
+    central: "Central",
+    
+    // Booking statuses
+    pending: "Pending",
+    confirmed: "Confirmed",
+    inProgress: "In Progress",
+    inprogress: "In Progress",
+    completed: "Completed",
+    done: "Done",
+    cancelled: "Cancelled",
+    unsuccessful: "Unsuccessful",
+    
+    // Profile
+    darkMode: "Dark Mode",
+    lightMode: "Light Mode",
+    language: "Language",
+    english: "English",
+    burmese: "Burmese",
+    
+    // Technicians
+    manageTechnicians: "Manage Technicians here...",
+    addTechnician: "Add Technician",
+    createTechnician: "Create Technician",
+    editTechnician: "Edit Technician",
+    searchTechnicians: "Search technicians by name, email, phone, city, or district...",
+    noTechniciansFound: "No technicians found matching your search",
+    noTechniciansAvailable: "No technicians available",
+    name: "Name",
+    phoneNumber: "Phone Number",
+    passwordLeaveBlank: "(leave blank to keep current)",
+    enterNewPassword: "Enter new password",
+    enterPassword: "Enter password",
+    streetAddress: "Street Address",
+    township: "Township",
+    city: "City",
+    district: "District",
+    address: "Address",
+    location: "Location",
+    offeringServices: "Offering Services",
+    noServicesAssigned: "No services assigned to this technician",
+    availabilitySchedule: "Availability Schedule",
+    slotsAvailable: "slots available",
+    noTimeslotsAvailable: "No timeslots available for this technician",
+    assignServices: "Assign Services",
+    noServicesAvailableCreate: "No services available. Please create services first.",
+    reviews: "reviews",
+    fee: "Fee",
+    durationMin: "Duration",
+    min: "min",
+    onlyAdminsCanViewTechnicians: "Only admins can view technicians",
+    failedToFetchTechnicians: "Failed to fetch technicians",
+    failedToSaveTechnician: "Failed to save technician",
+    areYouSureDeleteTechnician: "Are you sure you want to delete this technician?",
+    failedToDeleteTechnician: "Failed to delete technician",
+    failedToUpdateTimeslot: "Failed to update timeslot",
+    createdAt: "Created At",
+    unknownService: "Unknown Service",
+    
+    // Customers
+    manageCustomers: "Manage Customers here...",
+    searchCustomers: "Search customers by name, email, or phone...",
+    noCustomersFound: "No customers found matching your search",
+    noCustomersAvailable: "No customers available",
+    customerDetails: "Customer Details",
+    phone: "Phone",
+    memberSince: "Member Since",
+    joined: "Joined",
+    viewProducts: "View Products",
+    viewForumPosts: "View Forum Posts",
+    noProductsFoundForCustomer: "No products found for this customer",
+    noForumPostsFoundForCustomer: "No forum posts found for this customer",
+    product: "Product",
+    purchased: "Purchased",
+    warrantyUntil: "Warranty until",
+    purchaseCode: "Purchase Code",
+    clickToViewBookings: "Click to view bookings →",
+    clickToViewDetails: "Click to view details →",
+    noBookingsFoundForProduct: "No bookings found for this product",
+    bookingTime: "Booking Time",
+    fees: "Fees",
+    technician: "Technician",
+    notAssigned: "Not assigned",
+    created: "Created",
+    postedBy: "Posted by",
+    postedOn: "Posted on",
+    updated: "Updated",
+    content: "Content",
+    photos: "Photos",
+    liked: "Liked",
+    like: "Like",
+    comments: "Comments",
+    writeAComment: "Write a comment...",
+    noCommentsYet: "No comments yet. Be the first to comment!",
+    anonymous: "Anonymous",
+    customer: "Customer",
+    admin: "Admin",
+    failedToFetchCustomers: "Failed to fetch customers",
+    failedToFetchCustomerProducts: "Failed to fetch customer products",
+    failedToFetchForumPosts: "Failed to fetch forum posts",
+    failedToFetchBookings: "Failed to fetch bookings for this product",
+    failedToAddComment: "Failed to add comment",
+    failedToDeleteComment: "Failed to delete comment",
+    areYouSureDeleteComment: "Are you sure you want to delete this comment?",
+    areYouSureDeletePost: "Are you sure you want to delete this post?",
+    failedToDeletePost: "Failed to delete post",
+    failedToUpdatePost: "Failed to update post",
+    postTitle: "Post title",
+    
+    // Booking Detail Modal
+    bookingDetails: "Booking Details",
+    customerInformation: "Customer Information",
+    productNickname: "Product Nickname",
+    requestedServices: "Requested Services",
+    noServices: "No services",
+    assignedTechnician: "Assigned Technician",
+    scheduledDate: "Scheduled Date",
+    bookingFor: "Booking For",
+    bookingOnDate: "Booking On Date",
+    minutes: "minutes",
+    noDescriptionProvided: "No description provided",
+    lastUpdated: "Last Updated",
+    
+    // Forum Detail Modal
+    postContent: "Post content",
+    noCommentsYetBeFirst: "No comments yet. Be the first to comment!",
+    
+    // Filters & Sort
+    filtersAndSort: "Filters & Sort",
+    dateType: "Date Type",
+    singleDate: "Single Date",
+    dateRange: "Date Range",
+    fromDate: "From Date",
+    toDate: "To Date",
+    postedOnDate: "Posted On Date",
+    bookingForDate: "Booking For Date",
+    numberOfLikes: "Number of Likes",
+    allStatuses: "All Statuses",
+    noBookingsFoundMatchingFilters: "No bookings found matching your filters",
+    noPostsFoundMatchingFilters: "No posts found matching your filters",
+    serviceCount: "service(s)",
+    photoCount: "photo(s)",
+  },
+  my: {
+    // Auth
+    login: "ဝင်ရောက်ရန်",
+    email: "အီးမေးလ်",
+    password: "စကားဝှက်",
+    rememberMe: "မှတ်ထားမည်",
+    forgotPassword: "စကားဝှက်မေ့နေသလား?",
+    welcomeBack: "ပြန်လည်ကြိုဆိုပါတယ်!",
+    adminLogin: "အက်ဒမင် ဝင်ရောက်ရန်",
+    pleaseLogin: "Dashboard ကိုဝင်ရောက်ရန် Login လုပ်ပါ",
+    
+    // Dashboard
+    dashboard: "ဒက်ရှ်ဘုတ်",
+    pendingBookings: "လုပ်ဆောင်ရန်ရှိသော ကြိုတင်မှာကြားမှုများ",
+    inProgressBookings: "ဆောင်ရွက်ဆဲ ကြိုတင်မှာကြားမှုများ",
+    todayBookings: "ယနေ့အတွက် ကြိုတင်မှာကြားမှုများ",
+    upcomingBookings: "လာမည့် ကြိုတင်မှာကြားမှုများ",
+    latestBookings: "နောက်ဆုံးလက်ခံရရှိသောကြိုတင်မှာကြားမှုများ",
+    latestForumPosts: "နောက်ဆုံး Forum ပို့စ်များ",
+    viewAll: "အားလုံးကြည့်ရန်",
+    
+    // Navigation
+    bookings: "ကြိုတင်မှာကြားမှုများ",
+    forum: "ဖိုရမ်",
+    services: "ဝန်ဆောင်မှုများ",
+    products: "ထုတ်ကုန်များ",
+    technicians: "နည်းပညာရှင်များ",
+    customers: "ဖောက်သည်များ",
+    profile: "ကိုယ်ရေးအချက်အလက်",
+    logout: "ထွက်ရန်",
+    settings: "ဆက်တင်များ",
+    
+    // Common
+    loading: "တင်နေသည်...",
+    error: "မှားယွင်းပါသည်",
+    success: "အောင်မြင်ပါသည်",
+    save: "သိမ်းမည်",
+    cancel: "မလုပ်တော့",
+    delete: "ဖျက်မည်",
+    edit: "ပြင်မည်",
+    view: "ကြည့်မည်",
+    search: "ရှာဖွေမည်",
+    filter: "စစ်ထုတ်မည်",
+    status: "အခြေအနေ",
+    date: "ရက်စွဲ",
+    actions: "လုပ်ဆောင်ချက်များ",
+    create: "ဖန်တီးမည်",
+    update: "အပ်ဒိတ်လုပ်မည်",
+    close: "ပိတ်မည်",
+    clearFilters: "စစ်ထုတ်မှုများ ဖယ်ရှားမည်",
+    clearSort: "အမျိုးအစားခွဲမှု ဖယ်ရှားမည်",
+    
+    // Services
+    manageServices: "ဝန်ဆောင်မှုအမျိုးအစားများအား ဤတွင်စီမံနိုင်ပါသည်...",
+    addServiceType: "ဝန်ဆောင်မှုအမျိုးအစား ထည့်မည်",
+    createServiceType: "ဝန်ဆောင်မှုအမျိုးအစား ဖန်တီးမည်",
+    editServiceType: "ဝန်ဆောင်မှုအမျိုးအစား ပြင်ဆင်မည်",
+    serviceName: "ဝန်ဆောင်မှုအမည်",
+    description: "ဖော်ပြချက်",
+    serviceFee: "ဝန်ဆောင်ခ (ကျပ်)",
+    duration: "ကြာချိန် (မိနစ်)",
+    searchServices: "ဝန်ဆောင်မှုများရှာမည်...",
+    noServicesFound: "သင်ရှာသောဝန်ဆောင်မှုများမတွေ့ပါ",
+    noServicesAvailable: "ဝန်ဆောင်မှုအမျိုးအစားများမရှိသေးပါ။ စတင်ရန် တစ်ခုဖန်တီးပါ!",
+    sortBy: "အမျိုးအစားခွဲမည်",
+    sortByFeesAsc: "ဝန်ဆောင်ခ: နည်းမှ များသို့",
+    sortByFeesDesc: "ဝန်ဆောင်ခ: များမှ နည်းသို့",
+    sortByDurationAsc: "ကြာချိန်: တိုမှ ရှည်သို့",
+    sortByDurationDesc: "ကြာချိန်: ရှည်မှ တိုသို့",
+    sortByPriceAsc: "စျေးနှုန်း: နည်းမှ များသို့",
+    sortByPriceDesc: "စျေးနှုန်း: များမှ နည်းသို့",
+    sortByCapacityAsc: "စွမ်းအား: နည်းမှ များသို့",
+    sortByCapacityDesc: "စွမ်းအား: များမှ နည်းသို့",
+    sortByDateAsc: "ရက်စွဲ: ဟောင်းမှ သစ်သို့",
+    sortByDateDesc: "ရက်စွဲ: သစ်မှ ဟောင်းသို့",
+    filterByType: "အမျိုးအစားဖြင့် စစ်ထုတ်မည်",
+    allTypes: "အားလုံး",
+    clearFilter: "စစ်ထုတ်မှု ဖယ်ရှားမည်",
+    
+    // Forum
+    forumPosts: "ဖိုရမ် ပို့စ်များအား ဤတွင်စီမံနိုင်ပါသည်...",
+    noPostsYet: "ဖိုရမ် ပို့စ်များမရှိသေးပါ",
+    forumSearchHint: "ပို့စ်ခေါင်းစဉ်၊ အကြောင်းအရာ သို့မဟုတ် အသုံးပြုသူအမည်ကို ရိုက်ထည့်ပြီး ရှာဖွေပါ...",
+    
+    // Bookings
+    allBookings: "ကြိုတင်မှာကြားမှုများအား ဤတွင်စီမံနိုင်ပါသည်...",
+    noBookingsYet: "ကြိုတင်မှာကြားမှုများမရှိသေးပါ",
+    bookingsSearchHint: "ဖောက်သည်အမည် သို့မဟုတ် နည်းပညာရှင်အမည်ကို ရိုက်ထည့်ပြီး ရှာဖွေပါ...",
+    
+    // Products
+    manageProducts: "ထုတ်ကုန်များအား ဤတွင်စီမံနိုင်ပါသည်...",
+    addProduct: "ထုတ်ကုန် ထည့်မည်",
+    createProduct: "ထုတ်ကုန် ဖန်တီးမည်",
+    editProduct: "ထုတ်ကုန် ပြင်ဆင်မည်",
+    productName: "ထုတ်ကုန်အမည်",
+    productModel: "ထုတ်ကုန်မော်ဒယ်",
+    brand: "ကုန်အမှတ်တံဆိပ်",
+    type: "အမျိုးအစား",
+    price: "စျေးနှုန်း",
+    capacity: "စွမ်းအား (HP)",
+    energyRating: "စွမ်းအင်အဆင့်သတ်မှတ်ချက်",
+    coolingPower: "အအေးပေးစွမ်းအား (BTU)",
+    refrigerant: "အအေးပေးပစ္စည်း",
+    warranty: "အာမခံ (နှစ်)",
+    years: "နှစ်",
+    tagline: "ဆောင်ပုဒ်",
+    voltageAverage: "ဗို့အားပျမ်းမျှ (V)",
+    voltageCount: "ဗို့အားအရေအတွက်",
+    releaseDate: "ထုတ်ဝေရက်စွဲ",
+    productImages: "ထုတ်ကုန်ပုံများ",
+    uploadImages: "ပုံများ တင်မည်",
+    searchProducts: "ထုတ်ကုန်များရှာမည်...(ထုတ်ကုန်အမည် သို့မဟုတ် မော်ဒယ်အမည် သို့မဟုတ် ကုန်အမှတ်တံဆိပ်အမည်ကို ရိုက်ထည့်ပြီး ရှာဖွေပါ...)",
+    noProductsFound: "သင်ရှာသောထုတ်ကုန်များမတွေ့ပါ",
+    noProductsAvailable: "ထုတ်ကုန်များမရှိသေးပါ။ စတင်ရန် တစ်ခုဖန်တီးပါ!",
+    viewDetails: "အသေးစိတ်ကြည့်မည်",
+    deleteProduct: "ထုတ်ကုန် ဖျက်မည်",
+    deleteImage: "ပုံ ဖျက်မည်",
+    areYouSureDeleteProduct: "ဤထုတ်ကုန်ကို ဖျက်ရန် သေချာပါသလား?",
+    areYouSureDeleteImage: "ဤပုံကို ဖျက်ရန် သေချာပါသလား?",
+    selectImages: "ပုံများ ရွေးချယ်မည်",
+    imagesSelected: "ပုံများ ရွေးချယ်ထားပြီး",
+    split: "Split",
+    window: "Window",
+    cassette: "Cassette",
+    portable: "Portable",
+    central: "Central",
+    
+    // Booking statuses
+    pending: "စောင့်ဆိုင်းဆဲ",
+    confirmed: "အတည်ပြုပြီး",
+    inProgress: "ဆောင်ရွက်ဆဲ",
+    inprogress: "ဆောင်ရွက်ဆဲ",
+    completed: "ပြီးစီးပြီ",
+    done: "ပြီးစီးပြီ",
+    cancelled: "ပယ်ဖျက်ပြီး",
+    unsuccessful: "မအောင်မြင်",
+    
+    // Profile
+    darkMode: "မှောင်မိုက်မုဒ်",
+    lightMode: "အလင်းမုဒ်",
+    language: "ဘာသာစကား",
+    english: "အင်္ဂလိပ်",
+    burmese: "မြန်မာ",
+    
+    // Technicians
+    manageTechnicians: "နည်းပညာရှင်များအား ဤတွင်စီမံနိုင်ပါသည်...",
+    addTechnician: "နည်းပညာရှင် ထည့်မည်",
+    createTechnician: "နည်းပညာရှင် ဖန်တီးမည်",
+    editTechnician: "နည်းပညာရှင် ပြင်ဆင်မည်",
+    searchTechnicians: "နည်းပညာရှင်များကို အမည်၊ အီးမေးလ်၊ ဖုန်း၊ မြို့ သို့မဟုတ် ခရိုင်ဖြင့် ရှာဖွေမည်...",
+    noTechniciansFound: "သင်ရှာသောနည်းပညာရှင်များမတွေ့ပါ",
+    noTechniciansAvailable: "နည်းပညာရှင်များမရှိသေးပါ",
+    name: "အမည်",
+    phoneNumber: "ဖုန်းနံပါတ်",
+    passwordLeaveBlank: "(လက်ရှိထားရန် ဗလာထားပါ)",
+    enterNewPassword: "စကားဝှက်အသစ် ထည့်ပါ",
+    enterPassword: "စကားဝှက် ထည့်ပါ",
+    streetAddress: "လမ်းလိပ်စာ",
+    township: "မြို့နယ်",
+    city: "မြို့",
+    district: "ခရိုင်",
+    address: "လိပ်စာ",
+    location: "တည်နေရာ",
+    offeringServices: "ပေးဆောင်သော ဝန်ဆောင်မှုများ",
+    noServicesAssigned: "ဤနည်းပညာရှင်အား ဝန်ဆောင်မှုများ ခန့်အပ်ထားခြင်းမရှိပါ",
+    availabilitySchedule: "ရရှိနိုင်သော အချိန်ဇယား",
+    slotsAvailable: "အချိန်များ ရရှိနိုင်သည်",
+    noTimeslotsAvailable: "ဤနည်းပညာရှင်အတွက် အချိန်များမရှိပါ",
+    assignServices: "ဝန်ဆောင်မှုများ ခန့်အပ်မည်",
+    noServicesAvailableCreate: "ဝန်ဆောင်မှုများမရှိသေးပါ။ ကျေးဇူးပြု၍ ဦးစွာဖန်တီးပါ။",
+    reviews: "သုံးသပ်ချက်များ",
+    fee: "ဝန်ဆောင်ခ",
+    durationMin: "ကြာချိန်",
+    min: "မိနစ်",
+    onlyAdminsCanViewTechnicians: "အက်ဒမင်များသာ နည်းပညာရှင်များကို ကြည့်နိုင်သည်",
+    failedToFetchTechnicians: "နည်းပညာရှင်များကို ရယူရန် မအောင်မြင်ပါ",
+    failedToSaveTechnician: "နည်းပညာရှင်ကို သိမ်းရန် မအောင်မြင်ပါ",
+    areYouSureDeleteTechnician: "ဤနည်းပညာရှင်ကို ဖျက်ရန် သေချာပါသလား?",
+    failedToDeleteTechnician: "နည်းပညာရှင်ကို ဖျက်ရန် မအောင်မြင်ပါ",
+    failedToUpdateTimeslot: "အချိန်ကို အပ်ဒိတ်လုပ်ရန် မအောင်မြင်ပါ",
+    createdAt: "ဖန်တီးထားသော ရက်စွဲ",
+    unknownService: "မသိသော ဝန်ဆောင်မှု",
+    
+    // Customers
+    manageCustomers: "ဖောက်သည်များအား ဤတွင်စီမံနိုင်ပါသည်...",
+    searchCustomers: "ဖောက်သည်များကို အမည်၊ အီးမေးလ် သို့မဟုတ် ဖုန်းဖြင့် ရှာဖွေမည်...",
+    noCustomersFound: "သင်ရှာသောဖောက်သည်များမတွေ့ပါ",
+    noCustomersAvailable: "ဖောက်သည်များမရှိသေးပါ",
+    customerDetails: "ဖောက်သည် အသေးစိတ်",
+    phone: "ဖုန်း",
+    memberSince: "အဖွဲ့ဝင်ဖြစ်သော ရက်စွဲ",
+    joined: "ဝင်ရောက်ခဲ့သည်",
+    viewProducts: "ထုတ်ကုန်များ ကြည့်မည်",
+    viewForumPosts: "ဖိုရမ် ပို့စ်များ ကြည့်မည်",
+    noProductsFoundForCustomer: "ဤဖောက်သည်အတွက် ထုတ်ကုန်များမတွေ့ပါ",
+    noForumPostsFoundForCustomer: "ဤဖောက်သည်အတွက် ဖိုရမ် ပို့စ်များမတွေ့ပါ",
+    product: "ထုတ်ကုန်",
+    purchased: "ဝယ်ယူထားသော",
+    warrantyUntil: "အာမခံ ကုန်ဆုံးရက်",
+    purchaseCode: "ဝယ်ယူမှု ကုဒ်",
+    clickToViewBookings: "ကြိုတင်မှာကြားမှုများ ကြည့်ရန် နှိပ်ပါ →",
+    clickToViewDetails: "အသေးစိတ် ကြည့်ရန် နှိပ်ပါ →",
+    noBookingsFoundForProduct: "ဤထုတ်ကုန်အတွက် ကြိုတင်မှာကြားမှုများမတွေ့ပါ",
+    bookingTime: "ကြိုတင်မှာကြားသော အချိန်",
+    fees: "ဝန်ဆောင်ခ",
+    technician: "နည်းပညာရှင်",
+    notAssigned: "ခန့်အပ်ထားခြင်းမရှိ",
+    created: "ဖန်တီးထားသော",
+    postedBy: "တင်သွင်းသူ",
+    postedOn: "တင်သွင်းသော ရက်စွဲ",
+    updated: "အပ်ဒိတ်လုပ်ထားသော",
+    content: "အကြောင်းအရာ",
+    photos: "ဓာတ်ပုံများ",
+    liked: "နှစ်သက်ထားပြီး",
+    like: "နှစ်သက်သည်",
+    comments: "မှတ်ချက်များ",
+    writeAComment: "မှတ်ချက် ရေးသားရန်...",
+    noCommentsYet: "မှတ်ချက်များမရှိသေးပါ။ ပထမဆုံး မှတ်ချက်ပေးသူဖြစ်ပါ!",
+    anonymous: "အမည်မသိ",
+    customer: "ဖောက်သည်",
+    admin: "အက်ဒမင်",
+    failedToFetchCustomers: "ဖောက်သည်များကို ရယူရန် မအောင်မြင်ပါ",
+    failedToFetchCustomerProducts: "ဖောက်သည် ထုတ်ကုန်များကို ရယူရန် မအောင်မြင်ပါ",
+    failedToFetchForumPosts: "ဖိုရမ် ပို့စ်များကို ရယူရန် မအောင်မြင်ပါ",
+    failedToFetchBookings: "ဤထုတ်ကုန်အတွက် ကြိုတင်မှာကြားမှုများကို ရယူရန် မအောင်မြင်ပါ",
+    failedToAddComment: "မှတ်ချက် ထည့်ရန် မအောင်မြင်ပါ",
+    failedToDeleteComment: "မှတ်ချက် ဖျက်ရန် မအောင်မြင်ပါ",
+    areYouSureDeleteComment: "ဤမှတ်ချက်ကို ဖျက်ရန် သေချာပါသလား?",
+    areYouSureDeletePost: "ဤပို့စ်ကို ဖျက်ရန် သေချာပါသလား?",
+    failedToDeletePost: "ပို့စ် ဖျက်ရန် မအောင်မြင်ပါ",
+    failedToUpdatePost: "ပို့စ် အပ်ဒိတ်လုပ်ရန် မအောင်မြင်ပါ",
+    postTitle: "ပို့စ် ခေါင်းစဉ်",
+    
+    // Booking Detail Modal
+    bookingDetails: "ကြိုတင်မှာကြားမှု အသေးစိတ်",
+    customerInformation: "ဖောက်သည် အချက်အလက်",
+    productNickname: "ထုတ်ကုန် အမည်ပြောင်",
+    requestedServices: "တောင်းဆိုထားသော ဝန်ဆောင်မှုများ",
+    noServices: "ဝန်ဆောင်မှုများမရှိပါ",
+    assignedTechnician: "ခန့်အပ်ထားသော နည်းပညာရှင်",
+    scheduledDate: "သတ်မှတ်ထားသော ရက်စွဲ",
+    bookingFor: "ကြိုတင်မှာကြားမှု အတွက်",
+    bookingOnDate: "ကြိုတင်မှာကြားသော ရက်စွဲ",
+    minutes: "မိနစ်",
+    noDescriptionProvided: "ဖော်ပြချက်မရှိပါ",
+    lastUpdated: "နောက်ဆုံး အပ်ဒိတ်လုပ်ထားသော",
+    
+    // Forum Detail Modal
+    postContent: "ပို့စ် အကြောင်းအရာ",
+    noCommentsYetBeFirst: "မှတ်ချက်များမရှိသေးပါ။ ပထမဆုံး မှတ်ချက်ပေးသူဖြစ်ပါ!",
+    
+    // Filters & Sort
+    filtersAndSort: "စစ်ထုတ်မှုများ နှင့် အမျိုးအစားခွဲမှု",
+    dateType: "ရက်စွဲ အမျိုးအစား",
+    singleDate: "ရက်စွဲ တစ်ခု",
+    dateRange: "ရက်စွဲ အကွာအဝေး",
+    fromDate: "စတင်ရက်",
+    toDate: "အဆုံးရက်",
+    postedOnDate: "တင်သွင်းသော ရက်စွဲ",
+    bookingForDate: "ကြိုတင်မှာကြားမှု အတွက် ရက်စွဲ",
+    numberOfLikes: "နှစ်သက်မှု အရေအတွက်",
+    allStatuses: "အားလုံး အခြေအနေ",
+    noBookingsFoundMatchingFilters: "သင်စစ်ထုတ်ထားသော ကြိုတင်မှာကြားမှုများမတွေ့ပါ",
+    noPostsFoundMatchingFilters: "သင်စစ်ထုတ်ထားသော ပို့စ်များမတွေ့ပါ",
+    serviceCount: "ဝန်ဆောင်မှု(များ)",
+    photoCount: "ဓာတ်ပုံ(များ)",
+  },
+};
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguageState] = useState<Language>("en");
+
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("language") as Language;
+    if (savedLanguage) {
+      setLanguageState(savedLanguage);
+    }
+  }, []);
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem("language", lang);
+  };
+
+  const t = (key: string): string => {
+    const translationMap = translations[language] as TranslationKeys;
+    return translationMap[key] || key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+  return context;
+}

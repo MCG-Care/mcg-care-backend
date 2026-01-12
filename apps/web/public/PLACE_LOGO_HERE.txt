@@ -1,0 +1,19 @@
+📌 LOGO PLACEMENT INSTRUCTIONS
+================================
+
+Please place your company logo file in this directory as:
+
+    logo.png
+
+Requirements:
+- File name: logo.png (exactly)
+- Format: PNG with transparent background (recommended)
+- Size: Approximately 200x200px or similar square dimensions
+- The logo will be displayed in:
+  * Login page (larger size)
+  * Sidebar header (smaller size)
+  * Favicon (converted)
+
+After adding the logo, you can delete this instruction file.
+
+Current placeholder: A gradient "M" icon is being used until you add your logo.

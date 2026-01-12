@@ -11,14 +11,21 @@ export declare class ForumCommentsService {
         likeCount: number;
         postId: number;
         user: {
-            id: number;
-            name: string;
-            role: "customer" | "technician" | "admin";
-        };
+            id: any;
+            name: any;
+            role: any;
+        } | {
+            id: any;
+            name: any;
+            role: any;
+        }[];
         post: {
-            id: number;
-            title: string;
-        };
+            id: any;
+            title: any;
+        } | {
+            id: any;
+            title: any;
+        }[];
     }>;
     findAll(query: QueryCommentsDto): Promise<{
         data: {
@@ -30,14 +37,21 @@ export declare class ForumCommentsService {
             likeCount: number;
             postId: number;
             user: {
-                id: number;
-                name: string;
-                role: "customer" | "technician" | "admin";
-            };
+                id: any;
+                name: any;
+                role: any;
+            } | {
+                id: any;
+                name: any;
+                role: any;
+            }[];
             post: {
-                id: number;
-                title: string;
-            };
+                id: any;
+                title: any;
+            } | {
+                id: any;
+                title: any;
+            }[];
         }[];
         pagination: {
             page: number;
@@ -55,14 +69,21 @@ export declare class ForumCommentsService {
         likeCount: number;
         postId: number;
         user: {
-            id: number;
-            name: string;
-            role: "customer" | "technician" | "admin";
-        };
+            id: any;
+            name: any;
+            role: any;
+        } | {
+            id: any;
+            name: any;
+            role: any;
+        }[];
         post: {
-            id: number;
-            title: string;
-        };
+            id: any;
+            title: any;
+        } | {
+            id: any;
+            title: any;
+        }[];
     }>;
     update(id: number, updateCommentDto: UpdateCommentDto, userId: number): Promise<{
         id: number;
@@ -73,16 +94,29 @@ export declare class ForumCommentsService {
         likeCount: number;
         postId: number;
         user: {
-            id: number;
-            name: string;
-            role: "customer" | "technician" | "admin";
-        };
+            id: any;
+            name: any;
+            role: any;
+        } | {
+            id: any;
+            name: any;
+            role: any;
+        }[];
         post: {
-            id: number;
-            title: string;
-        };
+            id: any;
+            title: any;
+        } | {
+            id: any;
+            title: any;
+        }[];
     }>;
     remove(id: number, userId: number, isAdmin?: boolean): Promise<{
         message: string;
     }>;
+    likeComment(commentId: number, userId: number): Promise<{
+        message: string;
+        liked: boolean;
+        likeCount: number;
+    }>;
+    hasUserLikedComment(commentId: number, userId: number): Promise<boolean>;
 }

@@ -7,10 +7,10 @@ export declare class ProductsService {
     constructor(supabaseService: SupabaseService);
     create(createProductDto: CreateProductDto, imageFiles: Express.Multer.File[]): Promise<{
         id: number;
-        brand: string;
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        brand: string;
         productModel: string;
         price: string | null;
         description: string | null;
@@ -25,20 +25,16 @@ export declare class ProductsService {
         voltageCount: number | null;
         releaseDate: string | null;
         productImages: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            productId: number;
+            [x: string]: any;
         }[];
     }>;
     findAll(query: QueryProductsDto): Promise<{
         data: {
             id: number;
-            brand: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            brand: string;
             productModel: string;
             price: string | null;
             description: string | null;
@@ -53,11 +49,7 @@ export declare class ProductsService {
             voltageCount: number | null;
             releaseDate: string | null;
             productImages: {
-                url: string;
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                productId: number;
+                [x: string]: any;
             }[];
         }[];
         pagination: {
@@ -69,10 +61,10 @@ export declare class ProductsService {
     }>;
     findOne(id: number): Promise<{
         id: number;
-        brand: string;
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        brand: string;
         productModel: string;
         price: string | null;
         description: string | null;
@@ -87,19 +79,15 @@ export declare class ProductsService {
         voltageCount: number | null;
         releaseDate: string | null;
         productImages: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            productId: number;
+            [x: string]: any;
         }[];
     }>;
     update(id: number, updateProductDto: UpdateProductDto, imageFiles?: Express.Multer.File[]): Promise<{
         id: number;
-        brand: string;
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        brand: string;
         productModel: string;
         price: string | null;
         description: string | null;
@@ -114,11 +102,7 @@ export declare class ProductsService {
         voltageCount: number | null;
         releaseDate: string | null;
         productImages: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            productId: number;
+            [x: string]: any;
         }[];
     }>;
     remove(id: number): Promise<{
