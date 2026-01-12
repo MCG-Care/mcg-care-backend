@@ -125,7 +125,7 @@ export class CustomerProductsService {
         },
         customer: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
       },
@@ -177,7 +177,7 @@ export class CustomerProductsService {
         },
         customer: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
       },
@@ -220,7 +220,7 @@ export class CustomerProductsService {
         },
         customer: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
         bookings: {

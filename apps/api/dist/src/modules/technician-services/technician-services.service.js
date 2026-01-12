@@ -77,7 +77,7 @@ let TechnicianServicesService = class TechnicianServicesService {
             with: {
                 technician: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
             },

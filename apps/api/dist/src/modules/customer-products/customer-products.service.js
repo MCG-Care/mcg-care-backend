@@ -84,7 +84,7 @@ let CustomerProductsService = class CustomerProductsService {
                 },
                 customer: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
             },
@@ -122,7 +122,7 @@ let CustomerProductsService = class CustomerProductsService {
                 },
                 customer: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
             },
@@ -152,7 +152,7 @@ let CustomerProductsService = class CustomerProductsService {
                 },
                 customer: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
                 bookings: {
