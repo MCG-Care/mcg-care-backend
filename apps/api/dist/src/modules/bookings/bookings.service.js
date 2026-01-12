@@ -145,19 +145,28 @@ let BookingsService = class BookingsService {
         if (techsInDistrict.length === 0) {
             return null;
         }
-        const shuffled = this.shuffleArray([...techsInDistrict]);
-        for (const tech of shuffled) {
+        const techsWithServices = techsInDistrict.filter((tech) => {
             const techServiceIds = tech.technicianServices.map((ts) => ts.serviceId);
-            const hasAllServices = serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
-            if (!hasAllServices) {
-                continue;
-            }
-            const hasAvailability = await this.checkTechnicianAvailability(tech.id, bookingDate, startHour, requiredHours);
-            if (hasAvailability) {
-                return tech.id;
-            }
+            return serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
+        });
+        if (techsWithServices.length === 0) {
+            return null;
         }
-        return null;
+        const availabilityChecks = await Promise.all(techsWithServices.map(async (tech) => {
+            const hasAvailability = await this.checkTechnicianAvailability(tech.id, bookingDate, startHour, requiredHours);
+            return { tech, hasAvailability };
+        }));
+        const availableTechnicians = availabilityChecks
+            .filter((check) => check.hasAvailability)
+            .map((check) => check.tech);
+        if (availableTechnicians.length === 0) {
+            return null;
+        }
+        if (availableTechnicians.length === 1) {
+            return availableTechnicians[0].id;
+        }
+        const shuffled = this.shuffleArray([...availableTechnicians]);
+        return shuffled[0].id;
     }
     async checkTechnicianAvailability(technicianId, date, startHour, requiredHours) {
         const timeslot = await database_1.db.query.timeslots.findFirst({

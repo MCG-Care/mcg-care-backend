@@ -208,6 +208,7 @@ export class BookingsService {
   /**
    * Find an available technician for the booking
    * Returns technician ID or null if none available
+   * If multiple technicians match all criteria, randomly picks one
    */
   private async findAvailableTechnician(
     serviceIds: number[],
@@ -238,33 +239,47 @@ export class BookingsService {
       return null;
     }
 
-    // Shuffle array for random assignment
-    const shuffled = this.shuffleArray([...techsInDistrict]);
-
-    // Find the first technician that matches all criteria
-    for (const tech of shuffled) {
-      // Check if technician has all required services
+    // Filter technicians that have all required services
+    const techsWithServices = techsInDistrict.filter((tech) => {
       const techServiceIds = tech.technicianServices.map((ts: any) => ts.serviceId);
-      const hasAllServices = serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
+      return serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
+    });
 
-      if (!hasAllServices) {
-        continue;
-      }
-
-      // Check if technician has available timeslots
-      const hasAvailability = await this.checkTechnicianAvailability(
-        tech.id,
-        bookingDate,
-        startHour,
-        requiredHours,
-      );
-
-      if (hasAvailability) {
-        return tech.id;
-      }
+    if (techsWithServices.length === 0) {
+      return null;
     }
 
-    return null;
+    // Check availability for all technicians with matching services
+    // Use Promise.all to check all technicians in parallel for better performance
+    const availabilityChecks = await Promise.all(
+      techsWithServices.map(async (tech) => {
+        const hasAvailability = await this.checkTechnicianAvailability(
+          tech.id,
+          bookingDate,
+          startHour,
+          requiredHours,
+        );
+        return { tech, hasAvailability };
+      }),
+    );
+
+    // Filter to only technicians with availability
+    const availableTechnicians = availabilityChecks
+      .filter((check) => check.hasAvailability)
+      .map((check) => check.tech);
+
+    if (availableTechnicians.length === 0) {
+      return null;
+    }
+
+    // If multiple technicians match all criteria, randomly pick one
+    if (availableTechnicians.length === 1) {
+      return availableTechnicians[0].id;
+    }
+
+    // Randomly select one technician from the available ones
+    const shuffled = this.shuffleArray([...availableTechnicians]);
+    return shuffled[0].id;
   }
 
   /**
