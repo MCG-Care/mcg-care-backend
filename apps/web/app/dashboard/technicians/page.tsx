@@ -274,7 +274,12 @@ const TechniciansPage = () => {
       email: technician.email || "",
       password: "", // Don't pre-fill password
       phoneNo: technician.phoneNo || "",
-      address: technician.address || {
+      address: technician.address ? {
+        address: technician.address.address || "",
+        township: technician.address.township || "",
+        city: technician.address.city || "",
+        district: technician.address.district || "",
+      } : {
         address: "",
         township: "",
         city: "",
@@ -313,12 +318,11 @@ const TechniciansPage = () => {
       setSaving(true);
 
       if (isEditing && selectedTechnician) {
-        // Update technician
+        // Update technician basic info (without address)
         const updateData: any = {
           name: formData.name,
           email: formData.email,
           phoneNo: formData.phoneNo,
-          address: formData.address,
         };
 
         // Only include password if provided
@@ -327,6 +331,38 @@ const TechniciansPage = () => {
         }
 
         await api.patch(`/users/${selectedTechnician.id}`, updateData);
+        
+        // Update address separately if address fields are provided
+        if (formData.address.address && formData.address.township && formData.address.city && formData.address.district) {
+          try {
+            // Check if user has a primary address
+            if (selectedTechnician.primaryAddressId && selectedTechnician.address) {
+              // Update existing primary address
+              await api.patch(`/users/${selectedTechnician.id}/addresses/${selectedTechnician.primaryAddressId}`, {
+                address: formData.address.address,
+                township: formData.address.township,
+                city: formData.address.city,
+                district: formData.address.district,
+              });
+            } else {
+              // Create new address and set as primary
+              const addressResponse = await api.post(`/users/${selectedTechnician.id}/addresses`, {
+                address: formData.address.address,
+                township: formData.address.township,
+                city: formData.address.city,
+                district: formData.address.district,
+              });
+              
+              // Set as primary address
+              if (addressResponse.data?.id) {
+                await api.patch(`/users/${selectedTechnician.id}/primary-address/${addressResponse.data.id}`);
+              }
+            }
+          } catch (error) {
+            console.error("Error updating address:", error);
+            // Don't fail the whole operation if address update fails
+          }
+        }
         
         // Update services
         try {
@@ -486,8 +522,8 @@ const TechniciansPage = () => {
       technician.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       technician.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       technician.phoneNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      technician.address?.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      technician.address?.district.toLowerCase().includes(searchQuery.toLowerCase());
+      technician.address?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      technician.address?.district?.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesSearch;
   });
@@ -709,25 +745,30 @@ const TechniciansPage = () => {
                         {selectedTechnician.phoneNo}
                       </p>
                     </div>
-                    {selectedTechnician.address && (
+                    {selectedTechnician.address ? (
                       <>
                         <div>
                           <Label className="text-sm text-muted-foreground">{t("address")}</Label>
-                          <p className="font-medium">{selectedTechnician.address.address}</p>
+                          <p className="font-medium">{selectedTechnician.address.address || "N/A"}</p>
                         </div>
                         <div>
                           <Label className="text-sm text-muted-foreground">{t("township")}</Label>
-                          <p className="font-medium">{selectedTechnician.address.township}</p>
+                          <p className="font-medium">{selectedTechnician.address.township || "N/A"}</p>
                         </div>
                         <div>
                           <Label className="text-sm text-muted-foreground">{t("city")}</Label>
-                          <p className="font-medium">{selectedTechnician.address.city}</p>
+                          <p className="font-medium">{selectedTechnician.address.city || "N/A"}</p>
                         </div>
                         <div>
                           <Label className="text-sm text-muted-foreground">{t("district")}</Label>
-                          <p className="font-medium">{selectedTechnician.address.district}</p>
+                          <p className="font-medium">{selectedTechnician.address.district || "N/A"}</p>
                         </div>
                       </>
+                    ) : (
+                      <div>
+                        <Label className="text-sm text-muted-foreground">{t("address")}</Label>
+                        <p className="font-medium text-muted-foreground">No address on file</p>
+                      </div>
                     )}
                     {selectedTechnician.createdAt && (
                       <div>

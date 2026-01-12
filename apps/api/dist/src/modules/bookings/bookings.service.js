@@ -19,13 +19,14 @@ let BookingsService = class BookingsService {
         this.supabaseService = supabaseService;
     }
     async create(customerId, createBookingDto, imageFiles) {
+        var _a;
         const { airconId, serviceIds, bookingForDate, bookingTime, description } = createBookingDto;
         const aircon = await database_1.db.query.customerProducts.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
             with: {
                 customer: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
                 product: true,
@@ -37,10 +38,10 @@ let BookingsService = class BookingsService {
         if (aircon.customerId !== customerId) {
             throw new common_1.ForbiddenException('You can only book services for your own aircons');
         }
-        if (!aircon.customer.address) {
+        if (!((_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress)) {
             throw new common_1.BadRequestException('Customer address is required for booking. Please update your profile.');
         }
-        const customerDistrict = aircon.customer.address.district;
+        const customerDistrict = aircon.customer.primaryAddress.district;
         const services = await database_1.db.query.serviceTypes.findMany({
             where: (0, drizzle_orm_1.inArray)(database_1.schema.serviceTypes.id, serviceIds),
         });
@@ -132,7 +133,7 @@ let BookingsService = class BookingsService {
         const technicians = await database_1.db.query.users.findMany({
             where: (0, drizzle_orm_1.eq)(database_1.schema.users.role, 'technician'),
             with: {
-                address: true,
+                primaryAddress: true,
                 technicianServices: {
                     with: {
                         service: true,
@@ -140,23 +141,32 @@ let BookingsService = class BookingsService {
                 },
             },
         });
-        const techsInDistrict = technicians.filter((tech) => { var _a; return ((_a = tech.address) === null || _a === void 0 ? void 0 : _a.district) === customerDistrict; });
+        const techsInDistrict = technicians.filter((tech) => { var _a; return ((_a = tech.primaryAddress) === null || _a === void 0 ? void 0 : _a.district) === customerDistrict; });
         if (techsInDistrict.length === 0) {
             return null;
         }
-        const shuffled = this.shuffleArray([...techsInDistrict]);
-        for (const tech of shuffled) {
+        const techsWithServices = techsInDistrict.filter((tech) => {
             const techServiceIds = tech.technicianServices.map((ts) => ts.serviceId);
-            const hasAllServices = serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
-            if (!hasAllServices) {
-                continue;
-            }
-            const hasAvailability = await this.checkTechnicianAvailability(tech.id, bookingDate, startHour, requiredHours);
-            if (hasAvailability) {
-                return tech.id;
-            }
+            return serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
+        });
+        if (techsWithServices.length === 0) {
+            return null;
         }
-        return null;
+        const availabilityChecks = await Promise.all(techsWithServices.map(async (tech) => {
+            const hasAvailability = await this.checkTechnicianAvailability(tech.id, bookingDate, startHour, requiredHours);
+            return { tech, hasAvailability };
+        }));
+        const availableTechnicians = availabilityChecks
+            .filter((check) => check.hasAvailability)
+            .map((check) => check.tech);
+        if (availableTechnicians.length === 0) {
+            return null;
+        }
+        if (availableTechnicians.length === 1) {
+            return availableTechnicians[0].id;
+        }
+        const shuffled = this.shuffleArray([...availableTechnicians]);
+        return shuffled[0].id;
     }
     async checkTechnicianAvailability(technicianId, date, startHour, requiredHours) {
         const timeslot = await database_1.db.query.timeslots.findFirst({
@@ -248,7 +258,7 @@ let BookingsService = class BookingsService {
             with: {
                 technician: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
                 aircon: {
@@ -286,14 +296,14 @@ let BookingsService = class BookingsService {
             with: {
                 technician: {
                     with: {
-                        address: true,
+                        primaryAddress: true,
                     },
                 },
                 aircon: {
                     with: {
                         customer: {
                             with: {
-                                address: true,
+                                primaryAddress: true,
                             },
                         },
                         product: true,

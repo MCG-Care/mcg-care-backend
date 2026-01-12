@@ -23,6 +23,10 @@ exports.bookingStatusEnum = (0, pg_core_1.pgEnum)('booking_status', [
 ]);
 exports.addresses = (0, pg_core_1.pgTable)('addresses', {
     id: (0, pg_core_1.serial)('id').primaryKey(),
+    userId: (0, pg_core_1.integer)('user_id')
+        .notNull()
+        .references(() => exports.users.id, { onDelete: 'cascade' }),
+    name: (0, pg_core_1.text)('name'),
     address: (0, pg_core_1.text)('address'),
     township: (0, pg_core_1.text)('township').notNull(),
     city: (0, pg_core_1.text)('city').notNull(),
@@ -31,6 +35,7 @@ exports.addresses = (0, pg_core_1.pgTable)('addresses', {
     updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
 }, (table) => ({
     districtIdx: (0, pg_core_1.index)('addresses_district_idx').on(table.district),
+    userIdIdx: (0, pg_core_1.index)('addresses_user_id_idx').on(table.userId),
 }));
 exports.users = (0, pg_core_1.pgTable)('users', {
     id: (0, pg_core_1.serial)('id').primaryKey(),
@@ -38,7 +43,8 @@ exports.users = (0, pg_core_1.pgTable)('users', {
     email: (0, pg_core_1.text)('email').notNull().unique(),
     password: (0, pg_core_1.text)('password').notNull(),
     phoneNo: (0, pg_core_1.text)('phone_no').notNull(),
-    addressId: (0, pg_core_1.integer)('address_id').references(() => exports.addresses.id, {
+    primaryAddressId: (0, pg_core_1.integer)('primary_address_id')
+        .references(() => exports.addresses.id, {
         onDelete: 'set null',
     }),
     role: (0, exports.userRoleEnum)('role').notNull(),
@@ -266,14 +272,18 @@ exports.forumCommentLikes = (0, pg_core_1.pgTable)('forum_comment_likes', {
     userIdIdx: (0, pg_core_1.index)('forum_comment_likes_user_id_idx').on(table.userId),
     commentIdIdx: (0, pg_core_1.index)('forum_comment_likes_comment_id_idx').on(table.commentId),
 }));
-exports.addressesRelations = (0, drizzle_orm_1.relations)(exports.addresses, ({ many }) => ({
-    users: many(exports.users),
+exports.addressesRelations = (0, drizzle_orm_1.relations)(exports.addresses, ({ one }) => ({
+    user: one(exports.users, {
+        fields: [exports.addresses.userId],
+        references: [exports.users.id],
+    }),
 }));
 exports.usersRelations = (0, drizzle_orm_1.relations)(exports.users, ({ one, many }) => ({
-    address: one(exports.addresses, {
-        fields: [exports.users.addressId],
+    primaryAddress: one(exports.addresses, {
+        fields: [exports.users.primaryAddressId],
         references: [exports.addresses.id],
     }),
+    addresses: many(exports.addresses),
     customerProducts: many(exports.customerProducts),
     bookingsAsTechnician: many(exports.bookings),
     technicianServices: many(exports.technicianServices),

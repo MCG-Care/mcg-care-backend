@@ -39,7 +39,7 @@ export class ServiceLogsService {
     }
 
     // Verify technician is assigned to this booking
-    if (booking.technicianId !== userId) {
+    if ((booking as any).technicianId !== userId) {
       throw new ForbiddenException('You can only create service logs for your assigned bookings');
     }
 
@@ -91,11 +91,11 @@ export class ServiceLogsService {
 
     // Authorization check
     if (userRole === 'customer') {
-      if (booking.aircon.customerId !== userId) {
+      if ((booking.aircon as any).customerId !== userId) {
         throw new ForbiddenException('You can only view service logs for your own bookings');
       }
     } else if (userRole === 'technician') {
-      if (booking.technicianId !== userId) {
+      if ((booking as any).technicianId !== userId) {
         throw new ForbiddenException('You can only view service logs for your assigned bookings');
       }
     }
@@ -224,11 +224,11 @@ export class ServiceLogsService {
 
     // Authorization check
     if (userRole === 'customer') {
-      if (serviceLog.booking.aircon.customerId !== userId) {
+      if (((serviceLog.booking as any).aircon as any).customerId !== userId) {
         throw new ForbiddenException('You can only view service logs for your own bookings');
       }
     } else if (userRole === 'technician') {
-      if (serviceLog.booking.technicianId !== userId) {
+      if ((serviceLog.booking as any).technicianId !== userId) {
         throw new ForbiddenException('You can only view service logs for your assigned bookings');
       }
     }
@@ -252,7 +252,7 @@ export class ServiceLogsService {
       throw new ForbiddenException('Only technicians can update service logs');
     }
 
-    if (serviceLog.booking.technicianId !== userId) {
+    if ((serviceLog.booking as any).technicianId !== userId) {
       throw new ForbiddenException('You can only update service logs for your assigned bookings');
     }
 
@@ -279,7 +279,7 @@ export class ServiceLogsService {
     }
 
     if (userRole === 'technician') {
-      if (serviceLog.booking.technicianId !== userId) {
+      if ((serviceLog.booking as any).technicianId !== userId) {
         throw new ForbiddenException('You can only delete service logs for your assigned bookings');
       }
     }

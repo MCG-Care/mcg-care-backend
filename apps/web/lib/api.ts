@@ -1,6 +1,26 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://mcg-care-backend.onrender.com";
+// Determine API base URL based on environment
+const getApiBaseUrl = (): string => {
+  // If explicitly set via environment variable, use that
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // Check if we're running in development (localhost)
+  if (typeof window !== "undefined") {
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (isLocalhost) {
+      // Use localhost API server (default port 3001)
+      return "http://localhost:3001";
+    }
+  }
+  
+  // Production: use Render deployed API
+  return "https://mcg-care-backend.onrender.com";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

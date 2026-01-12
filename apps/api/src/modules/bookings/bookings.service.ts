@@ -31,7 +31,7 @@ export class BookingsService {
       with: {
         customer: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
         product: true,
@@ -46,13 +46,13 @@ export class BookingsService {
       throw new ForbiddenException('You can only book services for your own aircons');
     }
 
-    if (!aircon.customer.address) {
+    if (!(aircon.customer as any)?.primaryAddress) {
       throw new BadRequestException(
         'Customer address is required for booking. Please update your profile.',
       );
     }
 
-    const customerDistrict = aircon.customer.address.district;
+    const customerDistrict = (aircon.customer as any).primaryAddress.district;
 
     // 2. Verify all services exist and calculate duration + fees
     const services = await db.query.serviceTypes.findMany({
@@ -208,6 +208,7 @@ export class BookingsService {
   /**
    * Find an available technician for the booking
    * Returns technician ID or null if none available
+   * If multiple technicians match all criteria, randomly picks one
    */
   private async findAvailableTechnician(
     serviceIds: number[],
@@ -220,7 +221,7 @@ export class BookingsService {
     const technicians = await db.query.users.findMany({
       where: eq(schema.users.role, 'technician'),
       with: {
-        address: true,
+        primaryAddress: true,
         technicianServices: {
           with: {
             service: true,
@@ -231,40 +232,54 @@ export class BookingsService {
 
     // Filter by district
     const techsInDistrict = technicians.filter(
-      (tech) => tech.address?.district === customerDistrict,
+      (tech) => tech.primaryAddress?.district === customerDistrict,
     );
 
     if (techsInDistrict.length === 0) {
       return null;
     }
 
-    // Shuffle array for random assignment
-    const shuffled = this.shuffleArray([...techsInDistrict]);
+    // Filter technicians that have all required services
+    const techsWithServices = techsInDistrict.filter((tech) => {
+      const techServiceIds = tech.technicianServices.map((ts: any) => ts.serviceId);
+      return serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
+    });
 
-    // Find the first technician that matches all criteria
-    for (const tech of shuffled) {
-      // Check if technician has all required services
-      const techServiceIds = tech.technicianServices.map((ts) => ts.serviceId);
-      const hasAllServices = serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
-
-      if (!hasAllServices) {
-        continue;
-      }
-
-      // Check if technician has available timeslots
-      const hasAvailability = await this.checkTechnicianAvailability(
-        tech.id,
-        bookingDate,
-        startHour,
-        requiredHours,
-      );
-
-      if (hasAvailability) {
-        return tech.id;
-      }
+    if (techsWithServices.length === 0) {
+      return null;
     }
 
-    return null;
+    // Check availability for all technicians with matching services
+    // Use Promise.all to check all technicians in parallel for better performance
+    const availabilityChecks = await Promise.all(
+      techsWithServices.map(async (tech) => {
+        const hasAvailability = await this.checkTechnicianAvailability(
+          tech.id,
+          bookingDate,
+          startHour,
+          requiredHours,
+        );
+        return { tech, hasAvailability };
+      }),
+    );
+
+    // Filter to only technicians with availability
+    const availableTechnicians = availabilityChecks
+      .filter((check) => check.hasAvailability)
+      .map((check) => check.tech);
+
+    if (availableTechnicians.length === 0) {
+      return null;
+    }
+
+    // If multiple technicians match all criteria, randomly pick one
+    if (availableTechnicians.length === 1) {
+      return availableTechnicians[0].id;
+    }
+
+    // Randomly select one technician from the available ones
+    const shuffled = this.shuffleArray([...availableTechnicians]);
+    return shuffled[0].id;
   }
 
   /**
@@ -410,7 +425,7 @@ export class BookingsService {
       with: {
         technician: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
         aircon: {
@@ -453,14 +468,14 @@ export class BookingsService {
       with: {
         technician: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
         aircon: {
           with: {
             customer: {
               with: {
-                address: true,
+                primaryAddress: true,
               },
             },
             product: true,
@@ -483,11 +498,11 @@ export class BookingsService {
 
     // Authorization check
     if (userRole === 'customer') {
-      if (booking.aircon.customerId !== userId) {
+      if ((booking.aircon as any).customerId !== userId) {
         throw new ForbiddenException('You can only view your own bookings');
       }
     } else if (userRole === 'technician') {
-      if (booking.technicianId !== userId) {
+      if ((booking as any).technicianId !== userId) {
         throw new ForbiddenException('You can only view your assigned bookings');
       }
     }
@@ -507,7 +522,7 @@ export class BookingsService {
       throw new ForbiddenException('Customers cannot update bookings');
     }
 
-    if (userRole === 'technician' && booking.technicianId !== userId) {
+    if (userRole === 'technician' && (booking as any).technicianId !== userId) {
       throw new ForbiddenException('You can only update your assigned bookings');
     }
 
@@ -545,7 +560,7 @@ export class BookingsService {
 
     // Customers can only delete their own pending bookings
     if (userRole === 'customer') {
-      if (booking.aircon.customerId !== userId) {
+      if ((booking.aircon as any).customerId !== userId) {
         throw new ForbiddenException('You can only delete your own bookings');
       }
       if (booking.status !== 'pending') {
@@ -578,7 +593,7 @@ export class BookingsService {
   private async restoreTimeslots(booking: any): Promise<void> {
     const timeslot = await db.query.timeslots.findFirst({
       where: and(
-        eq(schema.timeslots.technicianId, booking.technicianId),
+        eq(schema.timeslots.technicianId, (booking as any).technicianId),
         eq(schema.timeslots.date, booking.bookingForDate),
       ),
     });
@@ -617,7 +632,7 @@ export class BookingsService {
       throw new ForbiddenException('Customers cannot delete booking images');
     }
 
-    if (userRole === 'technician' && booking.technicianId !== userId) {
+    if (userRole === 'technician' && (booking as any).technicianId !== userId) {
       throw new ForbiddenException('You can only delete images from your assigned bookings');
     }
 

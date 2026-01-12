@@ -5,77 +5,38 @@ export declare class TechnicianServicesController {
     constructor(technicianServicesService: TechnicianServicesService);
     assignServices(assignServiceDto: AssignServiceDto, user: any): Promise<{
         technicianId: number;
-        technicianName: string;
-        services: {
-            duration: number;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            serviceFee: string;
-        }[];
+        technicianName: any;
+        services: ({
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[])[];
     }>;
     getTechnicianServices(technicianId: number, user: any): Promise<{
         technicianId: number;
-        technicianName: string;
-        services: {
-            duration: number;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            serviceFee: string;
-        }[];
+        technicianName: any;
+        services: ({
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[])[];
     }>;
     getTechniciansForService(serviceId: number, user: any): Promise<{
         serviceId: number;
         serviceName: string;
-        technicians: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        }[];
+        technicians: ({
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[])[];
     }>;
     getAllTechniciansWithServices(user: any): Promise<{
-        id: number;
-        name: string;
-        email: string;
-        phoneNo: string;
-        address: {
-            id: number;
-            address: string | null;
-            township: string;
-            city: string;
-            district: string;
-            createdAt: Date;
-            updatedAt: Date;
-        } | null;
-        services: {
-            duration: number;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            serviceFee: string;
-        }[];
+        id: any;
+        name: any;
+        email: any;
+        phoneNo: any;
+        address: any;
+        services: any;
     }[]>;
     removeService(technicianId: number, serviceId: number, user: any): Promise<{
         message: string;

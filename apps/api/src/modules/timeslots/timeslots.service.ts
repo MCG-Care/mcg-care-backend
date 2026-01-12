@@ -95,7 +95,7 @@ export class TimeslotsService {
       with: {
         technician: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
       },
@@ -114,7 +114,7 @@ export class TimeslotsService {
       with: {
         technician: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
       },

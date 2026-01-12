@@ -125,7 +125,7 @@ export class CustomerProductsService {
         },
         customer: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
       },
@@ -137,9 +137,9 @@ export class CustomerProductsService {
     // Calculate warranty end date for each product
     const productsWithWarranty = customerProducts.map((cp) => {
       let warrantyEndDate: string | null = null;
-      if (cp.purchaseDate && cp.product.warranty) {
+      if (cp.purchaseDate && (cp.product as any).warranty) {
         const purchaseDate = new Date(cp.purchaseDate);
-        purchaseDate.setFullYear(purchaseDate.getFullYear() + cp.product.warranty);
+        purchaseDate.setFullYear(purchaseDate.getFullYear() + (cp.product as any).warranty);
         warrantyEndDate = purchaseDate.toISOString().split('T')[0];
       }
 
@@ -177,7 +177,7 @@ export class CustomerProductsService {
         },
         customer: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
       },
@@ -194,9 +194,9 @@ export class CustomerProductsService {
 
     // Calculate warranty end date
     let warrantyEndDate: string | null = null;
-    if (customerProduct.purchaseDate && customerProduct.product.warranty) {
+    if (customerProduct.purchaseDate && (customerProduct.product as any).warranty) {
       const purchaseDate = new Date(customerProduct.purchaseDate);
-      purchaseDate.setFullYear(purchaseDate.getFullYear() + customerProduct.product.warranty);
+      purchaseDate.setFullYear(purchaseDate.getFullYear() + (customerProduct.product as any).warranty);
       warrantyEndDate = purchaseDate.toISOString().split('T')[0];
     }
 
@@ -220,7 +220,7 @@ export class CustomerProductsService {
         },
         customer: {
           with: {
-            address: true,
+            primaryAddress: true,
           },
         },
         bookings: {
@@ -244,9 +244,9 @@ export class CustomerProductsService {
 
     // Calculate warranty end date
     let warrantyEndDate: string | null = null;
-    if (customerProduct.purchaseDate && customerProduct.product.warranty) {
+    if (customerProduct.purchaseDate && (customerProduct.product as any).warranty) {
       const purchaseDate = new Date(customerProduct.purchaseDate);
-      purchaseDate.setFullYear(purchaseDate.getFullYear() + customerProduct.product.warranty);
+      purchaseDate.setFullYear(purchaseDate.getFullYear() + (customerProduct.product as any).warranty);
       warrantyEndDate = purchaseDate.toISOString().split('T')[0];
     }
 

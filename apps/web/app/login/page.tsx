@@ -43,11 +43,24 @@ const LoginPage = () => {
       if (response.data.access_token) {
         localStorage.setItem("auth_token", response.data.access_token);
         
-        // Store basic user info (email from form for now)
-        localStorage.setItem("admin_user", JSON.stringify({
-          email: email,
-          name: "Admin", // Will be updated on dashboard
-        }));
+        // Store user info from response
+        if (response.data.user) {
+          localStorage.setItem("admin_user", JSON.stringify({
+            id: response.data.user.id,
+            email: response.data.user.email,
+            name: response.data.user.name,
+            role: response.data.user.role,
+            phoneNo: response.data.user.phoneNo,
+            primaryAddressId: response.data.user.primaryAddressId,
+            address: response.data.user.address,
+          }));
+        } else {
+          // Fallback to email if user object not present
+          localStorage.setItem("admin_user", JSON.stringify({
+            email: email,
+            name: "Admin",
+          }));
+        }
         
         // Use window.location for more reliable navigation
         window.location.href = "/dashboard";

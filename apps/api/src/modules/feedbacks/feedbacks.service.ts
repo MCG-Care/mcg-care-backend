@@ -40,7 +40,7 @@ export class FeedbacksService {
     }
 
     // Verify customer owns the booking
-    if (booking.aircon.customerId !== userId) {
+    if ((booking.aircon as any).customerId !== userId) {
       throw new ForbiddenException('You can only create feedback for your own bookings');
     }
 
@@ -155,11 +155,11 @@ export class FeedbacksService {
 
     // Apply role-based filtering
     if (userRole === 'customer') {
-      feedbacks = feedbacks.filter((f) => f.booking.aircon.customerId === userId);
+      feedbacks = feedbacks.filter((f) => ((f.booking as any).aircon as any).customerId === userId);
     } else if (userRole === 'technician') {
-      feedbacks = feedbacks.filter((f) => f.booking.technicianId === userId);
+      feedbacks = feedbacks.filter((f) => (f.booking as any).technicianId === userId);
     } else if (userRole === 'admin' && technicianId) {
-      feedbacks = feedbacks.filter((f) => f.booking.technicianId === technicianId);
+      feedbacks = feedbacks.filter((f) => (f.booking as any).technicianId === technicianId);
     }
 
     // Limit results
@@ -198,11 +198,11 @@ export class FeedbacksService {
 
     // Authorization check
     if (userRole === 'customer') {
-      if (booking.aircon.customerId !== userId) {
+      if ((booking.aircon as any).customerId !== userId) {
         throw new ForbiddenException('You can only view feedback for your own bookings');
       }
     } else if (userRole === 'technician') {
-      if (booking.technicianId !== userId) {
+      if ((booking as any).technicianId !== userId) {
         throw new ForbiddenException('You can only view feedback for your assigned bookings');
       }
     }
@@ -268,11 +268,11 @@ export class FeedbacksService {
 
     // Authorization check
     if (userRole === 'customer') {
-      if (feedback.booking.aircon.customerId !== userId) {
+      if (((feedback.booking as any).aircon as any).customerId !== userId) {
         throw new ForbiddenException('You can only view your own feedback');
       }
     } else if (userRole === 'technician') {
-      if (feedback.booking.technicianId !== userId) {
+      if ((feedback.booking as any).technicianId !== userId) {
         throw new ForbiddenException('You can only view feedback for your assigned bookings');
       }
     }
@@ -291,7 +291,7 @@ export class FeedbacksService {
       throw new ForbiddenException('Only customers can update their feedback');
     }
 
-    if (feedback.booking.aircon.customerId !== userId) {
+    if (((feedback.booking as any).aircon as any).customerId !== userId) {
       throw new ForbiddenException('You can only update your own feedback');
     }
 
@@ -323,7 +323,7 @@ export class FeedbacksService {
 
     // Only customers who created it or admins can delete
     if (userRole === 'customer') {
-      if (feedback.booking.aircon.customerId !== userId) {
+      if (((feedback.booking as any).aircon as any).customerId !== userId) {
         throw new ForbiddenException('You can only delete your own feedback');
       }
     } else if (userRole === 'technician') {

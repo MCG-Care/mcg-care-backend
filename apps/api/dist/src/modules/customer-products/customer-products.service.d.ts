@@ -15,52 +15,15 @@ export declare class CustomerProductsService {
         qrUrl: string | null;
         purchaseCode: string | null;
         customer: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         product: {
-            id: number;
-            brand: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            productModel: string;
-            price: string | null;
-            description: string | null;
-            capacity: string | null;
-            type: "split" | "window" | "cassette" | "portable" | "central";
-            energyRating: number | null;
-            coolingPower: number | null;
-            refrigerant: string | null;
-            warranty: number | null;
-            tagline: string | null;
-            voltageAverage: number | null;
-            voltageCount: number | null;
-            releaseDate: string | null;
-            productImages: {
-                url: string;
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                productId: number;
-            }[];
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
     }>;
     findAll(customerId: number | undefined, query: QueryCustomerProductsDto): Promise<{
         data: {
@@ -75,52 +38,15 @@ export declare class CustomerProductsService {
             qrUrl: string | null;
             purchaseCode: string | null;
             customer: {
-                password: string;
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                email: string;
-                phoneNo: string;
-                addressId: number | null;
-                role: "customer" | "technician" | "admin";
-                address: {
-                    id: number;
-                    address: string | null;
-                    township: string;
-                    city: string;
-                    district: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                } | null;
-            };
+                [x: string]: any;
+            } | {
+                [x: string]: any;
+            }[];
             product: {
-                id: number;
-                brand: string;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                productModel: string;
-                price: string | null;
-                description: string | null;
-                capacity: string | null;
-                type: "split" | "window" | "cassette" | "portable" | "central";
-                energyRating: number | null;
-                coolingPower: number | null;
-                refrigerant: string | null;
-                warranty: number | null;
-                tagline: string | null;
-                voltageAverage: number | null;
-                voltageCount: number | null;
-                releaseDate: string | null;
-                productImages: {
-                    url: string;
-                    id: number;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    productId: number;
-                }[];
-            };
+                [x: string]: any;
+            } | {
+                [x: string]: any;
+            }[];
         }[];
         pagination: {
             page: number;
@@ -141,52 +67,15 @@ export declare class CustomerProductsService {
         qrUrl: string | null;
         purchaseCode: string | null;
         customer: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         product: {
-            id: number;
-            brand: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            productModel: string;
-            price: string | null;
-            description: string | null;
-            capacity: string | null;
-            type: "split" | "window" | "cassette" | "portable" | "central";
-            energyRating: number | null;
-            coolingPower: number | null;
-            refrigerant: string | null;
-            warranty: number | null;
-            tagline: string | null;
-            voltageAverage: number | null;
-            voltageCount: number | null;
-            releaseDate: string | null;
-            productImages: {
-                url: string;
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                productId: number;
-            }[];
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
     }>;
     findByQR(qrUrl: string): Promise<{
         warrantyEndDate: string | null;
@@ -200,95 +89,18 @@ export declare class CustomerProductsService {
         qrUrl: string | null;
         purchaseCode: string | null;
         customer: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         bookings: {
-            duration: number;
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            technicianId: number;
-            airconId: number;
-            bookingOnDate: string;
-            bookingForDate: string;
-            bookingTime: string;
-            fees: string;
-            status: "pending" | "inprogress" | "done" | "unsuccessful";
-            bookingServices: {
-                createdAt: Date;
-                serviceId: number;
-                bookingId: number;
-                service: {
-                    duration: number;
-                    id: number;
-                    name: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    description: string | null;
-                    serviceFee: string;
-                };
-            }[];
-            serviceLog: {
-                id: number;
-                createdAt: Date;
-                bookingId: number;
-                note: string;
-            } | null;
-            feedback: {
-                id: number;
-                createdAt: Date;
-                bookingId: number;
-                note: string | null;
-                rating: number;
-                satisfaction: number | null;
-                issueResolved: boolean | null;
-            } | null;
+            [x: string]: any;
         }[];
         product: {
-            id: number;
-            brand: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            productModel: string;
-            price: string | null;
-            description: string | null;
-            capacity: string | null;
-            type: "split" | "window" | "cassette" | "portable" | "central";
-            energyRating: number | null;
-            coolingPower: number | null;
-            refrigerant: string | null;
-            warranty: number | null;
-            tagline: string | null;
-            voltageAverage: number | null;
-            voltageCount: number | null;
-            releaseDate: string | null;
-            productImages: {
-                url: string;
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                productId: number;
-            }[];
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
     }>;
     update(id: number, customerId: number, updateCustomerProductDto: UpdateCustomerProductDto): Promise<{
         warrantyEndDate: string | null;
@@ -302,52 +114,15 @@ export declare class CustomerProductsService {
         qrUrl: string | null;
         purchaseCode: string | null;
         customer: {
-            password: string;
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string;
-            phoneNo: string;
-            addressId: number | null;
-            role: "customer" | "technician" | "admin";
-            address: {
-                id: number;
-                address: string | null;
-                township: string;
-                city: string;
-                district: string;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
         product: {
-            id: number;
-            brand: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            productModel: string;
-            price: string | null;
-            description: string | null;
-            capacity: string | null;
-            type: "split" | "window" | "cassette" | "portable" | "central";
-            energyRating: number | null;
-            coolingPower: number | null;
-            refrigerant: string | null;
-            warranty: number | null;
-            tagline: string | null;
-            voltageAverage: number | null;
-            voltageCount: number | null;
-            releaseDate: string | null;
-            productImages: {
-                url: string;
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                productId: number;
-            }[];
-        };
+            [x: string]: any;
+        } | {
+            [x: string]: any;
+        }[];
     }>;
     remove(id: number, customerId: number): Promise<{
         message: string;

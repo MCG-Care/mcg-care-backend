@@ -14,29 +14,19 @@ export declare class ForumPostsService {
         content: string;
         likeCount: number;
         user: {
-            id: number;
-            name: string;
-            role: "customer" | "technician" | "admin";
-        };
+            id: any;
+            name: any;
+            role: any;
+        } | {
+            id: any;
+            name: any;
+            role: any;
+        }[];
         comments: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: number;
-            content: string;
-            likeCount: number;
-            postId: number;
-            user: {
-                id: number;
-                name: string;
-                role: "customer" | "technician" | "admin";
-            };
+            [x: string]: any;
         }[];
         images: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            postId: number;
+            [x: string]: any;
         }[];
     }>;
     findAll(query: QueryPostsDto): Promise<{
@@ -51,15 +41,16 @@ export declare class ForumPostsService {
             content: string;
             likeCount: number;
             user: {
-                id: number;
-                name: string;
-                role: "customer" | "technician" | "admin";
-            };
+                id: any;
+                name: any;
+                role: any;
+            } | {
+                id: any;
+                name: any;
+                role: any;
+            }[];
             images: {
-                url: string;
-                id: number;
-                createdAt: Date;
-                postId: number;
+                [x: string]: any;
             }[];
         }[];
         pagination: {
@@ -78,29 +69,19 @@ export declare class ForumPostsService {
         content: string;
         likeCount: number;
         user: {
-            id: number;
-            name: string;
-            role: "customer" | "technician" | "admin";
-        };
+            id: any;
+            name: any;
+            role: any;
+        } | {
+            id: any;
+            name: any;
+            role: any;
+        }[];
         comments: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: number;
-            content: string;
-            likeCount: number;
-            postId: number;
-            user: {
-                id: number;
-                name: string;
-                role: "customer" | "technician" | "admin";
-            };
+            [x: string]: any;
         }[];
         images: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            postId: number;
+            [x: string]: any;
         }[];
     }>;
     update(id: number, updatePostDto: UpdatePostDto, userId: number, imageFiles?: Express.Multer.File[]): Promise<{
@@ -112,29 +93,19 @@ export declare class ForumPostsService {
         content: string;
         likeCount: number;
         user: {
-            id: number;
-            name: string;
-            role: "customer" | "technician" | "admin";
-        };
+            id: any;
+            name: any;
+            role: any;
+        } | {
+            id: any;
+            name: any;
+            role: any;
+        }[];
         comments: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: number;
-            content: string;
-            likeCount: number;
-            postId: number;
-            user: {
-                id: number;
-                name: string;
-                role: "customer" | "technician" | "admin";
-            };
+            [x: string]: any;
         }[];
         images: {
-            url: string;
-            id: number;
-            createdAt: Date;
-            postId: number;
+            [x: string]: any;
         }[];
     }>;
     remove(id: number, userId: number, isAdmin?: boolean): Promise<{
