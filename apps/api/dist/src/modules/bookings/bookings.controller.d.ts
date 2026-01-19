@@ -2,6 +2,7 @@ import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { QueryBookingsDto } from './dto/query-bookings.dto';
+import { AvailabilityQueryDto } from './dto/availability-query.dto';
 export declare class BookingsController {
     private readonly bookingsService;
     constructor(bookingsService: BookingsService);
@@ -26,12 +27,12 @@ export declare class BookingsController {
         bookingServices: {
             [x: string]: any;
         }[];
+        bookingImages: {
+            [x: string]: any;
+        }[];
         aircon: {
             [x: string]: any;
         } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {
@@ -67,12 +68,12 @@ export declare class BookingsController {
             bookingServices: {
                 [x: string]: any;
             }[];
+            bookingImages: {
+                [x: string]: any;
+            }[];
             aircon: {
                 [x: string]: any;
             } | {
-                [x: string]: any;
-            }[];
-            bookingImages: {
                 [x: string]: any;
             }[];
             serviceLog: {
@@ -93,6 +94,10 @@ export declare class BookingsController {
             totalPages: number;
         };
     }>;
+    getAvailability(query: AvailabilityQueryDto, user: any): Promise<{
+        date: string;
+        availableSlots: number[];
+    }[]>;
     findOne(id: number, user: any): Promise<{
         duration: number;
         id: number;
@@ -114,12 +119,12 @@ export declare class BookingsController {
         bookingServices: {
             [x: string]: any;
         }[];
+        bookingImages: {
+            [x: string]: any;
+        }[];
         aircon: {
             [x: string]: any;
         } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {
@@ -154,12 +159,12 @@ export declare class BookingsController {
         bookingServices: {
             [x: string]: any;
         }[];
+        bookingImages: {
+            [x: string]: any;
+        }[];
         aircon: {
             [x: string]: any;
         } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {

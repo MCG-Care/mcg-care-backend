@@ -20,6 +20,7 @@ const bookings_service_1 = require("./bookings.service");
 const create_booking_dto_1 = require("./dto/create-booking.dto");
 const update_booking_dto_1 = require("./dto/update-booking.dto");
 const query_bookings_dto_1 = require("./dto/query-bookings.dto");
+const availability_query_dto_1 = require("./dto/availability-query.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 let BookingsController = class BookingsController {
@@ -37,6 +38,12 @@ let BookingsController = class BookingsController {
     }
     async findAll(query, user) {
         return this.bookingsService.findAll(user.id, user.role, query);
+    }
+    async getAvailability(query, user) {
+        if (user.role !== 'customer') {
+            throw new common_1.BadRequestException('Only customers can check availability');
+        }
+        return this.bookingsService.getAvailability(user.id, query);
     }
     async findOne(id, user) {
         return this.bookingsService.findOne(id, user.id, user.role);
@@ -85,6 +92,21 @@ __decorate([
     __metadata("design:paramtypes", [query_bookings_dto_1.QueryBookingsDto, Object]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('availability'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get available timeslots per day for next 30 days (Customer only)',
+        description: 'Returns available time slots for each day where at least one technician from the same district can perform all selected services. ' +
+            'Query parameters: airconId (required), serviceIds (required, can be comma-separated or multiple params), addressId (optional), date (optional, YYYY-MM-DD format). ' +
+            'If date is provided, returns availability only for that date; otherwise returns 30 days. ' +
+            'Example: /bookings/availability?airconId=1&serviceIds=1&serviceIds=2&addressId=3&date=2026-01-20',
+    }),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [availability_query_dto_1.AvailabilityQueryDto, Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "getAvailability", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Get booking by ID' }),

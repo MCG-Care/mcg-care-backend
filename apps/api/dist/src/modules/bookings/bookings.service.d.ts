@@ -1,6 +1,7 @@
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { QueryBookingsDto } from './dto/query-bookings.dto';
+import { AvailabilityQueryDto } from './dto/availability-query.dto';
 import { SupabaseService } from '../../config/supabase.service';
 export declare class BookingsService {
     private readonly supabaseService;
@@ -26,12 +27,12 @@ export declare class BookingsService {
         bookingServices: {
             [x: string]: any;
         }[];
+        bookingImages: {
+            [x: string]: any;
+        }[];
         aircon: {
             [x: string]: any;
         } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {
@@ -71,12 +72,12 @@ export declare class BookingsService {
             bookingServices: {
                 [x: string]: any;
             }[];
+            bookingImages: {
+                [x: string]: any;
+            }[];
             aircon: {
                 [x: string]: any;
             } | {
-                [x: string]: any;
-            }[];
-            bookingImages: {
                 [x: string]: any;
             }[];
             serviceLog: {
@@ -118,12 +119,12 @@ export declare class BookingsService {
         bookingServices: {
             [x: string]: any;
         }[];
+        bookingImages: {
+            [x: string]: any;
+        }[];
         aircon: {
             [x: string]: any;
         } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {
@@ -158,12 +159,12 @@ export declare class BookingsService {
         bookingServices: {
             [x: string]: any;
         }[];
+        bookingImages: {
+            [x: string]: any;
+        }[];
         aircon: {
             [x: string]: any;
         } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {
@@ -184,5 +185,11 @@ export declare class BookingsService {
     removeImage(bookingId: number, imageId: number, userId: number, userRole: string): Promise<{
         message: string;
     }>;
+    getAvailability(customerId: number, query: AvailabilityQueryDto): Promise<{
+        date: string;
+        availableSlots: number[];
+    }[]>;
+    private getAvailabilityForDate;
+    private generateEmptyAvailability;
     private uploadBookingImages;
 }

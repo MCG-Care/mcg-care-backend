@@ -9,6 +9,7 @@ import { eq, and, sql, desc, inArray } from 'drizzle-orm';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { QueryBookingsDto } from './dto/query-bookings.dto';
+import { AvailabilityQueryDto } from './dto/availability-query.dto';
 import { SupabaseService } from '../../config/supabase.service';
 
 @Injectable()
@@ -677,6 +678,353 @@ export class BookingsService {
     await db.delete(schema.bookingImages).where(eq(schema.bookingImages.id, imageId));
 
     return { message: 'Image deleted successfully' };
+  }
+
+  /**
+   * Get available timeslots per day for the next 30 days
+   * Returns an array of dates with available time slots where at least one technician
+   * from the same district can perform all selected services
+   */
+  async getAvailability(customerId: number, query: AvailabilityQueryDto) {
+    const { airconId, serviceIds, addressId, date } = query;
+
+    // 1. Verify customer owns the aircon
+    const aircon = await db.query.customerProducts.findFirst({
+      where: eq(schema.customerProducts.id, airconId),
+      with: {
+        customer: {
+          with: {
+            primaryAddress: true,
+          },
+        },
+      },
+    });
+
+    if (!aircon) {
+      throw new NotFoundException(`Aircon with ID ${airconId} not found`);
+    }
+
+    if (aircon.customerId !== customerId) {
+      throw new ForbiddenException('You can only check availability for your own aircons');
+    }
+
+    // 2. Determine which address to use for district check
+    let customerDistrict: string;
+
+    if (addressId) {
+      // If addressId is provided, fetch and validate that address
+      const selectedAddress = await db.query.addresses.findFirst({
+        where: eq(schema.addresses.id, addressId),
+      });
+
+      if (!selectedAddress) {
+        throw new NotFoundException(`Address with ID ${addressId} not found`);
+      }
+
+      if (selectedAddress.userId !== customerId) {
+        throw new ForbiddenException('You can only use your own addresses for booking');
+      }
+
+      customerDistrict = selectedAddress.district;
+    } else {
+      // If no addressId provided, use primary address
+      if (!(aircon.customer as any)?.primaryAddress) {
+        throw new BadRequestException(
+          'Customer address is required for checking availability. Please update your profile or provide an addressId.',
+        );
+      }
+
+      customerDistrict = (aircon.customer as any).primaryAddress.district;
+    }
+
+    // 3. Verify all services exist and calculate duration
+    const services = await db.query.serviceTypes.findMany({
+      where: inArray(schema.serviceTypes.id, serviceIds),
+    });
+
+    if (services.length !== serviceIds.length) {
+      throw new BadRequestException('One or more service IDs are invalid');
+    }
+
+    // Calculate service duration (in minutes)
+    const serviceDuration = services.reduce((sum, service) => sum + service.duration, 0);
+    const serviceHours = Math.ceil(serviceDuration / 60);
+
+    // 4. Find all technicians from the same district who have all required services
+    const technicians = await db.query.users.findMany({
+      where: eq(schema.users.role, 'technician'),
+      with: {
+        primaryAddress: true,
+        technicianServices: {
+          with: {
+            service: true,
+          },
+        },
+      },
+    });
+
+    // Filter by district
+    const techsInDistrict = technicians.filter(
+      (tech) => tech.primaryAddress?.district === customerDistrict,
+    );
+
+    if (techsInDistrict.length === 0) {
+      // No technicians in district, return empty availability
+      return this.generateEmptyAvailability(date);
+    }
+
+    // Filter technicians that have all required services
+    const techsWithServices = techsInDistrict.filter((tech) => {
+      const techServiceIds = tech.technicianServices.map((ts: any) => ts.serviceId);
+      return serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
+    });
+
+    if (techsWithServices.length === 0) {
+      // No technicians with required services, return empty availability
+      return this.generateEmptyAvailability(date);
+    }
+
+    const technicianIds = techsWithServices.map((tech) => tech.id);
+
+    // 5. Get current time in Bangkok timezone (UTC+7)
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    
+    const parts = formatter.formatToParts(now);
+    const bangkokNow = new Date(
+      parseInt(parts.find(p => p.type === 'year')!.value),
+      parseInt(parts.find(p => p.type === 'month')!.value) - 1,
+      parseInt(parts.find(p => p.type === 'day')!.value),
+      parseInt(parts.find(p => p.type === 'hour')!.value),
+      parseInt(parts.find(p => p.type === 'minute')!.value),
+      parseInt(parts.find(p => p.type === 'second')!.value),
+    );
+    
+    // Get today's date in Bangkok timezone (set to midnight)
+    const today = new Date(bangkokNow);
+    today.setHours(0, 0, 0, 0);
+    
+    const currentHour = bangkokNow.getHours();
+    const currentMinute = bangkokNow.getMinutes();
+
+    // Format today's date string in Bangkok timezone for comparison
+    const todayDateFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const todayDateStr = todayDateFormatter.format(today);
+
+    // If a specific date is provided, return only that date's availability
+    if (date) {
+      // Validate the date
+      const requestedDate = new Date(date);
+      requestedDate.setHours(0, 0, 0, 0);
+
+      if (requestedDate < today) {
+        throw new BadRequestException('Cannot check availability for past dates');
+      }
+
+      // Check if date is within 30 days
+      const maxDate = new Date(today);
+      maxDate.setDate(maxDate.getDate() + 30);
+      if (requestedDate > maxDate) {
+        throw new BadRequestException('Cannot check availability more than 30 days in advance');
+      }
+
+      // Format the requested date string
+      const requestedDateStr = todayDateFormatter.format(requestedDate);
+      const isToday = requestedDateStr === todayDateStr;
+
+      // Get availability for the requested date
+      const dayAvailability = await this.getAvailabilityForDate(
+        technicianIds,
+        requestedDateStr,
+        serviceHours,
+        isToday,
+        currentHour,
+      );
+
+      return [
+        {
+          date: requestedDateStr,
+          availableSlots: dayAvailability,
+        },
+      ];
+    }
+
+    // Otherwise, return availability for next 30 days
+    const availability: Array<{ date: string; availableSlots: number[] }> = [];
+
+    // Loop for 30 days starting from today (includes today + next 29 days = 30 days total)
+    // But we want to include the 30th day from today, so we need 31 iterations (0-30)
+    for (let i = 0; i <= 30; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(today.getDate() + i);
+      
+      // Format date string in Bangkok timezone (YYYY-MM-DD)
+      const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      const dateStr = dateFormatter.format(checkDate);
+
+      // Check if this is today's date by comparing date strings
+      const isToday = dateStr === todayDateStr;
+
+      // Get availability for this date
+      const dayAvailability = await this.getAvailabilityForDate(
+        technicianIds,
+        dateStr,
+        serviceHours,
+        isToday,
+        currentHour,
+      );
+
+      availability.push({
+        date: dateStr,
+        availableSlots: dayAvailability,
+      });
+    }
+
+    return availability;
+  }
+
+  /**
+   * Get availability for a specific date
+   */
+  private async getAvailabilityForDate(
+    technicianIds: number[],
+    dateStr: string,
+    serviceHours: number,
+    isToday: boolean,
+    currentHour: number,
+  ): Promise<number[]> {
+    // Get timeslots for all matching technicians for this date
+    const timeslots = await db.query.timeslots.findMany({
+      where: and(
+        inArray(schema.timeslots.technicianId, technicianIds),
+        eq(schema.timeslots.date, dateStr),
+      ),
+    });
+
+    // Find available hours (9-16) where at least one technician can handle the booking
+    const availableSlots: number[] = [];
+
+    for (let hour = 9; hour <= 16; hour++) {
+      // If booking is for today, check if the booking time has already passed
+      if (isToday && hour <= currentHour) {
+        continue; // Skip past hours for today
+      }
+
+      // Check if service would extend beyond working hours (5 PM)
+      const serviceEndTime = hour + serviceHours;
+      if (serviceEndTime > 17) {
+        continue; // Skip this hour as it extends beyond 5 PM
+      }
+
+      // Calculate required hours (including traffic time if applicable)
+      const hasSlotForTraffic = serviceEndTime < 17;
+      const requiredHours = hasSlotForTraffic ? serviceHours + 1 : serviceHours;
+
+      // Check if at least one technician has availability starting at this hour
+      const hasAvailability = timeslots.some((timeslot) => {
+        if (!timeslot.slots || timeslot.slots.length === 0) {
+          return false;
+        }
+
+        // Check if all required consecutive hours are available
+        const requiredSlots = Array.from({ length: requiredHours }, (_, i) => hour + i);
+        return requiredSlots.every((slot) => timeslot.slots.includes(slot));
+      });
+
+      if (hasAvailability) {
+        availableSlots.push(hour);
+      }
+    }
+
+    return availableSlots;
+  }
+
+  /**
+   * Generate empty availability (when no technicians match criteria)
+   * If date is provided, returns single date; otherwise returns 30 days
+   */
+  private generateEmptyAvailability(date?: string): Array<{ date: string; availableSlots: number[] }> {
+    // If a specific date is provided, return only that date
+    if (date) {
+      return [
+        {
+          date,
+          availableSlots: [],
+        },
+      ];
+    }
+
+    // Otherwise, return empty availability for next 30 days
+    // Get current time in Bangkok timezone (UTC+7)
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    
+    const parts = formatter.formatToParts(now);
+    const bangkokNow = new Date(
+      parseInt(parts.find(p => p.type === 'year')!.value),
+      parseInt(parts.find(p => p.type === 'month')!.value) - 1,
+      parseInt(parts.find(p => p.type === 'day')!.value),
+      parseInt(parts.find(p => p.type === 'hour')!.value),
+      parseInt(parts.find(p => p.type === 'minute')!.value),
+      parseInt(parts.find(p => p.type === 'second')!.value),
+    );
+    
+    // Get today's date in Bangkok timezone (set to midnight)
+    const today = new Date(bangkokNow);
+    today.setHours(0, 0, 0, 0);
+
+    const availability: Array<{ date: string; availableSlots: number[] }> = [];
+
+    // Loop for 30 days starting from today (includes today + next 29 days = 30 days total)
+    // But we want to include the 30th day from today, so we need 31 iterations (0-30)
+    for (let i = 0; i <= 30; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(today.getDate() + i);
+      
+      // Format date string in Bangkok timezone (YYYY-MM-DD)
+      const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      const dateStr = dateFormatter.format(checkDate);
+
+      availability.push({
+        date: dateStr,
+        availableSlots: [],
+      });
+    }
+
+    return availability;
   }
 
   /**

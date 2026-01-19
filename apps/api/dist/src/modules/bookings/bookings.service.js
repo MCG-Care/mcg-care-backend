@@ -434,6 +434,210 @@ let BookingsService = class BookingsService {
         await database_1.db.delete(database_1.schema.bookingImages).where((0, drizzle_orm_1.eq)(database_1.schema.bookingImages.id, imageId));
         return { message: 'Image deleted successfully' };
     }
+    async getAvailability(customerId, query) {
+        var _a;
+        const { airconId, serviceIds, addressId, date } = query;
+        const aircon = await database_1.db.query.customerProducts.findFirst({
+            where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
+            with: {
+                customer: {
+                    with: {
+                        primaryAddress: true,
+                    },
+                },
+            },
+        });
+        if (!aircon) {
+            throw new common_1.NotFoundException(`Aircon with ID ${airconId} not found`);
+        }
+        if (aircon.customerId !== customerId) {
+            throw new common_1.ForbiddenException('You can only check availability for your own aircons');
+        }
+        let customerDistrict;
+        if (addressId) {
+            const selectedAddress = await database_1.db.query.addresses.findFirst({
+                where: (0, drizzle_orm_1.eq)(database_1.schema.addresses.id, addressId),
+            });
+            if (!selectedAddress) {
+                throw new common_1.NotFoundException(`Address with ID ${addressId} not found`);
+            }
+            if (selectedAddress.userId !== customerId) {
+                throw new common_1.ForbiddenException('You can only use your own addresses for booking');
+            }
+            customerDistrict = selectedAddress.district;
+        }
+        else {
+            if (!((_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress)) {
+                throw new common_1.BadRequestException('Customer address is required for checking availability. Please update your profile or provide an addressId.');
+            }
+            customerDistrict = aircon.customer.primaryAddress.district;
+        }
+        const services = await database_1.db.query.serviceTypes.findMany({
+            where: (0, drizzle_orm_1.inArray)(database_1.schema.serviceTypes.id, serviceIds),
+        });
+        if (services.length !== serviceIds.length) {
+            throw new common_1.BadRequestException('One or more service IDs are invalid');
+        }
+        const serviceDuration = services.reduce((sum, service) => sum + service.duration, 0);
+        const serviceHours = Math.ceil(serviceDuration / 60);
+        const technicians = await database_1.db.query.users.findMany({
+            where: (0, drizzle_orm_1.eq)(database_1.schema.users.role, 'technician'),
+            with: {
+                primaryAddress: true,
+                technicianServices: {
+                    with: {
+                        service: true,
+                    },
+                },
+            },
+        });
+        const techsInDistrict = technicians.filter((tech) => { var _a; return ((_a = tech.primaryAddress) === null || _a === void 0 ? void 0 : _a.district) === customerDistrict; });
+        if (techsInDistrict.length === 0) {
+            return this.generateEmptyAvailability(date);
+        }
+        const techsWithServices = techsInDistrict.filter((tech) => {
+            const techServiceIds = tech.technicianServices.map((ts) => ts.serviceId);
+            return serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
+        });
+        if (techsWithServices.length === 0) {
+            return this.generateEmptyAvailability(date);
+        }
+        const technicianIds = techsWithServices.map((tech) => tech.id);
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+        const parts = formatter.formatToParts(now);
+        const bangkokNow = new Date(parseInt(parts.find(p => p.type === 'year').value), parseInt(parts.find(p => p.type === 'month').value) - 1, parseInt(parts.find(p => p.type === 'day').value), parseInt(parts.find(p => p.type === 'hour').value), parseInt(parts.find(p => p.type === 'minute').value), parseInt(parts.find(p => p.type === 'second').value));
+        const today = new Date(bangkokNow);
+        today.setHours(0, 0, 0, 0);
+        const currentHour = bangkokNow.getHours();
+        const currentMinute = bangkokNow.getMinutes();
+        const todayDateFormatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        });
+        const todayDateStr = todayDateFormatter.format(today);
+        if (date) {
+            const requestedDate = new Date(date);
+            requestedDate.setHours(0, 0, 0, 0);
+            if (requestedDate < today) {
+                throw new common_1.BadRequestException('Cannot check availability for past dates');
+            }
+            const maxDate = new Date(today);
+            maxDate.setDate(maxDate.getDate() + 30);
+            if (requestedDate > maxDate) {
+                throw new common_1.BadRequestException('Cannot check availability more than 30 days in advance');
+            }
+            const requestedDateStr = todayDateFormatter.format(requestedDate);
+            const isToday = requestedDateStr === todayDateStr;
+            const dayAvailability = await this.getAvailabilityForDate(technicianIds, requestedDateStr, serviceHours, isToday, currentHour);
+            return [
+                {
+                    date: requestedDateStr,
+                    availableSlots: dayAvailability,
+                },
+            ];
+        }
+        const availability = [];
+        for (let i = 0; i <= 30; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(today.getDate() + i);
+            const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Bangkok',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            });
+            const dateStr = dateFormatter.format(checkDate);
+            const isToday = dateStr === todayDateStr;
+            const dayAvailability = await this.getAvailabilityForDate(technicianIds, dateStr, serviceHours, isToday, currentHour);
+            availability.push({
+                date: dateStr,
+                availableSlots: dayAvailability,
+            });
+        }
+        return availability;
+    }
+    async getAvailabilityForDate(technicianIds, dateStr, serviceHours, isToday, currentHour) {
+        const timeslots = await database_1.db.query.timeslots.findMany({
+            where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.inArray)(database_1.schema.timeslots.technicianId, technicianIds), (0, drizzle_orm_1.eq)(database_1.schema.timeslots.date, dateStr)),
+        });
+        const availableSlots = [];
+        for (let hour = 9; hour <= 16; hour++) {
+            if (isToday && hour <= currentHour) {
+                continue;
+            }
+            const serviceEndTime = hour + serviceHours;
+            if (serviceEndTime > 17) {
+                continue;
+            }
+            const hasSlotForTraffic = serviceEndTime < 17;
+            const requiredHours = hasSlotForTraffic ? serviceHours + 1 : serviceHours;
+            const hasAvailability = timeslots.some((timeslot) => {
+                if (!timeslot.slots || timeslot.slots.length === 0) {
+                    return false;
+                }
+                const requiredSlots = Array.from({ length: requiredHours }, (_, i) => hour + i);
+                return requiredSlots.every((slot) => timeslot.slots.includes(slot));
+            });
+            if (hasAvailability) {
+                availableSlots.push(hour);
+            }
+        }
+        return availableSlots;
+    }
+    generateEmptyAvailability(date) {
+        if (date) {
+            return [
+                {
+                    date,
+                    availableSlots: [],
+                },
+            ];
+        }
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+        const parts = formatter.formatToParts(now);
+        const bangkokNow = new Date(parseInt(parts.find(p => p.type === 'year').value), parseInt(parts.find(p => p.type === 'month').value) - 1, parseInt(parts.find(p => p.type === 'day').value), parseInt(parts.find(p => p.type === 'hour').value), parseInt(parts.find(p => p.type === 'minute').value), parseInt(parts.find(p => p.type === 'second').value));
+        const today = new Date(bangkokNow);
+        today.setHours(0, 0, 0, 0);
+        const availability = [];
+        for (let i = 0; i <= 30; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(today.getDate() + i);
+            const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Bangkok',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            });
+            const dateStr = dateFormatter.format(checkDate);
+            availability.push({
+                date: dateStr,
+                availableSlots: [],
+            });
+        }
+        return availability;
+    }
     async uploadBookingImages(bookingId, files) {
         const uploadPromises = files.map(async (file) => {
             const timestamp = Date.now();

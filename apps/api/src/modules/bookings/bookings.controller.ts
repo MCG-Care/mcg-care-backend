@@ -19,6 +19,7 @@ import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { QueryBookingsDto } from './dto/query-bookings.dto';
+import { AvailabilityQueryDto } from './dto/availability-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -55,6 +56,24 @@ export class BookingsController {
   @ApiOperation({ summary: 'Get all bookings (filtered by user role)' })
   async findAll(@Query() query: QueryBookingsDto, @CurrentUser() user: any) {
     return this.bookingsService.findAll(user.id, user.role, query);
+  }
+
+  @Get('availability')
+  @ApiOperation({
+    summary: 'Get available timeslots per day for next 30 days (Customer only)',
+    description:
+      'Returns available time slots for each day where at least one technician from the same district can perform all selected services. ' +
+      'Query parameters: airconId (required), serviceIds (required, can be comma-separated or multiple params), addressId (optional), date (optional, YYYY-MM-DD format). ' +
+      'If date is provided, returns availability only for that date; otherwise returns 30 days. ' +
+      'Example: /bookings/availability?airconId=1&serviceIds=1&serviceIds=2&addressId=3&date=2026-01-20',
+  })
+  async getAvailability(@Query() query: AvailabilityQueryDto, @CurrentUser() user: any) {
+    // Only customers can check availability
+    if (user.role !== 'customer') {
+      throw new BadRequestException('Only customers can check availability');
+    }
+
+    return this.bookingsService.getAvailability(user.id, query);
   }
 
   @Get(':id')
