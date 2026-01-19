@@ -4,4 +4,5 @@ export declare class CreateBookingDto {
     bookingForDate: string;
     bookingTime: number;
     description?: string;
+    addressId?: number;
 }

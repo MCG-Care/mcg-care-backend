@@ -20,7 +20,7 @@ let BookingsService = class BookingsService {
     }
     async create(customerId, createBookingDto, imageFiles) {
         var _a;
-        const { airconId, serviceIds, bookingForDate, bookingTime, description } = createBookingDto;
+        const { airconId, serviceIds, bookingForDate, bookingTime, description, addressId } = createBookingDto;
         const aircon = await database_1.db.query.customerProducts.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
             with: {
@@ -38,10 +38,25 @@ let BookingsService = class BookingsService {
         if (aircon.customerId !== customerId) {
             throw new common_1.ForbiddenException('You can only book services for your own aircons');
         }
-        if (!((_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress)) {
-            throw new common_1.BadRequestException('Customer address is required for booking. Please update your profile.');
+        let customerDistrict;
+        if (addressId) {
+            const selectedAddress = await database_1.db.query.addresses.findFirst({
+                where: (0, drizzle_orm_1.eq)(database_1.schema.addresses.id, addressId),
+            });
+            if (!selectedAddress) {
+                throw new common_1.NotFoundException(`Address with ID ${addressId} not found`);
+            }
+            if (selectedAddress.userId !== customerId) {
+                throw new common_1.ForbiddenException('You can only use your own addresses for booking');
+            }
+            customerDistrict = selectedAddress.district;
         }
-        const customerDistrict = aircon.customer.primaryAddress.district;
+        else {
+            if (!((_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress)) {
+                throw new common_1.BadRequestException('Customer address is required for booking. Please update your profile or provide an addressId.');
+            }
+            customerDistrict = aircon.customer.primaryAddress.district;
+        }
         const services = await database_1.db.query.serviceTypes.findMany({
             where: (0, drizzle_orm_1.inArray)(database_1.schema.serviceTypes.id, serviceIds),
         });

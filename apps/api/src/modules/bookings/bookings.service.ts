@@ -23,7 +23,7 @@ export class BookingsService {
     createBookingDto: CreateBookingDto,
     imageFiles?: Express.Multer.File[],
   ) {
-    const { airconId, serviceIds, bookingForDate, bookingTime, description } = createBookingDto;
+    const { airconId, serviceIds, bookingForDate, bookingTime, description, addressId } = createBookingDto;
 
     // 1. Verify customer owns the aircon
     const aircon = await db.query.customerProducts.findFirst({
@@ -46,15 +46,36 @@ export class BookingsService {
       throw new ForbiddenException('You can only book services for your own aircons');
     }
 
-    if (!(aircon.customer as any)?.primaryAddress) {
-      throw new BadRequestException(
-        'Customer address is required for booking. Please update your profile.',
-      );
+    // 2. Determine which address to use for district check
+    let customerDistrict: string;
+
+    if (addressId) {
+      // If addressId is provided, fetch and validate that address
+      const selectedAddress = await db.query.addresses.findFirst({
+        where: eq(schema.addresses.id, addressId),
+      });
+
+      if (!selectedAddress) {
+        throw new NotFoundException(`Address with ID ${addressId} not found`);
+      }
+
+      if (selectedAddress.userId !== customerId) {
+        throw new ForbiddenException('You can only use your own addresses for booking');
+      }
+
+      customerDistrict = selectedAddress.district;
+    } else {
+      // If no addressId provided, use primary address
+      if (!(aircon.customer as any)?.primaryAddress) {
+        throw new BadRequestException(
+          'Customer address is required for booking. Please update your profile or provide an addressId.',
+        );
+      }
+
+      customerDistrict = (aircon.customer as any).primaryAddress.district;
     }
 
-    const customerDistrict = (aircon.customer as any).primaryAddress.district;
-
-    // 2. Verify all services exist and calculate duration + fees
+    // 3. Verify all services exist and calculate duration + fees
     const services = await db.query.serviceTypes.findMany({
       where: inArray(schema.serviceTypes.id, serviceIds),
     });
@@ -72,7 +93,7 @@ export class BookingsService {
     // Calculate required hours for actual service (round up)
     const serviceHours = Math.ceil(serviceDuration / 60);
 
-    // 3. Validate booking date and time
+    // 4. Validate booking date and time
     // Get current time in Bangkok timezone (UTC+7)
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -145,7 +166,7 @@ export class BookingsService {
     const totalDuration = hasSlotForTraffic ? serviceDuration + 60 : serviceDuration;
     const requiredHours = Math.ceil(totalDuration / 60);
 
-    // 4. Find available technician
+    // 5. Find available technician
     const assignedTechnicianId = await this.findAvailableTechnician(
       serviceIds,
       customerDistrict,
@@ -160,7 +181,7 @@ export class BookingsService {
       );
     }
 
-    // 5. Create booking
+    // 6. Create booking
     const bookingOnDate = new Date().toISOString().split('T')[0];
     const bookingTimeStr = `${bookingTime.toString().padStart(2, '0')}:00:00`;
 
@@ -179,17 +200,17 @@ export class BookingsService {
       })
       .returning();
 
-    // 6. Link services to booking
+    // 7. Link services to booking
     const bookingServiceRecords = serviceIds.map((serviceId) => ({
       bookingId: newBooking.id,
       serviceId,
     }));
     await db.insert(schema.bookingServices).values(bookingServiceRecords);
 
-    // 7. Update technician's timeslots (remove booked hours)
+    // 8. Update technician's timeslots (remove booked hours)
     await this.updateTimeslots(assignedTechnicianId, bookingForDate, bookingTime, requiredHours);
 
-    // 8. Upload images if provided
+    // 9. Upload images if provided
     if (imageFiles && imageFiles.length > 0) {
       const imageUrls = await this.uploadBookingImages(newBooking.id, imageFiles);
 
@@ -201,7 +222,7 @@ export class BookingsService {
       await db.insert(schema.bookingImages).values(imageRecords);
     }
 
-    // 9. Return complete booking details
+    // 10. Return complete booking details
     return this.findOne(newBooking.id, customerId, 'customer');
   }
 
