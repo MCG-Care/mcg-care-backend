@@ -520,26 +520,34 @@ let BookingsService = class BookingsService {
         today.setHours(0, 0, 0, 0);
         const currentHour = bangkokNow.getHours();
         const currentMinute = bangkokNow.getMinutes();
-        const todayDateFormatter = new Intl.DateTimeFormat('en-CA', {
+        const dateFormatter = new Intl.DateTimeFormat('en-CA', {
             timeZone: 'Asia/Bangkok',
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
         });
-        const todayDateStr = todayDateFormatter.format(today);
+        const bangkokDateParts = formatter.formatToParts(now);
+        const year = bangkokDateParts.find(p => p.type === 'year').value;
+        const month = bangkokDateParts.find(p => p.type === 'month').value;
+        const day = bangkokDateParts.find(p => p.type === 'day').value;
+        const finalTodayDateStr = `${year}-${month}-${day}`;
         if (date) {
-            const requestedDate = new Date(date);
-            requestedDate.setHours(0, 0, 0, 0);
-            if (requestedDate < today) {
+            const normalizedDate = date.trim();
+            const dateParts = normalizedDate.split('-');
+            if (dateParts.length !== 3 || dateParts[0].length !== 4 || dateParts[1].length !== 2 || dateParts[2].length !== 2) {
+                throw new common_1.BadRequestException('Invalid date format. Expected YYYY-MM-DD');
+            }
+            const requestedDateStr = normalizedDate;
+            if (requestedDateStr < finalTodayDateStr) {
                 throw new common_1.BadRequestException('Cannot check availability for past dates');
             }
             const maxDate = new Date(today);
             maxDate.setDate(maxDate.getDate() + 30);
-            if (requestedDate > maxDate) {
+            const maxDateStr = dateFormatter.format(maxDate);
+            if (requestedDateStr > maxDateStr) {
                 throw new common_1.BadRequestException('Cannot check availability more than 30 days in advance');
             }
-            const requestedDateStr = todayDateFormatter.format(requestedDate);
-            const isToday = requestedDateStr === todayDateStr;
+            const isToday = requestedDateStr === finalTodayDateStr;
             const dayAvailability = await this.getAvailabilityForDate(technicianIds, requestedDateStr, serviceHours, isToday, currentHour);
             return [
                 {
@@ -559,7 +567,7 @@ let BookingsService = class BookingsService {
                 day: '2-digit',
             });
             const dateStr = dateFormatter.format(checkDate);
-            const isToday = dateStr === todayDateStr;
+            const isToday = dateStr === finalTodayDateStr;
             const dayAvailability = await this.getAvailabilityForDate(technicianIds, dateStr, serviceHours, isToday, currentHour);
             availability.push({
                 date: dateStr,

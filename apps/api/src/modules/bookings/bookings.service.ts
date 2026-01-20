@@ -817,34 +817,47 @@ export class BookingsService {
     const currentMinute = bangkokNow.getMinutes();
 
     // Format today's date string in Bangkok timezone for comparison
-    const todayDateFormatter = new Intl.DateTimeFormat('en-CA', {
+    // Build the date string directly from formatted parts to avoid timezone conversion issues
+    const dateFormatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Bangkok',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
     });
-    const todayDateStr = todayDateFormatter.format(today);
+    
+    // Get the date parts directly from Bangkok timezone to build today's date string
+    const bangkokDateParts = formatter.formatToParts(now);
+    const year = bangkokDateParts.find(p => p.type === 'year')!.value;
+    const month = bangkokDateParts.find(p => p.type === 'month')!.value;
+    const day = bangkokDateParts.find(p => p.type === 'day')!.value;
+    const finalTodayDateStr = `${year}-${month}-${day}`;
 
     // If a specific date is provided, return only that date's availability
     if (date) {
-      // Validate the date
-      const requestedDate = new Date(date);
-      requestedDate.setHours(0, 0, 0, 0);
-
-      if (requestedDate < today) {
+      // Normalize and validate the date format (YYYY-MM-DD)
+      const normalizedDate = date.trim();
+      const dateParts = normalizedDate.split('-');
+      if (dateParts.length !== 3 || dateParts[0].length !== 4 || dateParts[1].length !== 2 || dateParts[2].length !== 2) {
+        throw new BadRequestException('Invalid date format. Expected YYYY-MM-DD');
+      }
+      
+      // The input is already in YYYY-MM-DD format, use it directly for comparison
+      const requestedDateStr = normalizedDate;
+      
+      // Compare date strings directly (YYYY-MM-DD format) - this avoids timezone conversion issues
+      // Only reject if the requested date is strictly before today
+      if (requestedDateStr < finalTodayDateStr) {
         throw new BadRequestException('Cannot check availability for past dates');
       }
 
-      // Check if date is within 30 days
+      // Check if date is within 30 days - format maxDate in Bangkok timezone for comparison
       const maxDate = new Date(today);
       maxDate.setDate(maxDate.getDate() + 30);
-      if (requestedDate > maxDate) {
+      const maxDateStr = dateFormatter.format(maxDate);
+      if (requestedDateStr > maxDateStr) {
         throw new BadRequestException('Cannot check availability more than 30 days in advance');
       }
-
-      // Format the requested date string
-      const requestedDateStr = todayDateFormatter.format(requestedDate);
-      const isToday = requestedDateStr === todayDateStr;
+      const isToday = requestedDateStr === finalTodayDateStr;
 
       // Get availability for the requested date
       const dayAvailability = await this.getAvailabilityForDate(
@@ -882,7 +895,7 @@ export class BookingsService {
       const dateStr = dateFormatter.format(checkDate);
 
       // Check if this is today's date by comparing date strings
-      const isToday = dateStr === todayDateStr;
+      const isToday = dateStr === finalTodayDateStr;
 
       // Get availability for this date
       const dayAvailability = await this.getAvailabilityForDate(

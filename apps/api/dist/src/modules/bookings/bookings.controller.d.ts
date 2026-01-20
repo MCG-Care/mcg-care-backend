@@ -27,12 +27,12 @@ export declare class BookingsController {
         bookingServices: {
             [x: string]: any;
         }[];
-        bookingImages: {
-            [x: string]: any;
-        }[];
         aircon: {
             [x: string]: any;
         } | {
+            [x: string]: any;
+        }[];
+        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {
@@ -68,12 +68,12 @@ export declare class BookingsController {
             bookingServices: {
                 [x: string]: any;
             }[];
-            bookingImages: {
-                [x: string]: any;
-            }[];
             aircon: {
                 [x: string]: any;
             } | {
+                [x: string]: any;
+            }[];
+            bookingImages: {
                 [x: string]: any;
             }[];
             serviceLog: {
@@ -119,12 +119,12 @@ export declare class BookingsController {
         bookingServices: {
             [x: string]: any;
         }[];
-        bookingImages: {
-            [x: string]: any;
-        }[];
         aircon: {
             [x: string]: any;
         } | {
+            [x: string]: any;
+        }[];
+        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {
@@ -159,12 +159,12 @@ export declare class BookingsController {
         bookingServices: {
             [x: string]: any;
         }[];
-        bookingImages: {
-            [x: string]: any;
-        }[];
         aircon: {
             [x: string]: any;
         } | {
+            [x: string]: any;
+        }[];
+        bookingImages: {
             [x: string]: any;
         }[];
         serviceLog: {
