@@ -47,9 +47,9 @@ export class BookingsService {
       throw new ForbiddenException('You can only book services for your own aircons');
     }
 
-    // 2. Determine which address to use for district check and store it for the response
+    // 2. Determine which address to use for district check
     let customerDistrict: string;
-    let serviceAddress: any = null; // Track which address was used for the service
+    let bookingAddressId: number | null = null; // Store the addressId used for this booking
 
     if (addressId) {
       // If addressId is provided, fetch and validate that address
@@ -66,18 +66,7 @@ export class BookingsService {
       }
 
       customerDistrict = selectedAddress.district;
-      // Store the complete selected address object for the response
-      serviceAddress = {
-        id: selectedAddress.id,
-        userId: selectedAddress.userId,
-        name: selectedAddress.name,
-        address: selectedAddress.address,
-        township: selectedAddress.township,
-        city: selectedAddress.city,
-        district: selectedAddress.district,
-        createdAt: selectedAddress.createdAt,
-        updatedAt: selectedAddress.updatedAt,
-      };
+      bookingAddressId = addressId; // Store the selected address ID
     } else {
       // If no addressId provided, use primary address
       const primaryAddress = (aircon.customer as any)?.primaryAddress;
@@ -88,18 +77,7 @@ export class BookingsService {
       }
 
       customerDistrict = primaryAddress.district;
-      // Store the complete primary address object for the response
-      serviceAddress = {
-        id: primaryAddress.id,
-        userId: primaryAddress.userId,
-        name: primaryAddress.name,
-        address: primaryAddress.address,
-        township: primaryAddress.township,
-        city: primaryAddress.city,
-        district: primaryAddress.district,
-        createdAt: primaryAddress.createdAt,
-        updatedAt: primaryAddress.updatedAt,
-      };
+      // bookingAddressId remains null, indicating primary address was used
     }
 
     // 3. Verify all services exist and calculate duration + fees
@@ -217,6 +195,7 @@ export class BookingsService {
       .values({
         technicianId: assignedTechnicianId,
         airconId,
+        addressId: bookingAddressId, // Store the addressId used (null if primary address was used)
         bookingOnDate,
         bookingForDate,
         bookingTime: bookingTimeStr,
@@ -249,36 +228,8 @@ export class BookingsService {
       await db.insert(schema.bookingImages).values(imageRecords);
     }
 
-    // 10. Return complete booking details with the address used for service
-    const bookingDetails = await this.findOne(newBooking.id, customerId, 'customer');
-    
-    // Ensure serviceAddress is set (it should always be set at this point, but add fallback for safety)
-    if (!serviceAddress) {
-      // Fallback: use primary address if serviceAddress wasn't set (shouldn't happen)
-      const primaryAddress = (bookingDetails.aircon as any)?.customer?.primaryAddress;
-      if (primaryAddress) {
-        serviceAddress = {
-          id: primaryAddress.id,
-          userId: primaryAddress.userId,
-          name: primaryAddress.name,
-          address: primaryAddress.address,
-          township: primaryAddress.township,
-          city: primaryAddress.city,
-          district: primaryAddress.district,
-          createdAt: primaryAddress.createdAt,
-          updatedAt: primaryAddress.updatedAt,
-        };
-      }
-    }
-    
-    // Return booking with serviceAddress included
-    // serviceAddress contains the address that was used for this booking:
-    // - If addressId was provided in the request, it's the selected address
-    // - If addressId was not provided, it's the customer's primary address
-    return {
-      ...(bookingDetails as any),
-      serviceAddress,
-    };
+    // 10. Return complete booking details (findOne will include serviceAddress)
+    return this.findOne(newBooking.id, customerId, 'customer');
   }
 
   /**
@@ -506,7 +457,11 @@ export class BookingsService {
         },
         aircon: {
           with: {
-            customer: true,
+            customer: {
+              with: {
+                primaryAddress: true,
+              },
+            },
             product: true,
           },
         },
@@ -524,8 +479,59 @@ export class BookingsService {
       orderBy: [desc(schema.bookings.createdAt)],
     });
 
+    // Add serviceAddress to each booking
+    const bookingsWithAddress = await Promise.all(
+      bookings.map(async (booking) => {
+        let serviceAddress: any = null;
+        const bookingAddressId = (booking as any).addressId;
+
+        if (bookingAddressId) {
+          // If addressId is stored, fetch that address
+          const address = await db.query.addresses.findFirst({
+            where: eq(schema.addresses.id, bookingAddressId),
+          });
+          if (address) {
+            serviceAddress = {
+              id: address.id,
+              userId: address.userId,
+              name: address.name,
+              address: address.address,
+              township: address.township,
+              city: address.city,
+              district: address.district,
+              createdAt: address.createdAt,
+              updatedAt: address.updatedAt,
+            };
+          }
+        }
+
+        // If no addressId stored (or address not found), use primary address
+        if (!serviceAddress) {
+          const primaryAddress = (booking.aircon as any)?.customer?.primaryAddress;
+          if (primaryAddress) {
+            serviceAddress = {
+              id: primaryAddress.id,
+              userId: primaryAddress.userId,
+              name: primaryAddress.name,
+              address: primaryAddress.address,
+              township: primaryAddress.township,
+              city: primaryAddress.city,
+              district: primaryAddress.district,
+              createdAt: primaryAddress.createdAt,
+              updatedAt: primaryAddress.updatedAt,
+            };
+          }
+        }
+
+        return {
+          ...(booking as any),
+          serviceAddress,
+        };
+      }),
+    );
+
     return {
-      data: bookings,
+      data: bookingsWithAddress,
       pagination: {
         page,
         limit,
@@ -584,7 +590,53 @@ export class BookingsService {
     }
     // Admins can view any booking
 
-    return booking;
+    // Get the service address (address used for this booking)
+    let serviceAddress: any = null;
+    const bookingAddressId = (booking as any).addressId;
+
+    if (bookingAddressId) {
+      // If addressId is stored, fetch that address
+      const address = await db.query.addresses.findFirst({
+        where: eq(schema.addresses.id, bookingAddressId),
+      });
+      if (address) {
+        serviceAddress = {
+          id: address.id,
+          userId: address.userId,
+          name: address.name,
+          address: address.address,
+          township: address.township,
+          city: address.city,
+          district: address.district,
+          createdAt: address.createdAt,
+          updatedAt: address.updatedAt,
+        };
+      }
+    }
+
+    // If no addressId stored (or address not found), use primary address
+    if (!serviceAddress) {
+      const primaryAddress = (booking.aircon as any)?.customer?.primaryAddress;
+      if (primaryAddress) {
+        serviceAddress = {
+          id: primaryAddress.id,
+          userId: primaryAddress.userId,
+          name: primaryAddress.name,
+          address: primaryAddress.address,
+          township: primaryAddress.township,
+          city: primaryAddress.city,
+          district: primaryAddress.district,
+          createdAt: primaryAddress.createdAt,
+          updatedAt: primaryAddress.updatedAt,
+        };
+      }
+    }
+
+    // Return booking with serviceAddress included
+    return {
+      ...(booking as any),
+      serviceAddress,
+    };
   }
 
   /**
@@ -646,7 +698,7 @@ export class BookingsService {
 
     // Delete booking images from storage
     if (booking.bookingImages && booking.bookingImages.length > 0) {
-      const imagePaths = booking.bookingImages.map((img) =>
+      const imagePaths = booking.bookingImages.map((img: any) =>
         this.supabaseService.extractPathFromUrl(img.url, 'booking-images'),
       );
       await this.supabaseService.deleteFiles('booking-images', imagePaths);

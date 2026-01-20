@@ -238,6 +238,9 @@ export const bookings = pgTable(
     airconId: integer('aircon_id')
       .notNull()
       .references(() => customerProducts.id, { onDelete: 'cascade' }),
+    addressId: integer('address_id')
+      // @ts-ignore - Circular reference: addresses is defined above, but Drizzle handles this at runtime
+      .references(() => addresses.id, { onDelete: 'set null' }), // Address used for this booking (optional - null means primary address was used)
     bookingOnDate: date('booking_on_date').notNull(), // When the booking was made
     bookingForDate: date('booking_for_date').notNull(), // When the service is scheduled
     bookingTime: time('booking_time').notNull(), // Start time of service

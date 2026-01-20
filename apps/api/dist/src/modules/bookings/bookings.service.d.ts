@@ -12,46 +12,7 @@ export declare class BookingsService {
     private updateTimeslots;
     private shuffleArray;
     findAll(userId: number, userRole: string, query: QueryBookingsDto): Promise<{
-        data: {
-            duration: number;
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            technicianId: number;
-            airconId: number;
-            bookingOnDate: string;
-            bookingForDate: string;
-            bookingTime: string;
-            fees: string;
-            status: "pending" | "inprogress" | "done" | "unsuccessful";
-            technician: {
-                [x: string]: any;
-            } | {
-                [x: string]: any;
-            }[];
-            bookingServices: {
-                [x: string]: any;
-            }[];
-            aircon: {
-                [x: string]: any;
-            } | {
-                [x: string]: any;
-            }[];
-            bookingImages: {
-                [x: string]: any;
-            }[];
-            serviceLog: {
-                [x: string]: any;
-            } | {
-                [x: string]: any;
-            }[] | null;
-            feedback: {
-                [x: string]: any;
-            } | {
-                [x: string]: any;
-            }[] | null;
-        }[];
+        data: any[];
         pagination: {
             page: number;
             limit: number;
@@ -59,86 +20,8 @@ export declare class BookingsService {
             totalPages: number;
         };
     }>;
-    findOne(id: number, userId: number, userRole: string): Promise<{
-        duration: number;
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        technicianId: number;
-        airconId: number;
-        bookingOnDate: string;
-        bookingForDate: string;
-        bookingTime: string;
-        fees: string;
-        status: "pending" | "inprogress" | "done" | "unsuccessful";
-        technician: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[];
-        bookingServices: {
-            [x: string]: any;
-        }[];
-        aircon: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
-            [x: string]: any;
-        }[];
-        serviceLog: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[] | null;
-        feedback: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[] | null;
-    }>;
-    update(id: number, userId: number, userRole: string, updateBookingDto: UpdateBookingDto): Promise<{
-        duration: number;
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        technicianId: number;
-        airconId: number;
-        bookingOnDate: string;
-        bookingForDate: string;
-        bookingTime: string;
-        fees: string;
-        status: "pending" | "inprogress" | "done" | "unsuccessful";
-        technician: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[];
-        bookingServices: {
-            [x: string]: any;
-        }[];
-        aircon: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
-            [x: string]: any;
-        }[];
-        serviceLog: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[] | null;
-        feedback: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[] | null;
-    }>;
+    findOne(id: number, userId: number, userRole: string): Promise<any>;
+    update(id: number, userId: number, userRole: string, updateBookingDto: UpdateBookingDto): Promise<any>;
     remove(id: number, userId: number, userRole: string): Promise<{
         message: string;
     }>;
