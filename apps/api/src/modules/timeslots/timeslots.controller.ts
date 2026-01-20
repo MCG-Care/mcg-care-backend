@@ -12,6 +12,7 @@ import {
   ForbiddenException,
   UnauthorizedException,
   Headers,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -33,6 +34,8 @@ import { ConfigService } from '@nestjs/config';
 @ApiBearerAuth('JWT-auth')
 @Controller('timeslots')
 export class TimeslotsController {
+  private readonly logger = new Logger(TimeslotsController.name);
+
   constructor(
     private readonly timeslotsService: TimeslotsService,
     private readonly configService: ConfigService,
@@ -169,16 +172,34 @@ export class TimeslotsController {
   async dailyMaintenanceCron(@Headers('x-cron-secret') cronSecret: string) {
     // This endpoint is for cron jobs only - uses a secret token instead of JWT
     // This avoids JWT expiration issues
+    this.logger.log('🔧 Daily maintenance cron endpoint called');
+    
     const expectedSecret = this.configService.get<string>('CRON_SECRET');
 
     if (!expectedSecret) {
+      this.logger.error('❌ CRON_SECRET not configured');
       throw new UnauthorizedException('CRON_SECRET not configured');
     }
 
-    if (!cronSecret || cronSecret !== expectedSecret) {
+    if (!cronSecret) {
+      this.logger.warn('⚠️ No cron secret provided in request');
       throw new UnauthorizedException('Invalid cron secret token');
     }
 
-    return this.timeslotsService.dailyTimeslotMaintenance();
+    if (cronSecret !== expectedSecret) {
+      this.logger.warn('⚠️ Invalid cron secret token provided');
+      throw new UnauthorizedException('Invalid cron secret token');
+    }
+
+    this.logger.log('✅ Cron secret validated, starting maintenance...');
+    
+    try {
+      const result = await this.timeslotsService.dailyTimeslotMaintenance();
+      this.logger.log(`✅ Daily maintenance completed: Deleted ${result.deletedCount} expired timeslots, Added ${result.addedCount} new timeslots`);
+      return result;
+    } catch (error) {
+      this.logger.error('❌ Daily maintenance failed:', error);
+      throw error;
+    }
   }
 }

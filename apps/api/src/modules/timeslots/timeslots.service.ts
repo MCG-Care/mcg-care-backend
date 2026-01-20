@@ -10,14 +10,22 @@ export class TimeslotsService {
   private readonly DEFAULT_SLOTS = [9, 10, 11, 12, 13, 14, 15, 16];
 
   /**
-   * Get today's date in local timezone (YYYY-MM-DD format)
-   * This ensures we use the server's local date, not UTC
+   * Get today's date in Bangkok timezone (YYYY-MM-DD format)
+   * This ensures we use Bangkok date, not server's local timezone
+   * Cron runs at 17:00 UTC (00:00 Bangkok), so we need Bangkok date
    */
   private getLocalDateString(date: Date = new Date()): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // Convert to Bangkok timezone (UTC+7)
+    // Use Intl.DateTimeFormat to get date components in Bangkok timezone
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    
+    // Format returns YYYY-MM-DD directly
+    return formatter.format(date);
   }
 
   /**
@@ -231,6 +239,8 @@ export class TimeslotsService {
     dayThirty.setDate(dayThirty.getDate() + 30);
     const dayThirtyStr = this.getLocalDateString(dayThirty);
 
+    console.log(`🔧 Maintenance started - Today: ${today}, Day 30: ${dayThirtyStr}`);
+
     // Delete timeslots older than today
     const deletedResult = await db
       .delete(schema.timeslots)
@@ -238,11 +248,14 @@ export class TimeslotsService {
       .returning();
 
     const deletedCount = deletedResult.length;
+    console.log(`🗑️  Deleted ${deletedCount} expired timeslots`);
 
     // Get all technicians
     const technicians = await db.query.users.findMany({
       where: eq(schema.users.role, 'technician'),
     });
+
+    console.log(`👥 Found ${technicians.length} technicians`);
 
     const newTimeslots = [];
 
@@ -261,20 +274,37 @@ export class TimeslotsService {
           date: dayThirtyStr,
           slots: [...this.DEFAULT_SLOTS],
         });
+        console.log(`➕ Will create timeslot for technician ${technician.id} on ${dayThirtyStr}`);
+      } else {
+        console.log(`⏭️  Timeslot already exists for technician ${technician.id} on ${dayThirtyStr}`);
       }
     }
 
     // Insert new timeslots
     if (newTimeslots.length > 0) {
-      await db.insert(schema.timeslots).values(newTimeslots);
+      console.log(`💾 Inserting ${newTimeslots.length} new timeslots...`);
+      try {
+        await db.insert(schema.timeslots).values(newTimeslots);
+        console.log(`✅ Successfully inserted ${newTimeslots.length} timeslots`);
+      } catch (error) {
+        console.error(`❌ Failed to insert timeslots:`, error);
+        throw error;
+      }
+    } else {
+      console.log(`ℹ️  No new timeslots to create (all technicians already have timeslots for ${dayThirtyStr})`);
     }
 
-    return {
+    const result = {
       message: 'Daily timeslot maintenance completed',
       deletedCount,
       addedCount: newTimeslots.length,
       date: today,
+      dayThirtyDate: dayThirtyStr,
+      technicianCount: technicians.length,
     };
+
+    console.log(`✅ Maintenance completed:`, result);
+    return result;
   }
 
   /**

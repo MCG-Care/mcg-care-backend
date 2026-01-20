@@ -15,10 +15,13 @@ let TimeslotsService = class TimeslotsService {
         this.DEFAULT_SLOTS = [9, 10, 11, 12, 13, 14, 15, 16];
     }
     getLocalDateString(date = new Date()) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        });
+        return formatter.format(date);
     }
     async create(createTimeslotDto) {
         const { technicianId, date, slots } = createTimeslotDto;
@@ -157,14 +160,17 @@ let TimeslotsService = class TimeslotsService {
         const dayThirty = new Date();
         dayThirty.setDate(dayThirty.getDate() + 30);
         const dayThirtyStr = this.getLocalDateString(dayThirty);
+        console.log(`🔧 Maintenance started - Today: ${today}, Day 30: ${dayThirtyStr}`);
         const deletedResult = await database_1.db
             .delete(database_1.schema.timeslots)
             .where((0, drizzle_orm_1.lt)(database_1.schema.timeslots.date, today))
             .returning();
         const deletedCount = deletedResult.length;
+        console.log(`🗑️  Deleted ${deletedCount} expired timeslots`);
         const technicians = await database_1.db.query.users.findMany({
             where: (0, drizzle_orm_1.eq)(database_1.schema.users.role, 'technician'),
         });
+        console.log(`👥 Found ${technicians.length} technicians`);
         const newTimeslots = [];
         for (const technician of technicians) {
             const existingTimeslot = await database_1.db.query.timeslots.findFirst({
@@ -176,17 +182,36 @@ let TimeslotsService = class TimeslotsService {
                     date: dayThirtyStr,
                     slots: [...this.DEFAULT_SLOTS],
                 });
+                console.log(`➕ Will create timeslot for technician ${technician.id} on ${dayThirtyStr}`);
+            }
+            else {
+                console.log(`⏭️  Timeslot already exists for technician ${technician.id} on ${dayThirtyStr}`);
             }
         }
         if (newTimeslots.length > 0) {
-            await database_1.db.insert(database_1.schema.timeslots).values(newTimeslots);
+            console.log(`💾 Inserting ${newTimeslots.length} new timeslots...`);
+            try {
+                await database_1.db.insert(database_1.schema.timeslots).values(newTimeslots);
+                console.log(`✅ Successfully inserted ${newTimeslots.length} timeslots`);
+            }
+            catch (error) {
+                console.error(`❌ Failed to insert timeslots:`, error);
+                throw error;
+            }
         }
-        return {
+        else {
+            console.log(`ℹ️  No new timeslots to create (all technicians already have timeslots for ${dayThirtyStr})`);
+        }
+        const result = {
             message: 'Daily timeslot maintenance completed',
             deletedCount,
             addedCount: newTimeslots.length,
             date: today,
+            dayThirtyDate: dayThirtyStr,
+            technicianCount: technicians.length,
         };
+        console.log(`✅ Maintenance completed:`, result);
+        return result;
     }
     async getTechnicianAvailability(technicianId, startDate, endDate) {
         const timeslots = await database_1.db.query.timeslots.findMany({

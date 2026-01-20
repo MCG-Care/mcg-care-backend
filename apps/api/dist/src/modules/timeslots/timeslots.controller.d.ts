@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 export declare class TimeslotsController {
     private readonly timeslotsService;
     private readonly configService;
+    private readonly logger;
     constructor(timeslotsService: TimeslotsService, configService: ConfigService);
     create(createTimeslotDto: CreateTimeslotDto, user: any): Promise<{
         date: string;
@@ -74,11 +75,15 @@ export declare class TimeslotsController {
         deletedCount: number;
         addedCount: number;
         date: string;
+        dayThirtyDate: string;
+        technicianCount: number;
     }>;
     dailyMaintenanceCron(cronSecret: string): Promise<{
         message: string;
         deletedCount: number;
         addedCount: number;
         date: string;
+        dayThirtyDate: string;
+        technicianCount: number;
     }>;
 }

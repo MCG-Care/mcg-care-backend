@@ -34,6 +34,7 @@ serve(async (req) => {
     if (action === "daily-maintenance") {
       // Call the daily maintenance endpoint using secret token (no JWT expiration)
       console.log("🔧 Running daily maintenance...");
+      console.log(`📍 Target URL: ${RENDER_API_URL}/timeslots/maintenance/daily-cron`);
       
       if (!CRON_SECRET) {
         throw new Error("CRON_SECRET environment variable is not set");
@@ -44,28 +45,44 @@ serve(async (req) => {
         "X-Cron-Secret": CRON_SECRET,
       };
 
-      const response = await fetch(`${RENDER_API_URL}/timeslots/maintenance/daily-cron`, {
-        method: "POST",
-        headers,
-      });
+      try {
+        const response = await fetch(`${RENDER_API_URL}/timeslots/maintenance/daily-cron`, {
+          method: "POST",
+          headers,
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Maintenance failed: ${response.status} - ${errorText}`);
+        const responseText = await response.text();
+        console.log(`📊 Response status: ${response.status}`);
+        console.log(`📄 Response body: ${responseText.substring(0, 500)}`);
+
+        if (!response.ok) {
+          throw new Error(`Maintenance failed: ${response.status} - ${responseText}`);
+        }
+
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (e) {
+          console.warn("⚠️ Failed to parse response as JSON, using raw text");
+          data = { raw: responseText };
+        }
+
+        console.log(`✅ Daily maintenance completed: ${response.status}`);
+        console.log(`📈 Maintenance result:`, JSON.stringify(data, null, 2));
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "Daily maintenance completed",
+            status: response.status,
+            data,
+          }),
+          { headers: { "Content-Type": "application/json" }, status: 200 }
+        );
+      } catch (fetchError) {
+        console.error("❌ Fetch error:", fetchError);
+        throw new Error(`Failed to call maintenance endpoint: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
       }
-
-      const data = await response.json();
-      console.log(`✅ Daily maintenance completed: ${response.status}`);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Daily maintenance completed",
-          status: response.status,
-          data,
-        }),
-        { headers: { "Content-Type": "application/json" }, status: 200 }
-      );
     }
 
     return new Response(
