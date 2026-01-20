@@ -47,8 +47,9 @@ export class BookingsService {
       throw new ForbiddenException('You can only book services for your own aircons');
     }
 
-    // 2. Determine which address to use for district check
+    // 2. Determine which address to use for district check and store it for the response
     let customerDistrict: string;
+    let serviceAddress: any = null; // Track which address was used for the service
 
     if (addressId) {
       // If addressId is provided, fetch and validate that address
@@ -65,15 +66,40 @@ export class BookingsService {
       }
 
       customerDistrict = selectedAddress.district;
+      // Store the complete selected address object for the response
+      serviceAddress = {
+        id: selectedAddress.id,
+        userId: selectedAddress.userId,
+        name: selectedAddress.name,
+        address: selectedAddress.address,
+        township: selectedAddress.township,
+        city: selectedAddress.city,
+        district: selectedAddress.district,
+        createdAt: selectedAddress.createdAt,
+        updatedAt: selectedAddress.updatedAt,
+      };
     } else {
       // If no addressId provided, use primary address
-      if (!(aircon.customer as any)?.primaryAddress) {
+      const primaryAddress = (aircon.customer as any)?.primaryAddress;
+      if (!primaryAddress) {
         throw new BadRequestException(
           'Customer address is required for booking. Please update your profile or provide an addressId.',
         );
       }
 
-      customerDistrict = (aircon.customer as any).primaryAddress.district;
+      customerDistrict = primaryAddress.district;
+      // Store the complete primary address object for the response
+      serviceAddress = {
+        id: primaryAddress.id,
+        userId: primaryAddress.userId,
+        name: primaryAddress.name,
+        address: primaryAddress.address,
+        township: primaryAddress.township,
+        city: primaryAddress.city,
+        district: primaryAddress.district,
+        createdAt: primaryAddress.createdAt,
+        updatedAt: primaryAddress.updatedAt,
+      };
     }
 
     // 3. Verify all services exist and calculate duration + fees
@@ -223,8 +249,36 @@ export class BookingsService {
       await db.insert(schema.bookingImages).values(imageRecords);
     }
 
-    // 10. Return complete booking details
-    return this.findOne(newBooking.id, customerId, 'customer');
+    // 10. Return complete booking details with the address used for service
+    const bookingDetails = await this.findOne(newBooking.id, customerId, 'customer');
+    
+    // Ensure serviceAddress is set (it should always be set at this point, but add fallback for safety)
+    if (!serviceAddress) {
+      // Fallback: use primary address if serviceAddress wasn't set (shouldn't happen)
+      const primaryAddress = (bookingDetails.aircon as any)?.customer?.primaryAddress;
+      if (primaryAddress) {
+        serviceAddress = {
+          id: primaryAddress.id,
+          userId: primaryAddress.userId,
+          name: primaryAddress.name,
+          address: primaryAddress.address,
+          township: primaryAddress.township,
+          city: primaryAddress.city,
+          district: primaryAddress.district,
+          createdAt: primaryAddress.createdAt,
+          updatedAt: primaryAddress.updatedAt,
+        };
+      }
+    }
+    
+    // Return booking with serviceAddress included
+    // serviceAddress contains the address that was used for this booking:
+    // - If addressId was provided in the request, it's the selected address
+    // - If addressId was not provided, it's the customer's primary address
+    return {
+      ...(bookingDetails as any),
+      serviceAddress,
+    };
   }
 
   /**

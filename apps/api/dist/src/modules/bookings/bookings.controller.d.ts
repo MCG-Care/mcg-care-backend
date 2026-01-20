@@ -6,46 +6,7 @@ import { AvailabilityQueryDto } from './dto/availability-query.dto';
 export declare class BookingsController {
     private readonly bookingsService;
     constructor(bookingsService: BookingsService);
-    create(createBookingDto: CreateBookingDto, images: Express.Multer.File[], user: any): Promise<{
-        duration: number;
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        technicianId: number;
-        airconId: number;
-        bookingOnDate: string;
-        bookingForDate: string;
-        bookingTime: string;
-        fees: string;
-        status: "pending" | "inprogress" | "done" | "unsuccessful";
-        technician: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[];
-        bookingServices: {
-            [x: string]: any;
-        }[];
-        aircon: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
-            [x: string]: any;
-        }[];
-        serviceLog: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[] | null;
-        feedback: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[] | null;
-    }>;
+    create(createBookingDto: CreateBookingDto, images: Express.Multer.File[], user: any): Promise<any>;
     findAll(query: QueryBookingsDto, user: any): Promise<{
         data: {
             duration: number;

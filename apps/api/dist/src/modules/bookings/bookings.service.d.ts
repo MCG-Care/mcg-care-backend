@@ -6,46 +6,7 @@ import { SupabaseService } from '../../config/supabase.service';
 export declare class BookingsService {
     private readonly supabaseService;
     constructor(supabaseService: SupabaseService);
-    create(customerId: number, createBookingDto: CreateBookingDto, imageFiles?: Express.Multer.File[]): Promise<{
-        duration: number;
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        technicianId: number;
-        airconId: number;
-        bookingOnDate: string;
-        bookingForDate: string;
-        bookingTime: string;
-        fees: string;
-        status: "pending" | "inprogress" | "done" | "unsuccessful";
-        technician: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[];
-        bookingServices: {
-            [x: string]: any;
-        }[];
-        aircon: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[];
-        bookingImages: {
-            [x: string]: any;
-        }[];
-        serviceLog: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[] | null;
-        feedback: {
-            [x: string]: any;
-        } | {
-            [x: string]: any;
-        }[] | null;
-    }>;
+    create(customerId: number, createBookingDto: CreateBookingDto, imageFiles?: Express.Multer.File[]): Promise<any>;
     private findAvailableTechnician;
     private checkTechnicianAvailability;
     private updateTimeslots;

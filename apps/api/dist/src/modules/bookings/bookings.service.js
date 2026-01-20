@@ -19,7 +19,7 @@ let BookingsService = class BookingsService {
         this.supabaseService = supabaseService;
     }
     async create(customerId, createBookingDto, imageFiles) {
-        var _a;
+        var _a, _b, _c;
         const { airconId, serviceIds, bookingForDate, bookingTime, description, addressId } = createBookingDto;
         const aircon = await database_1.db.query.customerProducts.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
@@ -39,6 +39,7 @@ let BookingsService = class BookingsService {
             throw new common_1.ForbiddenException('You can only book services for your own aircons');
         }
         let customerDistrict;
+        let serviceAddress = null;
         if (addressId) {
             const selectedAddress = await database_1.db.query.addresses.findFirst({
                 where: (0, drizzle_orm_1.eq)(database_1.schema.addresses.id, addressId),
@@ -50,12 +51,35 @@ let BookingsService = class BookingsService {
                 throw new common_1.ForbiddenException('You can only use your own addresses for booking');
             }
             customerDistrict = selectedAddress.district;
+            serviceAddress = {
+                id: selectedAddress.id,
+                userId: selectedAddress.userId,
+                name: selectedAddress.name,
+                address: selectedAddress.address,
+                township: selectedAddress.township,
+                city: selectedAddress.city,
+                district: selectedAddress.district,
+                createdAt: selectedAddress.createdAt,
+                updatedAt: selectedAddress.updatedAt,
+            };
         }
         else {
-            if (!((_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress)) {
+            const primaryAddress = (_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress;
+            if (!primaryAddress) {
                 throw new common_1.BadRequestException('Customer address is required for booking. Please update your profile or provide an addressId.');
             }
-            customerDistrict = aircon.customer.primaryAddress.district;
+            customerDistrict = primaryAddress.district;
+            serviceAddress = {
+                id: primaryAddress.id,
+                userId: primaryAddress.userId,
+                name: primaryAddress.name,
+                address: primaryAddress.address,
+                township: primaryAddress.township,
+                city: primaryAddress.city,
+                district: primaryAddress.district,
+                createdAt: primaryAddress.createdAt,
+                updatedAt: primaryAddress.updatedAt,
+            };
         }
         const services = await database_1.db.query.serviceTypes.findMany({
             where: (0, drizzle_orm_1.inArray)(database_1.schema.serviceTypes.id, serviceIds),
@@ -142,7 +166,24 @@ let BookingsService = class BookingsService {
             }));
             await database_1.db.insert(database_1.schema.bookingImages).values(imageRecords);
         }
-        return this.findOne(newBooking.id, customerId, 'customer');
+        const bookingDetails = await this.findOne(newBooking.id, customerId, 'customer');
+        if (!serviceAddress) {
+            const primaryAddress = (_c = (_b = bookingDetails.aircon) === null || _b === void 0 ? void 0 : _b.customer) === null || _c === void 0 ? void 0 : _c.primaryAddress;
+            if (primaryAddress) {
+                serviceAddress = {
+                    id: primaryAddress.id,
+                    userId: primaryAddress.userId,
+                    name: primaryAddress.name,
+                    address: primaryAddress.address,
+                    township: primaryAddress.township,
+                    city: primaryAddress.city,
+                    district: primaryAddress.district,
+                    createdAt: primaryAddress.createdAt,
+                    updatedAt: primaryAddress.updatedAt,
+                };
+            }
+        }
+        return Object.assign(Object.assign({}, bookingDetails), { serviceAddress });
     }
     async findAvailableTechnician(serviceIds, customerDistrict, bookingDate, startHour, requiredHours) {
         const technicians = await database_1.db.query.users.findMany({
