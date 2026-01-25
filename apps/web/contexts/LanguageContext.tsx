@@ -288,6 +288,7 @@ const translations: Translations = {
     noPostsFoundMatchingFilters: "No posts found matching your filters",
     serviceCount: "service(s)",
     photoCount: "photo(s)",
+    serviceAddress: "Service Address",
   },
   my: {
     // Auth
@@ -555,6 +556,7 @@ const translations: Translations = {
     noPostsFoundMatchingFilters: "သင်စစ်ထုတ်ထားသော ပို့စ်များမတွေ့ပါ",
     serviceCount: "ဝန်ဆောင်မှု(များ)",
     photoCount: "ဓာတ်ပုံ(များ)",
+    serviceAddress: "ဝန်ဆောင်မှု လိပ်စာ",
   },
 };
 
