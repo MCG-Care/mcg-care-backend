@@ -28,8 +28,136 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Technician, TechnicianService, Timeslot, ServiceType, Booking } from "@/types";
 
+// District/City/Township data structure
+const addressData = {
+  districts: [
+    {
+      name: "Mandalay",
+      nameMm: "မန္တလေး",
+      cities: [
+        {
+          name: "Mandalay",
+          nameMm: "မန္တလေး",
+          townships: [
+            { name: "Aungmyethazan", nameMm: "အောင်မြေသာစံ" },
+            { name: "Chanayethazan", nameMm: "ချမ်းအေးသာစံ" },
+            { name: "Mahaaungmye", nameMm: "မဟာအောင်မြေ" },
+            { name: "Chanmyathazi", nameMm: "ချမ်းမြသာစည်" },
+            { name: "Pyigyidagun", nameMm: "ပြည်ကြီးတံခွန်" },
+            { name: "Patheingyi", nameMm: "ပုသိမ်ကြီး" },
+            { name: "Amarapura", nameMm: "အမရပူရ" },
+          ],
+        },
+        {
+          name: "Pyin Oo Lwin",
+          nameMm: "ပြင်ဦးလွင်",
+          townships: [
+            { name: "Pyin Oo Lwin", nameMm: "ပြင်ဦးလွင်" },
+            { name: "Madaya", nameMm: "မတ္တရာ" },
+            { name: "Mogok", nameMm: "မိုးကုတ်" },
+            { name: "Singu", nameMm: "စဉ့်ကူး" },
+            { name: "Tagaung", nameMm: "တကောင်း" },
+            { name: "Thabeikkyin", nameMm: "သပိတ်ကျင်း" },
+          ],
+        },
+        {
+          name: "Kyaukse",
+          nameMm: "ကျောက်ဆည်",
+          townships: [
+            { name: "Kyaukse", nameMm: "ကျောက်ဆည်" },
+            { name: "Myittha", nameMm: "မြစ်သား" },
+            { name: "Sintgaing", nameMm: "စဉ့်ကိုင်" },
+          ],
+        },
+        {
+          name: "Meiktila",
+          nameMm: "မိတ္ထီလာ",
+          townships: [
+            { name: "Meiktila", nameMm: "မိတ္ထီလာ" },
+            { name: "Mahlaing", nameMm: "မလှိုင်" },
+            { name: "Thazi", nameMm: "သာစည််" },
+            { name: "Wundwin", nameMm: "ဝမ်းတွင်း" },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Yangon",
+      nameMm: "ရန်ကုန်",
+      cities: [
+        {
+          name: "Eastern Yangon",
+          nameMm: "ရန်ကုန်အရှေ့ပိုင်း",
+          townships: [
+            { name: "Botataung", nameMm: "ဗိုလ်တထောင်" },
+            { name: "Dagon Seikkan", nameMm: "ဒဂုံဆိပ်ကမ်း" },
+            { name: "Dawbon", nameMm: "ဒေါပုံ" },
+            { name: "Mingala Taungnyunt", nameMm: "မင်္ဂလာတောင်ညွန့်" },
+            { name: "North Dagon", nameMm: "မြောက်ဒဂုံ" },
+            { name: "South Dagon", nameMm: "တောင်ဒဂုံ" },
+            { name: "East Dagon", nameMm: "အရှေ့ဒဂုံ" },
+            { name: "Thaketa", nameMm: "သာကေတ" },
+            { name: "Tamwe", nameMm: "တာမွေ" },
+            { name: "Pazundaung", nameMm: "ပုဇွန်တောင်" },
+            { name: "Thingangyun", nameMm: "သင်္ကန်းကျွန်း" },
+            { name: "Yankin", nameMm: "ရန်ကင်း" },
+          ],
+        },
+        {
+          name: "Western Yangon",
+          nameMm: "ရန်ကုန်အနောက်ပိုင်း",
+          townships: [
+            { name: "Ahlone", nameMm: "အလုံ" },
+            { name: "Bahan", nameMm: "ဗဟန်း" },
+            { name: "Dagon", nameMm: "ဒဂုံ" },
+            { name: "Hlaing", nameMm: "လှိုင်" },
+            { name: "Kamayut", nameMm: "ကမာရွတ်" },
+            { name: "Kyauktada", nameMm: "ကျောက်တံတား" },
+            { name: "Kyimyindaing", nameMm: "ကြည့်မြင်တိုင်" },
+            { name: "Lanmadaw", nameMm: "လမ်းမတော်" },
+            { name: "Latha", nameMm: "လသာ" },
+            { name: "Pabedan", nameMm: "ပန်းဘဲတန်း" },
+            { name: "Sanchaung", nameMm: "စမ်းချောင်း" },
+            { name: "Seikkan", nameMm: "ဆိပ်ကမ်း" },
+          ],
+        },
+        {
+          name: "Southern Yangon",
+          nameMm: "ရန်ကုန်တောင်ပိုင်း",
+          townships: [
+            { name: "Cocokyun", nameMm: "ကိုကိုးကျွန်း" },
+            { name: "Dala", nameMm: "ဒလ" },
+            { name: "Kawhmu", nameMm: "ကော့မှူး" },
+            { name: "Khayan", nameMm: "ခရမ်း" },
+            { name: "Kungyangon", nameMm: "ကွမ်းခြံကုန်း" },
+            { name: "Kyauktan", nameMm: "ကျောက်တန်း" },
+            { name: "Seikkyi Kanaungto", nameMm: "ဆိပ်ကြီးခနောင်တို" },
+            { name: "Thanlyin", nameMm: "သန်လျင်" },
+            { name: "Thongwa", nameMm: "သုံးခွ" },
+            { name: "Twantay", nameMm: "တွံတေး" },
+          ],
+        },
+        {
+          name: "Northern Yangon",
+          nameMm: "ရန်ကုန်မြောက်ပိုင်း",
+          townships: [
+            { name: "Hlaingthaya", nameMm: "လှိုင်သာယာ" },
+            { name: "Hlegu", nameMm: "လှည်းကူး" },
+            { name: "Hmawbi", nameMm: "မှော်ဘီ" },
+            { name: "Htantabin", nameMm: "ထန်းတပင်" },
+            { name: "Insein", nameMm: "အင်းစိန်" },
+            { name: "Mingaladon", nameMm: "မင်္ဂလာဒုံ" },
+            { name: "Shwepyitha", nameMm: "ရွှေပြည်သာ" },
+            { name: "Taikkyi", nameMm: "တိုက်ကြီး" },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 const TechniciansPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,6 +190,37 @@ const TechniciansPage = () => {
       district: "",
     },
   });
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [selectedTownship, setSelectedTownship] = useState<string>("");
+
+  // Helper functions to get available options
+  const getDistricts = () => {
+    return addressData.districts.map((d) => ({
+      value: d.name, // Always use English for database
+      label: language === "my" ? d.nameMm : d.name, // Show Burmese in UI if language is my
+    }));
+  };
+
+  const getCitiesForDistrict = (districtName: string) => {
+    const district = addressData.districts.find((d) => d.name === districtName);
+    if (!district) return [];
+    return district.cities.map((c) => ({
+      value: c.name, // Always use English for database
+      label: language === "my" ? c.nameMm : c.name, // Show Burmese in UI if language is my
+    }));
+  };
+
+  const getTownshipsForCity = (districtName: string, cityName: string) => {
+    const district = addressData.districts.find((d) => d.name === districtName);
+    if (!district) return [];
+    const city = district.cities.find((c) => c.name === cityName);
+    if (!city) return [];
+    return city.townships.map((t) => ({
+      value: t.name, // Always use English for database
+      label: language === "my" ? t.nameMm : t.name, // Show Burmese in UI if language is my
+    }));
+  };
 
   useEffect(() => {
     checkAdmin();
@@ -269,6 +428,11 @@ const TechniciansPage = () => {
     setIsEditing(true);
     setIsViewing(false);
     setIsCreating(false);
+    
+    const district = technician.address?.district || "";
+    const city = technician.address?.city || "";
+    const township = technician.address?.township || "";
+    
     setFormData({
       name: technician.name || "",
       email: technician.email || "",
@@ -276,9 +440,9 @@ const TechniciansPage = () => {
       phoneNo: technician.phoneNo || "",
       address: technician.address ? {
         address: technician.address.address || "",
-        township: technician.address.township || "",
-        city: technician.address.city || "",
-        district: technician.address.district || "",
+        township: township,
+        city: city,
+        district: district,
       } : {
         address: "",
         township: "",
@@ -286,6 +450,11 @@ const TechniciansPage = () => {
         district: "",
       },
     });
+    
+    // Set selected dropdown values
+    setSelectedDistrict(district);
+    setSelectedCity(city);
+    setSelectedTownship(township);
     
     // Fetch current services for this technician
     try {
@@ -311,6 +480,9 @@ const TechniciansPage = () => {
         district: "",
       },
     });
+    setSelectedDistrict("");
+    setSelectedCity("");
+    setSelectedTownship("");
   };
 
   const handleSave = async () => {
@@ -968,49 +1140,93 @@ const TechniciansPage = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="township">{t("township")} *</Label>
-                        <Input
-                          id="township"
-                          value={formData.address.township}
-                          onChange={(e) =>
+                        <Label htmlFor="district">{t("district")} *</Label>
+                        <select
+                          id="district"
+                          value={selectedDistrict}
+                          onChange={(e) => {
+                            const district = e.target.value;
+                            setSelectedDistrict(district);
+                            setSelectedCity(""); // Reset city when district changes
+                            setSelectedTownship(""); // Reset township when district changes
                             setFormData({
                               ...formData,
-                              address: { ...formData.address, township: e.target.value },
-                            })
-                          }
-                          placeholder="e.g., Mayangone"
-                          className="mt-1"
-                        />
+                              address: {
+                                ...formData.address,
+                                district: district,
+                                city: "",
+                                township: "",
+                              },
+                            });
+                          }}
+                          className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">{t("selectDistrict")}</option>
+                          {getDistricts().map((district) => (
+                            <option key={district.value} value={district.value}>
+                              {district.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <Label htmlFor="city">{t("city")} *</Label>
-                        <Input
+                        <select
                           id="city"
-                          value={formData.address.city}
-                          onChange={(e) =>
+                          value={selectedCity}
+                          onChange={(e) => {
+                            const city = e.target.value;
+                            setSelectedCity(city);
+                            setSelectedTownship(""); // Reset township when city changes
                             setFormData({
                               ...formData,
-                              address: { ...formData.address, city: e.target.value },
-                            })
-                          }
-                          placeholder="e.g., Yangon"
-                          className="mt-1"
-                        />
+                              address: {
+                                ...formData.address,
+                                city: city,
+                                township: "",
+                              },
+                            });
+                          }}
+                          disabled={!selectedDistrict}
+                          className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">{t("selectCity")}</option>
+                          {selectedDistrict &&
+                            getCitiesForDistrict(selectedDistrict).map((city) => (
+                              <option key={city.value} value={city.value}>
+                                {city.label}
+                              </option>
+                            ))}
+                        </select>
                       </div>
                       <div>
-                        <Label htmlFor="district">{t("district")} *</Label>
-                        <Input
-                          id="district"
-                          value={formData.address.district}
-                          onChange={(e) =>
+                        <Label htmlFor="township">{t("township")} *</Label>
+                        <select
+                          id="township"
+                          value={selectedTownship}
+                          onChange={(e) => {
+                            const township = e.target.value;
+                            setSelectedTownship(township);
                             setFormData({
                               ...formData,
-                              address: { ...formData.address, district: e.target.value },
-                            })
-                          }
-                          placeholder="e.g., Yangon"
-                          className="mt-1"
-                        />
+                              address: {
+                                ...formData.address,
+                                township: township,
+                              },
+                            });
+                          }}
+                          disabled={!selectedCity}
+                          className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">{t("selectTownship")}</option>
+                          {selectedDistrict &&
+                            selectedCity &&
+                            getTownshipsForCity(selectedDistrict, selectedCity).map((township) => (
+                              <option key={township.value} value={township.value}>
+                                {township.label}
+                              </option>
+                            ))}
+                        </select>
                       </div>
                     </div>
                   </div>
