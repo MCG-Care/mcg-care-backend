@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var TimeslotsController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TimeslotsController = void 0;
 const common_1 = require("@nestjs/common");
@@ -22,10 +23,11 @@ const query_timeslots_dto_1 = require("./dto/query-timeslots.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const config_1 = require("@nestjs/config");
-let TimeslotsController = class TimeslotsController {
+let TimeslotsController = TimeslotsController_1 = class TimeslotsController {
     constructor(timeslotsService, configService) {
         this.timeslotsService = timeslotsService;
         this.configService = configService;
+        this.logger = new common_1.Logger(TimeslotsController_1.name);
     }
     async create(createTimeslotDto, user) {
         if (user.role !== 'admin') {
@@ -80,14 +82,30 @@ let TimeslotsController = class TimeslotsController {
         return this.timeslotsService.dailyTimeslotMaintenance();
     }
     async dailyMaintenanceCron(cronSecret) {
+        this.logger.log('🔧 Daily maintenance cron endpoint called');
         const expectedSecret = this.configService.get('CRON_SECRET');
         if (!expectedSecret) {
+            this.logger.error('❌ CRON_SECRET not configured');
             throw new common_1.UnauthorizedException('CRON_SECRET not configured');
         }
-        if (!cronSecret || cronSecret !== expectedSecret) {
+        if (!cronSecret) {
+            this.logger.warn('⚠️ No cron secret provided in request');
             throw new common_1.UnauthorizedException('Invalid cron secret token');
         }
-        return this.timeslotsService.dailyTimeslotMaintenance();
+        if (cronSecret !== expectedSecret) {
+            this.logger.warn('⚠️ Invalid cron secret token provided');
+            throw new common_1.UnauthorizedException('Invalid cron secret token');
+        }
+        this.logger.log('✅ Cron secret validated, starting maintenance...');
+        try {
+            const result = await this.timeslotsService.dailyTimeslotMaintenance();
+            this.logger.log(`✅ Daily maintenance completed: Deleted ${result.deletedCount} expired timeslots, Added ${result.addedCount} new timeslots`);
+            return result;
+        }
+        catch (error) {
+            this.logger.error('❌ Daily maintenance failed:', error);
+            throw error;
+        }
     }
 };
 exports.TimeslotsController = TimeslotsController;
@@ -191,7 +209,7 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], TimeslotsController.prototype, "dailyMaintenanceCron", null);
-exports.TimeslotsController = TimeslotsController = __decorate([
+exports.TimeslotsController = TimeslotsController = TimeslotsController_1 = __decorate([
     (0, swagger_1.ApiTags)('timeslots'),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.Controller)('timeslots'),

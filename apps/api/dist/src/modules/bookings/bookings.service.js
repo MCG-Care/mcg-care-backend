@@ -20,7 +20,7 @@ let BookingsService = class BookingsService {
     }
     async create(customerId, createBookingDto, imageFiles) {
         var _a;
-        const { airconId, serviceIds, bookingForDate, bookingTime, description } = createBookingDto;
+        const { airconId, serviceIds, bookingForDate, bookingTime, description, addressId } = createBookingDto;
         const aircon = await database_1.db.query.customerProducts.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
             with: {
@@ -38,10 +38,28 @@ let BookingsService = class BookingsService {
         if (aircon.customerId !== customerId) {
             throw new common_1.ForbiddenException('You can only book services for your own aircons');
         }
-        if (!((_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress)) {
-            throw new common_1.BadRequestException('Customer address is required for booking. Please update your profile.');
+        let customerDistrict;
+        let bookingAddressId = null;
+        if (addressId) {
+            const selectedAddress = await database_1.db.query.addresses.findFirst({
+                where: (0, drizzle_orm_1.eq)(database_1.schema.addresses.id, addressId),
+            });
+            if (!selectedAddress) {
+                throw new common_1.NotFoundException(`Address with ID ${addressId} not found`);
+            }
+            if (selectedAddress.userId !== customerId) {
+                throw new common_1.ForbiddenException('You can only use your own addresses for booking');
+            }
+            customerDistrict = selectedAddress.district;
+            bookingAddressId = addressId;
         }
-        const customerDistrict = aircon.customer.primaryAddress.district;
+        else {
+            const primaryAddress = (_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress;
+            if (!primaryAddress) {
+                throw new common_1.BadRequestException('Customer address is required for booking. Please update your profile or provide an addressId.');
+            }
+            customerDistrict = primaryAddress.district;
+        }
         const services = await database_1.db.query.serviceTypes.findMany({
             where: (0, drizzle_orm_1.inArray)(database_1.schema.serviceTypes.id, serviceIds),
         });
@@ -104,6 +122,7 @@ let BookingsService = class BookingsService {
             .values({
             technicianId: assignedTechnicianId,
             airconId,
+            addressId: bookingAddressId,
             bookingOnDate,
             bookingForDate,
             bookingTime: bookingTimeStr,
@@ -263,7 +282,11 @@ let BookingsService = class BookingsService {
                 },
                 aircon: {
                     with: {
-                        customer: true,
+                        customer: {
+                            with: {
+                                primaryAddress: true,
+                            },
+                        },
                         product: true,
                     },
                 },
@@ -280,8 +303,48 @@ let BookingsService = class BookingsService {
             offset,
             orderBy: [(0, drizzle_orm_1.desc)(database_1.schema.bookings.createdAt)],
         });
+        const bookingsWithAddress = await Promise.all(bookings.map(async (booking) => {
+            var _a, _b;
+            let serviceAddress = null;
+            const bookingAddressId = booking.addressId;
+            if (bookingAddressId) {
+                const address = await database_1.db.query.addresses.findFirst({
+                    where: (0, drizzle_orm_1.eq)(database_1.schema.addresses.id, bookingAddressId),
+                });
+                if (address) {
+                    serviceAddress = {
+                        id: address.id,
+                        userId: address.userId,
+                        name: address.name,
+                        address: address.address,
+                        township: address.township,
+                        city: address.city,
+                        district: address.district,
+                        createdAt: address.createdAt,
+                        updatedAt: address.updatedAt,
+                    };
+                }
+            }
+            if (!serviceAddress) {
+                const primaryAddress = (_b = (_a = booking.aircon) === null || _a === void 0 ? void 0 : _a.customer) === null || _b === void 0 ? void 0 : _b.primaryAddress;
+                if (primaryAddress) {
+                    serviceAddress = {
+                        id: primaryAddress.id,
+                        userId: primaryAddress.userId,
+                        name: primaryAddress.name,
+                        address: primaryAddress.address,
+                        township: primaryAddress.township,
+                        city: primaryAddress.city,
+                        district: primaryAddress.district,
+                        createdAt: primaryAddress.createdAt,
+                        updatedAt: primaryAddress.updatedAt,
+                    };
+                }
+            }
+            return Object.assign(Object.assign({}, booking), { serviceAddress });
+        }));
         return {
-            data: bookings,
+            data: bookingsWithAddress,
             pagination: {
                 page,
                 limit,
@@ -291,6 +354,7 @@ let BookingsService = class BookingsService {
         };
     }
     async findOne(id, userId, userRole) {
+        var _a, _b;
         const booking = await database_1.db.query.bookings.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.bookings.id, id),
             with: {
@@ -332,7 +396,43 @@ let BookingsService = class BookingsService {
                 throw new common_1.ForbiddenException('You can only view your assigned bookings');
             }
         }
-        return booking;
+        let serviceAddress = null;
+        const bookingAddressId = booking.addressId;
+        if (bookingAddressId) {
+            const address = await database_1.db.query.addresses.findFirst({
+                where: (0, drizzle_orm_1.eq)(database_1.schema.addresses.id, bookingAddressId),
+            });
+            if (address) {
+                serviceAddress = {
+                    id: address.id,
+                    userId: address.userId,
+                    name: address.name,
+                    address: address.address,
+                    township: address.township,
+                    city: address.city,
+                    district: address.district,
+                    createdAt: address.createdAt,
+                    updatedAt: address.updatedAt,
+                };
+            }
+        }
+        if (!serviceAddress) {
+            const primaryAddress = (_b = (_a = booking.aircon) === null || _a === void 0 ? void 0 : _a.customer) === null || _b === void 0 ? void 0 : _b.primaryAddress;
+            if (primaryAddress) {
+                serviceAddress = {
+                    id: primaryAddress.id,
+                    userId: primaryAddress.userId,
+                    name: primaryAddress.name,
+                    address: primaryAddress.address,
+                    township: primaryAddress.township,
+                    city: primaryAddress.city,
+                    district: primaryAddress.district,
+                    createdAt: primaryAddress.createdAt,
+                    updatedAt: primaryAddress.updatedAt,
+                };
+            }
+        }
+        return Object.assign(Object.assign({}, booking), { serviceAddress });
     }
     async update(id, userId, userRole, updateBookingDto) {
         const booking = await this.findOne(id, userId, userRole);
@@ -418,6 +518,218 @@ let BookingsService = class BookingsService {
         await this.supabaseService.deleteFile('booking-images', imagePath);
         await database_1.db.delete(database_1.schema.bookingImages).where((0, drizzle_orm_1.eq)(database_1.schema.bookingImages.id, imageId));
         return { message: 'Image deleted successfully' };
+    }
+    async getAvailability(customerId, query) {
+        var _a;
+        const { airconId, serviceIds, addressId, date } = query;
+        const aircon = await database_1.db.query.customerProducts.findFirst({
+            where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
+            with: {
+                customer: {
+                    with: {
+                        primaryAddress: true,
+                    },
+                },
+            },
+        });
+        if (!aircon) {
+            throw new common_1.NotFoundException(`Aircon with ID ${airconId} not found`);
+        }
+        if (aircon.customerId !== customerId) {
+            throw new common_1.ForbiddenException('You can only check availability for your own aircons');
+        }
+        let customerDistrict;
+        if (addressId) {
+            const selectedAddress = await database_1.db.query.addresses.findFirst({
+                where: (0, drizzle_orm_1.eq)(database_1.schema.addresses.id, addressId),
+            });
+            if (!selectedAddress) {
+                throw new common_1.NotFoundException(`Address with ID ${addressId} not found`);
+            }
+            if (selectedAddress.userId !== customerId) {
+                throw new common_1.ForbiddenException('You can only use your own addresses for booking');
+            }
+            customerDistrict = selectedAddress.district;
+        }
+        else {
+            if (!((_a = aircon.customer) === null || _a === void 0 ? void 0 : _a.primaryAddress)) {
+                throw new common_1.BadRequestException('Customer address is required for checking availability. Please update your profile or provide an addressId.');
+            }
+            customerDistrict = aircon.customer.primaryAddress.district;
+        }
+        const services = await database_1.db.query.serviceTypes.findMany({
+            where: (0, drizzle_orm_1.inArray)(database_1.schema.serviceTypes.id, serviceIds),
+        });
+        if (services.length !== serviceIds.length) {
+            throw new common_1.BadRequestException('One or more service IDs are invalid');
+        }
+        const serviceDuration = services.reduce((sum, service) => sum + service.duration, 0);
+        const serviceHours = Math.ceil(serviceDuration / 60);
+        const technicians = await database_1.db.query.users.findMany({
+            where: (0, drizzle_orm_1.eq)(database_1.schema.users.role, 'technician'),
+            with: {
+                primaryAddress: true,
+                technicianServices: {
+                    with: {
+                        service: true,
+                    },
+                },
+            },
+        });
+        const techsInDistrict = technicians.filter((tech) => { var _a; return ((_a = tech.primaryAddress) === null || _a === void 0 ? void 0 : _a.district) === customerDistrict; });
+        if (techsInDistrict.length === 0) {
+            return this.generateEmptyAvailability(date);
+        }
+        const techsWithServices = techsInDistrict.filter((tech) => {
+            const techServiceIds = tech.technicianServices.map((ts) => ts.serviceId);
+            return serviceIds.every((serviceId) => techServiceIds.includes(serviceId));
+        });
+        if (techsWithServices.length === 0) {
+            return this.generateEmptyAvailability(date);
+        }
+        const technicianIds = techsWithServices.map((tech) => tech.id);
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+        const parts = formatter.formatToParts(now);
+        const bangkokNow = new Date(parseInt(parts.find(p => p.type === 'year').value), parseInt(parts.find(p => p.type === 'month').value) - 1, parseInt(parts.find(p => p.type === 'day').value), parseInt(parts.find(p => p.type === 'hour').value), parseInt(parts.find(p => p.type === 'minute').value), parseInt(parts.find(p => p.type === 'second').value));
+        const today = new Date(bangkokNow);
+        today.setHours(0, 0, 0, 0);
+        const currentHour = bangkokNow.getHours();
+        const currentMinute = bangkokNow.getMinutes();
+        const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        });
+        const bangkokDateParts = formatter.formatToParts(now);
+        const year = bangkokDateParts.find(p => p.type === 'year').value;
+        const month = bangkokDateParts.find(p => p.type === 'month').value;
+        const day = bangkokDateParts.find(p => p.type === 'day').value;
+        const finalTodayDateStr = `${year}-${month}-${day}`;
+        if (date) {
+            const normalizedDate = date.trim();
+            const dateParts = normalizedDate.split('-');
+            if (dateParts.length !== 3 || dateParts[0].length !== 4 || dateParts[1].length !== 2 || dateParts[2].length !== 2) {
+                throw new common_1.BadRequestException('Invalid date format. Expected YYYY-MM-DD');
+            }
+            const requestedDateStr = normalizedDate;
+            if (requestedDateStr < finalTodayDateStr) {
+                throw new common_1.BadRequestException('Cannot check availability for past dates');
+            }
+            const maxDate = new Date(today);
+            maxDate.setDate(maxDate.getDate() + 30);
+            const maxDateStr = dateFormatter.format(maxDate);
+            if (requestedDateStr > maxDateStr) {
+                throw new common_1.BadRequestException('Cannot check availability more than 30 days in advance');
+            }
+            const isToday = requestedDateStr === finalTodayDateStr;
+            const dayAvailability = await this.getAvailabilityForDate(technicianIds, requestedDateStr, serviceHours, isToday, currentHour);
+            return [
+                {
+                    date: requestedDateStr,
+                    availableSlots: dayAvailability,
+                },
+            ];
+        }
+        const availability = [];
+        for (let i = 0; i <= 30; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(today.getDate() + i);
+            const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Bangkok',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            });
+            const dateStr = dateFormatter.format(checkDate);
+            const isToday = dateStr === finalTodayDateStr;
+            const dayAvailability = await this.getAvailabilityForDate(technicianIds, dateStr, serviceHours, isToday, currentHour);
+            availability.push({
+                date: dateStr,
+                availableSlots: dayAvailability,
+            });
+        }
+        return availability;
+    }
+    async getAvailabilityForDate(technicianIds, dateStr, serviceHours, isToday, currentHour) {
+        const timeslots = await database_1.db.query.timeslots.findMany({
+            where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.inArray)(database_1.schema.timeslots.technicianId, technicianIds), (0, drizzle_orm_1.eq)(database_1.schema.timeslots.date, dateStr)),
+        });
+        const availableSlots = [];
+        for (let hour = 9; hour <= 16; hour++) {
+            if (isToday && hour <= currentHour) {
+                continue;
+            }
+            const serviceEndTime = hour + serviceHours;
+            if (serviceEndTime > 17) {
+                continue;
+            }
+            const hasSlotForTraffic = serviceEndTime < 17;
+            const requiredHours = hasSlotForTraffic ? serviceHours + 1 : serviceHours;
+            const hasAvailability = timeslots.some((timeslot) => {
+                if (!timeslot.slots || timeslot.slots.length === 0) {
+                    return false;
+                }
+                const requiredSlots = Array.from({ length: requiredHours }, (_, i) => hour + i);
+                return requiredSlots.every((slot) => timeslot.slots.includes(slot));
+            });
+            if (hasAvailability) {
+                availableSlots.push(hour);
+            }
+        }
+        return availableSlots;
+    }
+    generateEmptyAvailability(date) {
+        if (date) {
+            return [
+                {
+                    date,
+                    availableSlots: [],
+                },
+            ];
+        }
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+        const parts = formatter.formatToParts(now);
+        const bangkokNow = new Date(parseInt(parts.find(p => p.type === 'year').value), parseInt(parts.find(p => p.type === 'month').value) - 1, parseInt(parts.find(p => p.type === 'day').value), parseInt(parts.find(p => p.type === 'hour').value), parseInt(parts.find(p => p.type === 'minute').value), parseInt(parts.find(p => p.type === 'second').value));
+        const today = new Date(bangkokNow);
+        today.setHours(0, 0, 0, 0);
+        const availability = [];
+        for (let i = 0; i <= 30; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(today.getDate() + i);
+            const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Bangkok',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            });
+            const dateStr = dateFormatter.format(checkDate);
+            availability.push({
+                date: dateStr,
+                availableSlots: [],
+            });
+        }
+        return availability;
     }
     async uploadBookingImages(bookingId, files) {
         const uploadPromises = files.map(async (file) => {
