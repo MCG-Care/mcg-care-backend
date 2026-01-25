@@ -150,6 +150,8 @@ exports.bookings = (0, pg_core_1.pgTable)('bookings', {
     airconId: (0, pg_core_1.integer)('aircon_id')
         .notNull()
         .references(() => exports.customerProducts.id, { onDelete: 'cascade' }),
+    addressId: (0, pg_core_1.integer)('address_id')
+        .references(() => exports.addresses.id, { onDelete: 'set null' }),
     bookingOnDate: (0, pg_core_1.date)('booking_on_date').notNull(),
     bookingForDate: (0, pg_core_1.date)('booking_for_date').notNull(),
     bookingTime: (0, pg_core_1.time)('booking_time').notNull(),

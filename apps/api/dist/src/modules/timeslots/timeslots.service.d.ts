@@ -58,6 +58,8 @@ export declare class TimeslotsService {
         deletedCount: number;
         addedCount: number;
         date: string;
+        dayThirtyDate: string;
+        technicianCount: number;
     }>;
     getTechnicianAvailability(technicianId: number, startDate: string, endDate: string): Promise<{
         technicianId: number;

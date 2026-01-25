@@ -942,6 +942,23 @@ export declare const bookings: import("drizzle-orm/pg-core").PgTableWithColumns<
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        addressId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "address_id";
+            tableName: "bookings";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         bookingOnDate: import("drizzle-orm/pg-core").PgColumn<{
             name: "booking_on_date";
             tableName: "bookings";

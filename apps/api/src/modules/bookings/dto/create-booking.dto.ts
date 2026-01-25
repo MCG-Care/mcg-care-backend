@@ -34,6 +34,11 @@ export class CreateBookingDto {
   @IsOptional()
   @IsString()
   description?: string; // Optional description from customer
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  addressId?: number; // Optional address ID - if provided, uses this address's district; otherwise uses primary address district
 }
 
 
