@@ -6,6 +6,9 @@
 # Documentation
 *.md
 
+# JSON
+*.json
+
 # TypeScript build cache
 *.tsbuildinfo
 

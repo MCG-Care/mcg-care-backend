@@ -52,6 +52,8 @@ const CustomersPage = () => {
   const [newComment, setNewComment] = useState("");
   const [editingPost, setEditingPost] = useState(false);
   const [postFormData, setPostFormData] = useState<Partial<ForumPost>>({});
+  const [selectedBookingDetail, setSelectedBookingDetail] = useState<Booking | null>(null);
+  const [showBookingDetailModal, setShowBookingDetailModal] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -153,6 +155,34 @@ const CustomersPage = () => {
       case "customer":
       default:
         return "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20",
+      confirmed: "text-blue-600 bg-blue-100 dark:bg-blue-900/20",
+      in_progress: "text-purple-600 bg-purple-100 dark:bg-purple-900/20",
+      inprogress: "text-purple-600 bg-purple-100 dark:bg-purple-900/20",
+      completed: "text-green-600 bg-green-100 dark:bg-green-900/20",
+      done: "text-green-600 bg-green-100 dark:bg-green-900/20",
+      cancelled: "text-red-600 bg-red-100 dark:bg-red-900/20",
+      unsuccessful: "text-red-600 bg-red-100 dark:bg-red-900/20",
+    };
+    return colors[status] || "text-gray-600 bg-gray-100";
+  };
+
+  const openBookingDetailModal = async (booking: Booking) => {
+    try {
+      // Fetch full booking details
+      const response = await api.get(`/bookings/${booking.id}`);
+      setSelectedBookingDetail(response.data);
+      setShowBookingDetailModal(true);
+    } catch (error) {
+      console.error("Error fetching booking details:", error);
+      // Fallback to basic booking data
+      setSelectedBookingDetail(booking);
+      setShowBookingDetailModal(true);
     }
   };
 
@@ -714,7 +744,11 @@ const CustomersPage = () => {
               ) : productBookings.length > 0 ? (
                 <div className="space-y-4">
                   {productBookings.map((booking, index) => (
-                    <Card key={booking.id} className="p-4">
+                    <Card 
+                      key={booking.id} 
+                      className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => openBookingDetailModal(booking)}
+                    >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -798,6 +832,230 @@ const CustomersPage = () => {
                 </p>
               )}
             </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Booking Detail Modal */}
+      {showBookingDetailModal && selectedBookingDetail && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => {
+            setShowBookingDetailModal(false);
+            setSelectedBookingDetail(null);
+          }}
+        >
+          <Card
+            className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-background"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
+              <CardTitle className="text-2xl">{t("bookingDetails")}</CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setShowBookingDetailModal(false);
+                  setSelectedBookingDetail(null);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-6 overflow-y-auto flex-1 pb-4">
+              {/* Customer Information */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h3 className="font-semibold text-lg mb-3">{t("customerInformation")}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">{t("name")}</Label>
+                    <p className="font-medium">
+                      {selectedBookingDetail.aircon?.customer?.name || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">{t("email")}</Label>
+                    <p className="font-medium">
+                      {selectedBookingDetail.aircon?.customer?.email || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">{t("phone")}</Label>
+                    <p className="font-medium">
+                      {selectedBookingDetail.aircon?.customer?.phoneNo || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">{t("product")}</Label>
+                    <p className="font-medium">
+                      {selectedBookingDetail.aircon?.product?.name || "N/A"}
+                    </p>
+                  </div>
+                  {selectedBookingDetail.aircon?.name && (
+                    <div>
+                      <Label className="text-muted-foreground">{t("productNickname")}</Label>
+                      <p className="font-medium">
+                        {selectedBookingDetail.aircon.name}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Services */}
+              <div>
+                <Label className="text-muted-foreground">{t("requestedServices")}</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedBookingDetail.bookingServices?.map((s: any) => (
+                    <span
+                      key={s.service.id}
+                      className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                    >
+                      {s.service?.name} - {s.service?.serviceFee} Ks
+                    </span>
+                  )) || <p>{t("noServices")}</p>}
+                </div>
+              </div>
+
+              {/* Technician Information */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h3 className="font-semibold text-lg mb-3">{t("assignedTechnician")}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">{t("name")}</Label>
+                    <p className="font-medium">
+                      {selectedBookingDetail.technician?.name || t("notAssigned")}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">{t("phone")}</Label>
+                    <p className="font-medium">
+                      {selectedBookingDetail.technician?.phoneNo || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Address */}
+              {selectedBookingDetail.serviceAddress && (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-3">{t("serviceAddress")}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedBookingDetail.serviceAddress.name && (
+                      <div>
+                        <Label className="text-muted-foreground">{t("name")}</Label>
+                        <p className="font-medium">{selectedBookingDetail.serviceAddress.name}</p>
+                      </div>
+                    )}
+                    <div>
+                      <Label className="text-muted-foreground">{t("address")}</Label>
+                      <p className="font-medium">{selectedBookingDetail.serviceAddress.address}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("township")}</Label>
+                      <p className="font-medium">{selectedBookingDetail.serviceAddress.township}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("city")}</Label>
+                      <p className="font-medium">{selectedBookingDetail.serviceAddress.city}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("district")}</Label>
+                      <p className="font-medium">{selectedBookingDetail.serviceAddress.district}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Booking Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">{t("status")}</Label>
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full text-sm mt-1 ${getStatusColor(
+                      selectedBookingDetail.status
+                    )}`}
+                  >
+                    {t(selectedBookingDetail.status)}
+                  </span>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("scheduledDate")}</Label>
+                  <p className="font-medium mt-1">
+                    {formatDate(selectedBookingDetail.bookingForDate)}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("bookingTime")}</Label>
+                  <p className="font-medium mt-1">{selectedBookingDetail.bookingTime || "N/A"}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("duration")}</Label>
+                  <p className="font-medium mt-1">{selectedBookingDetail.duration} {t("minutes")}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("fees")}</Label>
+                  <p className="font-medium mt-1">{selectedBookingDetail.fees || "0.00"} Ks</p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <Label className="text-muted-foreground">{t("description")}</Label>
+                <p className="mt-1 whitespace-pre-wrap">
+                  {selectedBookingDetail.description || t("noDescriptionProvided")}
+                </p>
+              </div>
+
+              {/* Photos */}
+              {selectedBookingDetail.bookingImages && selectedBookingDetail.bookingImages.length > 0 && (
+                <div>
+                  <Label className="text-muted-foreground flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4" />
+                    {t("photos")} ({selectedBookingDetail.bookingImages.length})
+                  </Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                    {selectedBookingDetail.bookingImages.map((img) => (
+                      <div
+                        key={img.id}
+                        className="relative aspect-video rounded-lg overflow-hidden border bg-muted"
+                      >
+                        <Image
+                          src={img.url}
+                          alt="Booking image"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                <div>
+                  <Label className="text-muted-foreground">{t("created")}</Label>
+                  <p className="text-sm">{formatDate(selectedBookingDetail.createdAt)}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("lastUpdated")}</Label>
+                  <p className="text-sm">{formatDate(selectedBookingDetail.updatedAt)}</p>
+                </div>
+              </div>
+            </CardContent>
+            {/* Sticky Close Button */}
+            <div className="p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setShowBookingDetailModal(false);
+                  setSelectedBookingDetail(null);
+                }}
+              >
+                {t("close")}
+              </Button>
+            </div>
           </Card>
         </div>
       )}
