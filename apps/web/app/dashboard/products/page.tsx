@@ -633,10 +633,10 @@ const ProductsPage = () => {
           onClick={handleCancel}
         >
           <Card
-            className="w-full max-w-4xl bg-background my-8"
+            className="w-full max-w-4xl bg-background my-8 flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <CardHeader className="flex flex-row items-center justify-between border-b">
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
               <CardTitle>
                 {isCreating
                   ? t("createProduct")
@@ -662,7 +662,7 @@ const ProductsPage = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4 pt-6 max-h-[70vh] overflow-y-auto">
+            <CardContent className="space-y-4 pt-6 overflow-y-auto flex-1 pb-4">
               {isViewing && selectedProduct ? (
                 // View Mode
                 <div className="space-y-6">
@@ -1069,33 +1069,35 @@ const ProductsPage = () => {
                       )}
                     </div>
                   </div>
-
-                  <div className="flex gap-2 pt-4">
-                    <Button
-                      onClick={handleSave}
-                      disabled={
-                        saving ||
-                        !formData.name ||
-                        !formData.productModel ||
-                        !formData.brand ||
-                        !formData.price
-                      }
-                      className="flex-1 gap-2"
-                    >
-                      {saving ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Save className="h-4 w-4" />
-                      )}
-                      {isEditing ? t("update") : t("create")}
-                    </Button>
-                    <Button variant="outline" onClick={handleCancel} className="flex-1">
-                      {t("cancel")}
-                    </Button>
-                  </div>
                 </div>
               )}
             </CardContent>
+            {/* Sticky Action Buttons - Only show for edit/create mode */}
+            {(isEditing || isCreating) && (
+              <div className="flex gap-2 p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
+                <Button
+                  onClick={handleSave}
+                  disabled={
+                    saving ||
+                    !formData.name ||
+                    !formData.productModel ||
+                    !formData.brand ||
+                    !formData.price
+                  }
+                  className="flex-1 gap-2"
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  {isEditing ? t("update") : t("create")}
+                </Button>
+                <Button variant="outline" onClick={handleCancel} className="flex-1">
+                  {t("cancel")}
+                </Button>
+              </div>
+            )}
           </Card>
         </div>
       )}

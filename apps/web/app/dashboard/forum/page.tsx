@@ -590,10 +590,10 @@ const ForumPage = () => {
           }}
         >
           <Card
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-background"
+            className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-background"
             onClick={(e) => e.stopPropagation()}
           >
-            <CardHeader className="flex flex-row items-center justify-between border-b">
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
               <CardTitle className="text-2xl flex-1">
                 {editingPost ? (
                   <Input
@@ -639,7 +639,7 @@ const ForumPage = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="space-y-6 pt-6 overflow-y-auto flex-1 pb-4">
               {/* Author Information */}
               <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -830,27 +830,28 @@ const ForumPage = () => {
                   </p>
                 )}
               </div>
-
-              {/* Action Buttons */}
-              {editingPost ? (
-                <div className="flex gap-2 pt-4 border-t">
-                  <Button
-                    variant="default"
-                    onClick={handleUpdatePost}
-                    className="flex-1 gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {t("save")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setEditingPost(false)}
-                    className="flex-1"
-                  >
-                    {t("cancel")}
-                  </Button>
-                </div>
-              ) : (
+            </CardContent>
+            {/* Sticky Action Buttons */}
+            {editingPost ? (
+              <div className="flex gap-2 p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
+                <Button
+                  variant="default"
+                  onClick={handleUpdatePost}
+                  className="flex-1 gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {t("save")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingPost(false)}
+                  className="flex-1"
+                >
+                  {t("cancel")}
+                </Button>
+              </div>
+            ) : (
+              <div className="p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
                 <Button
                   className="w-full"
                   onClick={() => {
@@ -860,8 +861,8 @@ const ForumPage = () => {
                 >
                   {t("close")}
                 </Button>
-              )}
-            </CardContent>
+              </div>
+            )}
           </Card>
         </div>
       )}

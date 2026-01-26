@@ -82,13 +82,11 @@ const DashboardPage = () => {
         upcomingBookings: upcoming,
       });
 
-      // Get latest 5 bookings
-      const sortedBookings = [...bookings]
-        .sort((a: Booking, b: Booking) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-        .slice(0, 5);
-      setLatestBookings(sortedBookings);
+      // Get today's bookings
+      const todayBookings = bookings.filter(
+        (b: Booking) => b.bookingForDate?.split("T")[0] === today
+      );
+      setLatestBookings(todayBookings);
 
       // Fetch forum posts (if endpoint exists)
       try {
@@ -364,10 +362,10 @@ const DashboardPage = () => {
 
       {/* Latest Bookings and Forum Posts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Latest Bookings */}
+        {/* Today's Bookings */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t("latestBookings")}</CardTitle>
+            <CardTitle>{t("todayBookings")}</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => window.location.href = '/dashboard/bookings'}>
               {t("viewAll")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -464,10 +462,10 @@ const DashboardPage = () => {
           }}
         >
           <Card
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-background"
+            className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-background"
             onClick={(e) => e.stopPropagation()}
           >
-            <CardHeader className="flex flex-row items-center justify-between border-b">
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
               <CardTitle className="text-2xl">{t("bookingDetails")}</CardTitle>
               <div className="flex gap-2">
                 {!editingBooking ? (
@@ -500,7 +498,7 @@ const DashboardPage = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="space-y-6 pt-6 overflow-y-auto flex-1 pb-4">
               {/* Customer Information */}
               <div className="p-4 bg-muted/50 rounded-lg">
                 <h3 className="font-semibold text-lg mb-3">{t("customerInformation")}</h3>
@@ -573,6 +571,37 @@ const DashboardPage = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Service Address */}
+              {selectedBooking.serviceAddress && (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-3">{t("serviceAddress")}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedBooking.serviceAddress.name && (
+                      <div>
+                        <Label className="text-muted-foreground">{t("name")}</Label>
+                        <p className="font-medium">{selectedBooking.serviceAddress.name}</p>
+                      </div>
+                    )}
+                    <div>
+                      <Label className="text-muted-foreground">{t("address")}</Label>
+                      <p className="font-medium">{selectedBooking.serviceAddress.address}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("township")}</Label>
+                      <p className="font-medium">{selectedBooking.serviceAddress.township}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("city")}</Label>
+                      <p className="font-medium">{selectedBooking.serviceAddress.city}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("district")}</Label>
+                      <p className="font-medium">{selectedBooking.serviceAddress.district}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Booking Details */}
               <div className="grid grid-cols-2 gap-4">
@@ -698,27 +727,28 @@ const DashboardPage = () => {
                   <p className="text-sm">{formatDate(selectedBooking.updatedAt)}</p>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              {editingBooking ? (
-                <div className="flex gap-2 pt-4 border-t">
-                  <Button
-                    variant="default"
-                    onClick={handleUpdateBooking}
-                    className="flex-1 gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {t("save")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setEditingBooking(false)}
-                    className="flex-1"
-                  >
-                    {t("cancel")}
-                  </Button>
-                </div>
-              ) : (
+            </CardContent>
+            {/* Sticky Action Buttons */}
+            {editingBooking ? (
+              <div className="flex gap-2 p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
+                <Button
+                  variant="default"
+                  onClick={handleUpdateBooking}
+                  className="flex-1 gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {t("save")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingBooking(false)}
+                  className="flex-1"
+                >
+                  {t("cancel")}
+                </Button>
+              </div>
+            ) : (
+              <div className="p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
                 <Button
                   className="w-full"
                   onClick={() => {
@@ -728,8 +758,8 @@ const DashboardPage = () => {
                 >
                   {t("close")}
                 </Button>
-              )}
-            </CardContent>
+              </div>
+            )}
           </Card>
         </div>
       )}
@@ -744,10 +774,10 @@ const DashboardPage = () => {
           }}
         >
           <Card
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-background"
+            className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-background"
             onClick={(e) => e.stopPropagation()}
           >
-            <CardHeader className="flex flex-row items-center justify-between border-b">
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
               <CardTitle className="text-2xl flex-1">
                 {editingPost ? (
                   <Input
@@ -793,7 +823,7 @@ const DashboardPage = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="space-y-6 pt-6 overflow-y-auto flex-1 pb-4">
               {/* Author Information */}
               <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -974,27 +1004,28 @@ const DashboardPage = () => {
                   </p>
                 )}
               </div>
-
-              {/* Action Buttons */}
-              {editingPost ? (
-                <div className="flex gap-2 pt-4 border-t">
-                  <Button
-                    variant="default"
-                    onClick={handleUpdatePost}
-                    className="flex-1 gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {t("save")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setEditingPost(false)}
-                    className="flex-1"
-                  >
-                    {t("cancel")}
-                  </Button>
-                </div>
-              ) : (
+            </CardContent>
+            {/* Sticky Action Buttons */}
+            {editingPost ? (
+              <div className="flex gap-2 p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
+                <Button
+                  variant="default"
+                  onClick={handleUpdatePost}
+                  className="flex-1 gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {t("save")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingPost(false)}
+                  className="flex-1"
+                >
+                  {t("cancel")}
+                </Button>
+              </div>
+            ) : (
+              <div className="p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
                 <Button
                   className="w-full"
                   onClick={() => {
@@ -1004,8 +1035,8 @@ const DashboardPage = () => {
                 >
                   {t("close")}
                 </Button>
-              )}
-            </CardContent>
+              </div>
+            )}
           </Card>
         </div>
       )}

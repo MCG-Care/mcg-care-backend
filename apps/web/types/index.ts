@@ -50,6 +50,17 @@ export interface Booking {
     id: string;
     url: string;
   }>;
+  serviceAddress?: {
+    id: number;
+    userId: number;
+    name?: string;
+    address: string;
+    township: string;
+    city: string;
+    district: string;
+    createdAt?: string;
+    updatedAt?: string;
+  };
 }
 
 export interface ForumPost {

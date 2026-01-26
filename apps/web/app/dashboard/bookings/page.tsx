@@ -458,10 +458,10 @@ const BookingsPage = () => {
           }}
         >
           <Card
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-background"
+            className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-background"
             onClick={(e) => e.stopPropagation()}
           >
-            <CardHeader className="flex flex-row items-center justify-between border-b">
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
               <CardTitle className="text-2xl">{t("bookingDetails")}</CardTitle>
               <div className="flex gap-2">
                 {!editingBooking ? (
@@ -494,7 +494,7 @@ const BookingsPage = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="space-y-6 pt-6 overflow-y-auto flex-1 pb-4">
               {/* Customer Information */}
               <div className="p-4 bg-muted/50 rounded-lg">
                 <h3 className="font-semibold text-lg mb-3">{t("customerInformation")}</h3>
@@ -567,6 +567,37 @@ const BookingsPage = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Service Address */}
+              {selectedBooking.serviceAddress && (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-3">{t("serviceAddress")}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedBooking.serviceAddress.name && (
+                      <div>
+                        <Label className="text-muted-foreground">{t("name")}</Label>
+                        <p className="font-medium">{selectedBooking.serviceAddress.name}</p>
+                      </div>
+                    )}
+                    <div>
+                      <Label className="text-muted-foreground">{t("address")}</Label>
+                      <p className="font-medium">{selectedBooking.serviceAddress.address}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("township")}</Label>
+                      <p className="font-medium">{selectedBooking.serviceAddress.township}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("city")}</Label>
+                      <p className="font-medium">{selectedBooking.serviceAddress.city}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">{t("district")}</Label>
+                      <p className="font-medium">{selectedBooking.serviceAddress.district}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Booking Details */}
               <div className="grid grid-cols-2 gap-4">
@@ -692,27 +723,28 @@ const BookingsPage = () => {
                   <p className="text-sm">{formatDate(selectedBooking.updatedAt)}</p>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              {editingBooking ? (
-                <div className="flex gap-2 pt-4 border-t">
-                  <Button
-                    variant="default"
-                    onClick={handleUpdateBooking}
-                    className="flex-1 gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {t("save")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setEditingBooking(false)}
-                    className="flex-1"
-                  >
-                    {t("cancel")}
-                  </Button>
-                </div>
-              ) : (
+            </CardContent>
+            {/* Sticky Action Buttons */}
+            {editingBooking ? (
+              <div className="flex gap-2 p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
+                <Button
+                  variant="default"
+                  onClick={handleUpdateBooking}
+                  className="flex-1 gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {t("save")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingBooking(false)}
+                  className="flex-1"
+                >
+                  {t("cancel")}
+                </Button>
+              </div>
+            ) : (
+              <div className="p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
                 <Button
                   className="w-full"
                   onClick={() => {
@@ -722,8 +754,8 @@ const BookingsPage = () => {
                 >
                   {t("close")}
                 </Button>
-              )}
-            </CardContent>
+              </div>
+            )}
           </Card>
         </div>
       )}
