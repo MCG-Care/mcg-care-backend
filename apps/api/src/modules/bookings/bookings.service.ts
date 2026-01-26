@@ -654,6 +654,63 @@ export class BookingsService {
       throw new ForbiddenException('You can only update your assigned bookings');
     }
 
+    // Validate that booking date has passed before marking as "done"
+    if (updateBookingDto.status === 'done') {
+      // Get current time in Bangkok timezone (UTC+7)
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+      
+      const parts = formatter.formatToParts(now);
+      const bangkokNow = new Date(
+        parseInt(parts.find(p => p.type === 'year')!.value),
+        parseInt(parts.find(p => p.type === 'month')!.value) - 1,
+        parseInt(parts.find(p => p.type === 'day')!.value),
+        parseInt(parts.find(p => p.type === 'hour')!.value),
+        parseInt(parts.find(p => p.type === 'minute')!.value),
+        parseInt(parts.find(p => p.type === 'second')!.value),
+      );
+      
+      // Get today's date in Bangkok timezone (set to midnight)
+      const today = new Date(bangkokNow);
+      today.setHours(0, 0, 0, 0);
+      
+      // Get booking date (set to midnight)
+      const bookingDate = new Date(booking.bookingForDate);
+      bookingDate.setHours(0, 0, 0, 0);
+      
+      // Check if booking date is in the future
+      if (bookingDate > today) {
+        throw new BadRequestException(
+          `Cannot mark booking as "done" before the scheduled date (${booking.bookingForDate}). The booking date must be today or in the past.`
+        );
+      }
+      
+      // If booking is for today, also check if the booking time has passed
+      if (bookingDate.getTime() === today.getTime()) {
+        const bookingTimeStr = booking.bookingTime || '09:00:00';
+        const bookingHour = parseInt(bookingTimeStr.split(':')[0]);
+        const currentHour = bangkokNow.getHours();
+        const currentMinute = bangkokNow.getMinutes();
+        
+        // If booking time hasn't started yet today, reject
+        // Booking times are on the hour (e.g., 09:00, 10:00), so if current hour is less than booking hour, reject
+        if (bookingHour > currentHour) {
+          throw new BadRequestException(
+            `Cannot mark booking as "done" before the scheduled time (${bookingTimeStr}). Current time in Bangkok is ${currentHour}:${currentMinute.toString().padStart(2, '0')}.`
+          );
+        }
+      }
+    }
+
     const updateData: any = {
       updatedAt: new Date(),
     };
