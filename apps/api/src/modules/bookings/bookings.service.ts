@@ -11,10 +11,14 @@ import { UpdateBookingDto } from './dto/update-booking.dto';
 import { QueryBookingsDto } from './dto/query-bookings.dto';
 import { AvailabilityQueryDto } from './dto/availability-query.dto';
 import { SupabaseService } from '../../config/supabase.service';
+import { MaintenanceRemindersService } from '../maintenance-reminders/maintenance-reminders.service';
 
 @Injectable()
 export class BookingsService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly maintenanceRemindersService: MaintenanceRemindersService,
+  ) {}
 
   /**
    * Create a new booking with automatic technician assignment
@@ -24,7 +28,7 @@ export class BookingsService {
     createBookingDto: CreateBookingDto,
     imageFiles?: Express.Multer.File[],
   ) {
-    const { airconId, serviceIds, bookingForDate, bookingTime, description, addressId } = createBookingDto;
+    const { airconId, serviceIds, bookingForDate, bookingTime, description, addressId, promoCode } = createBookingDto;
 
     // 1. Verify customer owns the aircon
     const aircon = await db.query.customerProducts.findFirst({
@@ -93,7 +97,54 @@ export class BookingsService {
     const serviceDuration = services.reduce((sum, service) => sum + service.duration, 0);
 
     // Calculate total fees (sum of all service fees)
-    const totalFees = services.reduce((sum, service) => sum + parseFloat(service.serviceFee), 0);
+    let totalFees = services.reduce((sum, service) => sum + parseFloat(service.serviceFee), 0);
+
+    // Apply promo code if provided
+    let promoCodeId: number | null = null;
+    if (promoCode) {
+      try {
+        // Find which service type the promo code is for
+        let validatedPromoCode = null;
+        let discountedServiceId = null;
+
+        // Try to validate the promo code against each service in the booking
+        for (const service of services) {
+          try {
+            validatedPromoCode = await this.maintenanceRemindersService.validatePromoCode(
+              promoCode,
+              airconId,
+              service.id,
+            );
+            discountedServiceId = service.id;
+            break;
+          } catch (error) {
+            // Continue to next service
+            continue;
+          }
+        }
+
+        if (!validatedPromoCode || !discountedServiceId) {
+          throw new BadRequestException(
+            'Promo code is not valid for any of the selected services',
+          );
+        }
+
+        // Find the service to apply discount to
+        const discountedService = services.find((s) => s.id === discountedServiceId);
+        if (discountedService) {
+          const serviceFee = parseFloat(discountedService.serviceFee);
+          const discount = (serviceFee * validatedPromoCode.discountPercentage) / 100;
+          totalFees -= discount;
+
+          // Store promo code ID to link with booking
+          promoCodeId = validatedPromoCode.id;
+        }
+      } catch (error: any) {
+        throw new BadRequestException(
+          error?.message || 'Invalid promo code',
+        );
+      }
+    }
 
     // Calculate required hours for actual service (round up)
     const serviceHours = Math.ceil(serviceDuration / 60);
@@ -196,6 +247,7 @@ export class BookingsService {
         technicianId: assignedTechnicianId,
         airconId,
         addressId: bookingAddressId, // Store the addressId used (null if primary address was used)
+        promoCodeId: promoCodeId, // Store the promo code ID if used
         bookingOnDate,
         bookingForDate,
         bookingTime: bookingTimeStr,
@@ -216,7 +268,12 @@ export class BookingsService {
     // 8. Update technician's timeslots (remove booked hours)
     await this.updateTimeslots(assignedTechnicianId, bookingForDate, bookingTime, requiredHours);
 
-    // 9. Upload images if provided
+    // 9. Mark promo code as used if one was applied
+    if (promoCodeId) {
+      await this.maintenanceRemindersService.markPromoCodeAsUsed(promoCodeId);
+    }
+
+    // 10. Upload images if provided
     if (imageFiles && imageFiles.length > 0) {
       const imageUrls = await this.uploadBookingImages(newBooking.id, imageFiles);
 
@@ -228,7 +285,7 @@ export class BookingsService {
       await db.insert(schema.bookingImages).values(imageRecords);
     }
 
-    // 10. Return complete booking details (findOne will include serviceAddress)
+    // 11. Return complete booking details (findOne will include serviceAddress)
     return this.findOne(newBooking.id, customerId, 'customer');
   }
 
@@ -728,6 +785,16 @@ export class BookingsService {
     }
 
     await db.update(schema.bookings).set(updateData).where(eq(schema.bookings.id, id));
+
+    // If booking is marked as "done", generate maintenance reminders
+    if (updateBookingDto.status === 'done') {
+      try {
+        await this.maintenanceRemindersService.createRemindersForBooking(id);
+      } catch (error) {
+        // Log error but don't fail the booking update
+        console.error('Failed to create maintenance reminders:', error);
+      }
+    }
 
     return this.findOne(id, userId, userRole);
   }

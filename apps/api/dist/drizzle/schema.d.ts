@@ -887,6 +887,309 @@ export declare const technicianServices: import("drizzle-orm/pg-core").PgTableWi
     };
     dialect: "pg";
 }>;
+export declare const promotionCodes: import("drizzle-orm/pg-core").PgTableWithColumns<{
+    name: "promotion_codes";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/pg-core").PgColumn<{
+            name: "id";
+            tableName: "promotion_codes";
+            dataType: "number";
+            columnType: "PgSerial";
+            data: number;
+            driverParam: number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        customerProductId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "customer_product_id";
+            tableName: "promotion_codes";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        serviceTypeId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "service_type_id";
+            tableName: "promotion_codes";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        code: import("drizzle-orm/pg-core").PgColumn<{
+            name: "code";
+            tableName: "promotion_codes";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        discountPercentage: import("drizzle-orm/pg-core").PgColumn<{
+            name: "discount_percentage";
+            tableName: "promotion_codes";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        expiresAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "expires_at";
+            tableName: "promotion_codes";
+            dataType: "string";
+            columnType: "PgDateString";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        isUsed: import("drizzle-orm/pg-core").PgColumn<{
+            name: "is_used";
+            tableName: "promotion_codes";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        createdAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "created_at";
+            tableName: "promotion_codes";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        updatedAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "updated_at";
+            tableName: "promotion_codes";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
+export declare const maintenanceReminders: import("drizzle-orm/pg-core").PgTableWithColumns<{
+    name: "maintenance_reminders";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/pg-core").PgColumn<{
+            name: "id";
+            tableName: "maintenance_reminders";
+            dataType: "number";
+            columnType: "PgSerial";
+            data: number;
+            driverParam: number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        customerId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "customer_id";
+            tableName: "maintenance_reminders";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        customerProductId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "customer_product_id";
+            tableName: "maintenance_reminders";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        serviceTypeId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "service_type_id";
+            tableName: "maintenance_reminders";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        promotionCodeId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "promotion_code_id";
+            tableName: "maintenance_reminders";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        reminderDate: import("drizzle-orm/pg-core").PgColumn<{
+            name: "reminder_date";
+            tableName: "maintenance_reminders";
+            dataType: "string";
+            columnType: "PgDateString";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        createdAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "created_at";
+            tableName: "maintenance_reminders";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        updatedAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "updated_at";
+            tableName: "maintenance_reminders";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
 export declare const bookings: import("drizzle-orm/pg-core").PgTableWithColumns<{
     name: "bookings";
     schema: undefined;
@@ -944,6 +1247,23 @@ export declare const bookings: import("drizzle-orm/pg-core").PgTableWithColumns<
         }, {}, {}>;
         addressId: import("drizzle-orm/pg-core").PgColumn<{
             name: "address_id";
+            tableName: "bookings";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        promoCodeId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "promo_code_id";
             tableName: "bookings";
             dataType: "number";
             columnType: "PgInteger";
@@ -1902,6 +2222,7 @@ export declare const usersRelations: import("drizzle-orm").Relations<string, {
     bookingsAsTechnician: import("drizzle-orm").Many<"bookings">;
     technicianServices: import("drizzle-orm").Many<"technician_services">;
     timeslots: import("drizzle-orm").Many<"timeslots">;
+    maintenanceReminders: import("drizzle-orm").Many<"maintenance_reminders">;
     forumPosts: import("drizzle-orm").Many<"forum_posts">;
     forumComments: import("drizzle-orm").Many<"forum_comments">;
     forumPostLikes: import("drizzle-orm").Many<"forum_post_likes">;
@@ -1918,6 +2239,8 @@ export declare const customerProductsRelations: import("drizzle-orm").Relations<
     customer: import("drizzle-orm").One<any, true>;
     product: import("drizzle-orm").One<"products", true>;
     bookings: import("drizzle-orm").Many<"bookings">;
+    promotionCodes: import("drizzle-orm").Many<"promotion_codes">;
+    maintenanceReminders: import("drizzle-orm").Many<"maintenance_reminders">;
 }>;
 export declare const timeslotsRelations: import("drizzle-orm").Relations<"timeslots", {
     technician: import("drizzle-orm").One<any, true>;
@@ -1925,6 +2248,8 @@ export declare const timeslotsRelations: import("drizzle-orm").Relations<"timesl
 export declare const serviceTypesRelations: import("drizzle-orm").Relations<"service_types", {
     technicianServices: import("drizzle-orm").Many<"technician_services">;
     bookingServices: import("drizzle-orm").Many<"booking_services">;
+    promotionCodes: import("drizzle-orm").Many<"promotion_codes">;
+    maintenanceReminders: import("drizzle-orm").Many<"maintenance_reminders">;
 }>;
 export declare const technicianServicesRelations: import("drizzle-orm").Relations<"technician_services", {
     technician: import("drizzle-orm").One<any, true>;
@@ -1933,6 +2258,7 @@ export declare const technicianServicesRelations: import("drizzle-orm").Relation
 export declare const bookingsRelations: import("drizzle-orm").Relations<"bookings", {
     technician: import("drizzle-orm").One<any, true>;
     aircon: import("drizzle-orm").One<"customer_products", true>;
+    promoCode: import("drizzle-orm").One<"promotion_codes", false>;
     bookingServices: import("drizzle-orm").Many<"booking_services">;
     bookingImages: import("drizzle-orm").Many<"booking_images">;
     serviceLog: import("drizzle-orm").One<"service_logs", false>;
@@ -1972,4 +2298,16 @@ export declare const forumPostLikesRelations: import("drizzle-orm").Relations<"f
 export declare const forumCommentLikesRelations: import("drizzle-orm").Relations<"forum_comment_likes", {
     user: import("drizzle-orm").One<any, true>;
     comment: import("drizzle-orm").One<"forum_comments", true>;
+}>;
+export declare const promotionCodesRelations: import("drizzle-orm").Relations<"promotion_codes", {
+    customerProduct: import("drizzle-orm").One<"customer_products", true>;
+    serviceType: import("drizzle-orm").One<"service_types", true>;
+    maintenanceReminder: import("drizzle-orm").One<"maintenance_reminders", false>;
+    bookings: import("drizzle-orm").Many<"bookings">;
+}>;
+export declare const maintenanceRemindersRelations: import("drizzle-orm").Relations<"maintenance_reminders", {
+    customer: import("drizzle-orm").One<any, true>;
+    customerProduct: import("drizzle-orm").One<"customer_products", true>;
+    serviceType: import("drizzle-orm").One<"service_types", true>;
+    promotionCode: import("drizzle-orm").One<"promotion_codes", true>;
 }>;

@@ -227,6 +227,70 @@ export const technicianServices = pgTable(
   }),
 );
 
+// Promotion Codes Table
+export const promotionCodes = pgTable(
+  'promotion_codes',
+  {
+    id: serial('id').primaryKey(),
+    customerProductId: integer('customer_product_id')
+      .notNull()
+      .references(() => customerProducts.id, { onDelete: 'cascade' }),
+    serviceTypeId: integer('service_type_id')
+      .notNull()
+      .references(() => serviceTypes.id, { onDelete: 'cascade' }),
+    code: text('code').notNull().unique(),
+    discountPercentage: integer('discount_percentage').notNull(), // 5-15%
+    expiresAt: date('expires_at').notNull(),
+    isUsed: boolean('is_used').default(false).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    codeIdx: uniqueIndex('promotion_codes_code_idx').on(table.code),
+    customerProductIdIdx: index('promotion_codes_customer_product_id_idx').on(
+      table.customerProductId,
+    ),
+    serviceTypeIdIdx: index('promotion_codes_service_type_id_idx').on(
+      table.serviceTypeId,
+    ),
+    isUsedIdx: index('promotion_codes_is_used_idx').on(table.isUsed),
+  }),
+);
+
+// Maintenance Reminders Table
+export const maintenanceReminders = pgTable(
+  'maintenance_reminders',
+  {
+    id: serial('id').primaryKey(),
+    customerId: integer('customer_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    customerProductId: integer('customer_product_id')
+      .notNull()
+      .references(() => customerProducts.id, { onDelete: 'cascade' }),
+    serviceTypeId: integer('service_type_id')
+      .notNull()
+      .references(() => serviceTypes.id, { onDelete: 'cascade' }),
+    promotionCodeId: integer('promotion_code_id')
+      .notNull()
+      .references(() => promotionCodes.id, { onDelete: 'cascade' }),
+    reminderDate: date('reminder_date').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    customerIdIdx: index('maintenance_reminders_customer_id_idx').on(
+      table.customerId,
+    ),
+    customerProductIdIdx: index('maintenance_reminders_customer_product_id_idx').on(
+      table.customerProductId,
+    ),
+    reminderDateIdx: index('maintenance_reminders_reminder_date_idx').on(
+      table.reminderDate,
+    ),
+  }),
+);
+
 // Bookings Table
 export const bookings = pgTable(
   'bookings',
@@ -241,6 +305,9 @@ export const bookings = pgTable(
     addressId: integer('address_id')
       // @ts-ignore - Circular reference: addresses is defined above, but Drizzle handles this at runtime
       .references(() => addresses.id, { onDelete: 'set null' }), // Address used for this booking (optional - null means primary address was used)
+    promoCodeId: integer('promo_code_id').references(() => promotionCodes.id, {
+      onDelete: 'set null',
+    }), // Applied promotion code (optional)
     bookingOnDate: date('booking_on_date').notNull(), // When the booking was made
     bookingForDate: date('booking_for_date').notNull(), // When the service is scheduled
     bookingTime: time('booking_time').notNull(), // Start time of service
@@ -262,6 +329,7 @@ export const bookings = pgTable(
     bookingForDateTechnicianIdx: index(
       'bookings_booking_for_date_technician_idx',
     ).on(table.bookingForDate, table.technicianId),
+    promoCodeIdIdx: index('bookings_promo_code_id_idx').on(table.promoCodeId),
   }),
 );
 
@@ -440,6 +508,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   bookingsAsTechnician: many(bookings),
   technicianServices: many(technicianServices),
   timeslots: many(timeslots),
+  maintenanceReminders: many(maintenanceReminders),
   forumPosts: many(forumPosts),
   forumComments: many(forumComments),
   forumPostLikes: many(forumPostLikes),
@@ -470,6 +539,8 @@ export const customerProductsRelations = relations(
       references: [products.id],
     }),
     bookings: many(bookings),
+    promotionCodes: many(promotionCodes),
+    maintenanceReminders: many(maintenanceReminders),
   }),
 );
 
@@ -483,6 +554,8 @@ export const timeslotsRelations = relations(timeslots, ({ one }) => ({
 export const serviceTypesRelations = relations(serviceTypes, ({ many }) => ({
   technicianServices: many(technicianServices),
   bookingServices: many(bookingServices),
+  promotionCodes: many(promotionCodes),
+  maintenanceReminders: many(maintenanceReminders),
 }));
 
 export const technicianServicesRelations = relations(
@@ -507,6 +580,10 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   aircon: one(customerProducts, {
     fields: [bookings.airconId],
     references: [customerProducts.id],
+  }),
+  promoCode: one(promotionCodes, {
+    fields: [bookings.promoCodeId],
+    references: [promotionCodes.id],
   }),
   bookingServices: many(bookingServices),
   bookingImages: many(bookingImages),
@@ -599,4 +676,42 @@ export const forumCommentLikesRelations = relations(forumCommentLikes, ({ one })
     references: [forumComments.id],
   }),
 }));
+
+export const promotionCodesRelations = relations(
+  promotionCodes,
+  ({ one, many }) => ({
+    customerProduct: one(customerProducts, {
+      fields: [promotionCodes.customerProductId],
+      references: [customerProducts.id],
+    }),
+    serviceType: one(serviceTypes, {
+      fields: [promotionCodes.serviceTypeId],
+      references: [serviceTypes.id],
+    }),
+    maintenanceReminder: one(maintenanceReminders),
+    bookings: many(bookings),
+  }),
+);
+
+export const maintenanceRemindersRelations = relations(
+  maintenanceReminders,
+  ({ one }) => ({
+    customer: one(users, {
+      fields: [maintenanceReminders.customerId],
+      references: [users.id],
+    }),
+    customerProduct: one(customerProducts, {
+      fields: [maintenanceReminders.customerProductId],
+      references: [customerProducts.id],
+    }),
+    serviceType: one(serviceTypes, {
+      fields: [maintenanceReminders.serviceTypeId],
+      references: [serviceTypes.id],
+    }),
+    promotionCode: one(promotionCodes, {
+      fields: [maintenanceReminders.promotionCodeId],
+      references: [promotionCodes.id],
+    }),
+  }),
+);
 

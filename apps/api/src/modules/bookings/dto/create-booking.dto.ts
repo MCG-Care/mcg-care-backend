@@ -39,6 +39,10 @@ export class CreateBookingDto {
   @IsInt()
   @Type(() => Number)
   addressId?: number; // Optional address ID - if provided, uses this address's district; otherwise uses primary address district
+
+  @IsOptional()
+  @IsString()
+  promoCode?: string; // Optional promo code for discount
 }
 
 

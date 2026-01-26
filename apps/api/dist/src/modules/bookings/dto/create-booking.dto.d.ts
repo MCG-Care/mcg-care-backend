@@ -5,4 +5,5 @@ export declare class CreateBookingDto {
     bookingTime: number;
     description?: string;
     addressId?: number;
+    promoCode?: string;
 }

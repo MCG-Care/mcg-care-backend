@@ -14,13 +14,15 @@ const common_1 = require("@nestjs/common");
 const database_1 = require("../../config/database");
 const drizzle_orm_1 = require("drizzle-orm");
 const supabase_service_1 = require("../../config/supabase.service");
+const maintenance_reminders_service_1 = require("../maintenance-reminders/maintenance-reminders.service");
 let BookingsService = class BookingsService {
-    constructor(supabaseService) {
+    constructor(supabaseService, maintenanceRemindersService) {
         this.supabaseService = supabaseService;
+        this.maintenanceRemindersService = maintenanceRemindersService;
     }
     async create(customerId, createBookingDto, imageFiles) {
         var _a;
-        const { airconId, serviceIds, bookingForDate, bookingTime, description, addressId } = createBookingDto;
+        const { airconId, serviceIds, bookingForDate, bookingTime, description, addressId, promoCode } = createBookingDto;
         const aircon = await database_1.db.query.customerProducts.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.id, airconId),
             with: {
@@ -67,7 +69,37 @@ let BookingsService = class BookingsService {
             throw new common_1.BadRequestException('One or more service IDs are invalid');
         }
         const serviceDuration = services.reduce((sum, service) => sum + service.duration, 0);
-        const totalFees = services.reduce((sum, service) => sum + parseFloat(service.serviceFee), 0);
+        let totalFees = services.reduce((sum, service) => sum + parseFloat(service.serviceFee), 0);
+        let promoCodeId = null;
+        if (promoCode) {
+            try {
+                let validatedPromoCode = null;
+                let discountedServiceId = null;
+                for (const service of services) {
+                    try {
+                        validatedPromoCode = await this.maintenanceRemindersService.validatePromoCode(promoCode, airconId, service.id);
+                        discountedServiceId = service.id;
+                        break;
+                    }
+                    catch (error) {
+                        continue;
+                    }
+                }
+                if (!validatedPromoCode || !discountedServiceId) {
+                    throw new common_1.BadRequestException('Promo code is not valid for any of the selected services');
+                }
+                const discountedService = services.find((s) => s.id === discountedServiceId);
+                if (discountedService) {
+                    const serviceFee = parseFloat(discountedService.serviceFee);
+                    const discount = (serviceFee * validatedPromoCode.discountPercentage) / 100;
+                    totalFees -= discount;
+                    promoCodeId = validatedPromoCode.id;
+                }
+            }
+            catch (error) {
+                throw new common_1.BadRequestException((error === null || error === void 0 ? void 0 : error.message) || 'Invalid promo code');
+            }
+        }
         const serviceHours = Math.ceil(serviceDuration / 60);
         const now = new Date();
         const formatter = new Intl.DateTimeFormat('en-US', {
@@ -123,6 +155,7 @@ let BookingsService = class BookingsService {
             technicianId: assignedTechnicianId,
             airconId,
             addressId: bookingAddressId,
+            promoCodeId: promoCodeId,
             bookingOnDate,
             bookingForDate,
             bookingTime: bookingTimeStr,
@@ -138,6 +171,9 @@ let BookingsService = class BookingsService {
         }));
         await database_1.db.insert(database_1.schema.bookingServices).values(bookingServiceRecords);
         await this.updateTimeslots(assignedTechnicianId, bookingForDate, bookingTime, requiredHours);
+        if (promoCodeId) {
+            await this.maintenanceRemindersService.markPromoCodeAsUsed(promoCodeId);
+        }
         if (imageFiles && imageFiles.length > 0) {
             const imageUrls = await this.uploadBookingImages(newBooking.id, imageFiles);
             const imageRecords = imageUrls.map((url) => ({
@@ -486,6 +522,14 @@ let BookingsService = class BookingsService {
             updateData.fees = updateBookingDto.fees.toString();
         }
         await database_1.db.update(database_1.schema.bookings).set(updateData).where((0, drizzle_orm_1.eq)(database_1.schema.bookings.id, id));
+        if (updateBookingDto.status === 'done') {
+            try {
+                await this.maintenanceRemindersService.createRemindersForBooking(id);
+            }
+            catch (error) {
+                console.error('Failed to create maintenance reminders:', error);
+            }
+        }
         return this.findOne(id, userId, userRole);
     }
     async remove(id, userId, userRole) {
@@ -777,6 +821,7 @@ let BookingsService = class BookingsService {
 exports.BookingsService = BookingsService;
 exports.BookingsService = BookingsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [supabase_service_1.SupabaseService])
+    __metadata("design:paramtypes", [supabase_service_1.SupabaseService,
+        maintenance_reminders_service_1.MaintenanceRemindersService])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map
