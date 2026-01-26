@@ -442,6 +442,37 @@ let BookingsService = class BookingsService {
         if (userRole === 'technician' && booking.technicianId !== userId) {
             throw new common_1.ForbiddenException('You can only update your assigned bookings');
         }
+        if (updateBookingDto.status === 'done') {
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Bangkok',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            });
+            const parts = formatter.formatToParts(now);
+            const bangkokNow = new Date(parseInt(parts.find(p => p.type === 'year').value), parseInt(parts.find(p => p.type === 'month').value) - 1, parseInt(parts.find(p => p.type === 'day').value), parseInt(parts.find(p => p.type === 'hour').value), parseInt(parts.find(p => p.type === 'minute').value), parseInt(parts.find(p => p.type === 'second').value));
+            const today = new Date(bangkokNow);
+            today.setHours(0, 0, 0, 0);
+            const bookingDate = new Date(booking.bookingForDate);
+            bookingDate.setHours(0, 0, 0, 0);
+            if (bookingDate > today) {
+                throw new common_1.BadRequestException(`Cannot mark booking as "done" before the scheduled date (${booking.bookingForDate}). The booking date must be today or in the past.`);
+            }
+            if (bookingDate.getTime() === today.getTime()) {
+                const bookingTimeStr = booking.bookingTime || '09:00:00';
+                const bookingHour = parseInt(bookingTimeStr.split(':')[0]);
+                const currentHour = bangkokNow.getHours();
+                const currentMinute = bangkokNow.getMinutes();
+                if (bookingHour > currentHour) {
+                    throw new common_1.BadRequestException(`Cannot mark booking as "done" before the scheduled time (${bookingTimeStr}). Current time in Bangkok is ${currentHour}:${currentMinute.toString().padStart(2, '0')}.`);
+                }
+            }
+        }
         const updateData = {
             updatedAt: new Date(),
         };

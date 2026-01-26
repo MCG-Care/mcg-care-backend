@@ -95,6 +95,36 @@ const BookingsPage = () => {
     return colors[status] || "text-gray-600 bg-gray-100";
   };
 
+  // Check if a booking can be marked as "done" (booking date must have passed)
+  const canMarkAsDone = (booking: Booking | null): boolean => {
+    if (!booking) return false;
+    
+    const bookingDate = new Date(booking.bookingForDate);
+    bookingDate.setHours(0, 0, 0, 0);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // If booking date is in the future, cannot mark as done
+    if (bookingDate > today) {
+      return false;
+    }
+    
+    // If booking is for today, check if the booking time has started
+    if (bookingDate.getTime() === today.getTime()) {
+      const bookingTimeStr = booking.bookingTime || '09:00:00';
+      const bookingHour = parseInt(bookingTimeStr.split(':')[0]);
+      const currentHour = new Date().getHours();
+      
+      // If booking time hasn't started yet today, cannot mark as done
+      if (bookingHour > currentHour) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   const openBookingModal = (booking: Booking) => {
     setSelectedBooking(booking);
     setBookingFormData({
@@ -109,14 +139,21 @@ const BookingsPage = () => {
   const handleUpdateBooking = async () => {
     if (!selectedBooking) return;
     
+    // Double-check on submit (in case they somehow bypassed the dropdown check)
+    if (bookingFormData.status === 'done' && !canMarkAsDone(selectedBooking)) {
+      alert(`Cannot mark booking as "done" before the scheduled date (${formatDate(selectedBooking.bookingForDate)}). The booking date must be today or in the past.`);
+      return;
+    }
+    
     try {
       await api.patch(`/bookings/${selectedBooking.id}`, bookingFormData);
       await fetchBookings();
       setEditingBooking(false);
       setSelectedBooking(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating booking:", error);
-      alert("Failed to update booking");
+      const errorMessage = error.response?.data?.message || error.message || "Failed to update booking";
+      alert(errorMessage);
     }
   };
 
@@ -607,13 +644,28 @@ const BookingsPage = () => {
                     <select
                       className="w-full mt-1 px-3 py-2 border rounded-md"
                       value={bookingFormData.status || selectedBooking.status}
-                      onChange={(e) =>
-                        setBookingFormData({ ...bookingFormData, status: e.target.value as any })
-                      }
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        
+                        // Check if trying to mark as "done" for a future booking
+                        if (newStatus === 'done' && !canMarkAsDone(selectedBooking)) {
+                          alert(`Cannot mark booking as "done" before the scheduled date (${formatDate(selectedBooking.bookingForDate)}). The booking date must be today or in the past.`);
+                          // Reset to current status
+                          setBookingFormData({ ...bookingFormData, status: selectedBooking.status as any });
+                          return;
+                        }
+                        
+                        setBookingFormData({ ...bookingFormData, status: newStatus as any });
+                      }}
                     >
                       <option value="pending">{t("pending")}</option>
                       <option value="inprogress">{t("inProgress")}</option>
-                      <option value="done">{t("done")}</option>
+                      <option 
+                        value="done" 
+                        disabled={!canMarkAsDone(selectedBooking)}
+                      >
+                        {t("done")} {!canMarkAsDone(selectedBooking) ? `(${t("notAvailableYet") || "Not available yet"})` : ""}
+                      </option>
                       <option value="unsuccessful">{t("unsuccessful")}</option>
                     </select>
                   ) : (
