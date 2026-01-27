@@ -22,6 +22,7 @@ const bookings_module_1 = require("./modules/bookings/bookings.module");
 const service_logs_module_1 = require("./modules/service-logs/service-logs.module");
 const feedbacks_module_1 = require("./modules/feedbacks/feedbacks.module");
 const maintenance_reminders_module_1 = require("./modules/maintenance-reminders/maintenance-reminders.module");
+const time_off_requests_module_1 = require("./modules/time-off-requests/time-off-requests.module");
 const database_module_1 = require("./config/database.module");
 let AppModule = class AppModule {
 };
@@ -47,6 +48,7 @@ exports.AppModule = AppModule = __decorate([
             service_logs_module_1.ServiceLogsModule,
             feedbacks_module_1.FeedbacksModule,
             maintenance_reminders_module_1.MaintenanceRemindersModule,
+            time_off_requests_module_1.TimeOffRequestsModule,
         ],
         controllers: [],
         providers: [],

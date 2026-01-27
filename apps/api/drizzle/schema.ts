@@ -40,6 +40,12 @@ export const bookingStatusEnum = pgEnum('booking_status', [
   'unsuccessful',
 ]);
 
+export const timeOffRequestStatusEnum = pgEnum('time_off_request_status', [
+  'pending',
+  'approved',
+  'rejected',
+]);
+
 // ============================================
 // TABLES
 // ============================================
@@ -184,6 +190,34 @@ export const timeslots = pgTable(
       table.date,
     ),
     dateIdx: index('timeslots_date_idx').on(table.date),
+  }),
+);
+
+// Time Off Requests Table (Technician requests to block off time)
+export const timeOffRequests = pgTable(
+  'time_off_requests',
+  {
+    id: serial('id').primaryKey(),
+    technicianId: integer('technician_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    startDate: date('start_date').notNull(), // Start date of time off (YYYY-MM-DD)
+    endDate: date('end_date').notNull(), // End date of time off (YYYY-MM-DD)
+    startSlot: integer('start_slot').notNull(), // Starting hour (e.g., 9 for 9am)
+    endSlot: integer('end_slot').notNull(), // Ending hour (e.g., 16 for 4pm, or 12 for 12pm)
+    isFullDay: boolean('is_full_day').default(false).notNull(), // True if blocking entire day (9-16)
+    reason: text('reason'), // Optional reason for time off
+    status: timeOffRequestStatusEnum('status').default('pending').notNull(),
+    reviewerId: integer('reviewer_id').references(() => users.id, { onDelete: 'set null' }), // Admin who reviewed the request
+    reviewedAt: timestamp('reviewed_at'), // When the request was reviewed
+    reviewNote: text('review_note'), // Optional note from admin
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    technicianIdIdx: index('time_off_requests_technician_id_idx').on(table.technicianId),
+    statusIdx: index('time_off_requests_status_idx').on(table.status),
+    dateRangeIdx: index('time_off_requests_date_range_idx').on(table.startDate, table.endDate),
   }),
 );
 
@@ -508,6 +542,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   bookingsAsTechnician: many(bookings),
   technicianServices: many(technicianServices),
   timeslots: many(timeslots),
+  timeOffRequestsAsTechnician: many(timeOffRequests, { relationName: 'technicianTimeOffRequests' }),
+  timeOffRequestsAsReviewer: many(timeOffRequests, { relationName: 'reviewedTimeOffRequests' }),
   maintenanceReminders: many(maintenanceReminders),
   forumPosts: many(forumPosts),
   forumComments: many(forumComments),
@@ -548,6 +584,19 @@ export const timeslotsRelations = relations(timeslots, ({ one }) => ({
   technician: one(users, {
     fields: [timeslots.technicianId],
     references: [users.id],
+  }),
+}));
+
+export const timeOffRequestsRelations = relations(timeOffRequests, ({ one }) => ({
+  technician: one(users, {
+    fields: [timeOffRequests.technicianId],
+    references: [users.id],
+    relationName: 'technicianTimeOffRequests',
+  }),
+  reviewer: one(users, {
+    fields: [timeOffRequests.reviewerId],
+    references: [users.id],
+    relationName: 'reviewedTimeOffRequests',
   }),
 }));
 
