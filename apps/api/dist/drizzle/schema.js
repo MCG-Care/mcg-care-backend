@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.forumCommentLikesRelations = exports.forumPostLikesRelations = exports.forumPostImagesRelations = exports.forumCommentsRelations = exports.forumPostsRelations = exports.feedbacksRelations = exports.serviceLogsRelations = exports.bookingImagesRelations = exports.bookingServicesRelations = exports.bookingsRelations = exports.technicianServicesRelations = exports.serviceTypesRelations = exports.timeslotsRelations = exports.customerProductsRelations = exports.productImagesRelations = exports.productsRelations = exports.usersRelations = exports.addressesRelations = exports.forumCommentLikes = exports.forumPostLikes = exports.forumPostImages = exports.forumComments = exports.forumPosts = exports.feedbacks = exports.serviceLogs = exports.bookingImages = exports.bookingServices = exports.bookings = exports.technicianServices = exports.serviceTypes = exports.timeslots = exports.customerProducts = exports.productImages = exports.products = exports.users = exports.addresses = exports.bookingStatusEnum = exports.productTypeEnum = exports.userRoleEnum = void 0;
+exports.maintenanceRemindersRelations = exports.promotionCodesRelations = exports.forumCommentLikesRelations = exports.forumPostLikesRelations = exports.forumPostImagesRelations = exports.forumCommentsRelations = exports.forumPostsRelations = exports.feedbacksRelations = exports.serviceLogsRelations = exports.bookingImagesRelations = exports.bookingServicesRelations = exports.bookingsRelations = exports.technicianServicesRelations = exports.serviceTypesRelations = exports.timeOffRequestsRelations = exports.timeslotsRelations = exports.customerProductsRelations = exports.productImagesRelations = exports.productsRelations = exports.usersRelations = exports.addressesRelations = exports.forumCommentLikes = exports.forumPostLikes = exports.forumPostImages = exports.forumComments = exports.forumPosts = exports.feedbacks = exports.serviceLogs = exports.bookingImages = exports.bookingServices = exports.bookings = exports.maintenanceReminders = exports.promotionCodes = exports.technicianServices = exports.serviceTypes = exports.timeOffRequests = exports.timeslots = exports.customerProducts = exports.productImages = exports.products = exports.users = exports.addresses = exports.timeOffRequestStatusEnum = exports.bookingStatusEnum = exports.productTypeEnum = exports.userRoleEnum = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 const drizzle_orm_1 = require("drizzle-orm");
 exports.userRoleEnum = (0, pg_core_1.pgEnum)('user_role', [
@@ -20,6 +20,11 @@ exports.bookingStatusEnum = (0, pg_core_1.pgEnum)('booking_status', [
     'inprogress',
     'done',
     'unsuccessful',
+]);
+exports.timeOffRequestStatusEnum = (0, pg_core_1.pgEnum)('time_off_request_status', [
+    'pending',
+    'approved',
+    'rejected',
 ]);
 exports.addresses = (0, pg_core_1.pgTable)('addresses', {
     id: (0, pg_core_1.serial)('id').primaryKey(),
@@ -118,6 +123,28 @@ exports.timeslots = (0, pg_core_1.pgTable)('timeslots', {
     technicianDateIdx: (0, pg_core_1.uniqueIndex)('timeslots_technician_date_idx').on(table.technicianId, table.date),
     dateIdx: (0, pg_core_1.index)('timeslots_date_idx').on(table.date),
 }));
+exports.timeOffRequests = (0, pg_core_1.pgTable)('time_off_requests', {
+    id: (0, pg_core_1.serial)('id').primaryKey(),
+    technicianId: (0, pg_core_1.integer)('technician_id')
+        .notNull()
+        .references(() => exports.users.id, { onDelete: 'cascade' }),
+    startDate: (0, pg_core_1.date)('start_date').notNull(),
+    endDate: (0, pg_core_1.date)('end_date').notNull(),
+    startSlot: (0, pg_core_1.integer)('start_slot').notNull(),
+    endSlot: (0, pg_core_1.integer)('end_slot').notNull(),
+    isFullDay: (0, pg_core_1.boolean)('is_full_day').default(false).notNull(),
+    reason: (0, pg_core_1.text)('reason'),
+    status: (0, exports.timeOffRequestStatusEnum)('status').default('pending').notNull(),
+    reviewerId: (0, pg_core_1.integer)('reviewer_id').references(() => exports.users.id, { onDelete: 'set null' }),
+    reviewedAt: (0, pg_core_1.timestamp)('reviewed_at'),
+    reviewNote: (0, pg_core_1.text)('review_note'),
+    createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
+    updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
+}, (table) => ({
+    technicianIdIdx: (0, pg_core_1.index)('time_off_requests_technician_id_idx').on(table.technicianId),
+    statusIdx: (0, pg_core_1.index)('time_off_requests_status_idx').on(table.status),
+    dateRangeIdx: (0, pg_core_1.index)('time_off_requests_date_range_idx').on(table.startDate, table.endDate),
+}));
 exports.serviceTypes = (0, pg_core_1.pgTable)('service_types', {
     id: (0, pg_core_1.serial)('id').primaryKey(),
     name: (0, pg_core_1.text)('name').notNull().unique(),
@@ -142,6 +169,48 @@ exports.technicianServices = (0, pg_core_1.pgTable)('technician_services', {
     technicianIdIdx: (0, pg_core_1.index)('technician_services_technician_id_idx').on(table.technicianId),
     serviceIdIdx: (0, pg_core_1.index)('technician_services_service_id_idx').on(table.serviceId),
 }));
+exports.promotionCodes = (0, pg_core_1.pgTable)('promotion_codes', {
+    id: (0, pg_core_1.serial)('id').primaryKey(),
+    customerProductId: (0, pg_core_1.integer)('customer_product_id')
+        .notNull()
+        .references(() => exports.customerProducts.id, { onDelete: 'cascade' }),
+    serviceTypeId: (0, pg_core_1.integer)('service_type_id')
+        .notNull()
+        .references(() => exports.serviceTypes.id, { onDelete: 'cascade' }),
+    code: (0, pg_core_1.text)('code').notNull().unique(),
+    discountPercentage: (0, pg_core_1.integer)('discount_percentage').notNull(),
+    expiresAt: (0, pg_core_1.date)('expires_at').notNull(),
+    isUsed: (0, pg_core_1.boolean)('is_used').default(false).notNull(),
+    createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
+    updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
+}, (table) => ({
+    codeIdx: (0, pg_core_1.uniqueIndex)('promotion_codes_code_idx').on(table.code),
+    customerProductIdIdx: (0, pg_core_1.index)('promotion_codes_customer_product_id_idx').on(table.customerProductId),
+    serviceTypeIdIdx: (0, pg_core_1.index)('promotion_codes_service_type_id_idx').on(table.serviceTypeId),
+    isUsedIdx: (0, pg_core_1.index)('promotion_codes_is_used_idx').on(table.isUsed),
+}));
+exports.maintenanceReminders = (0, pg_core_1.pgTable)('maintenance_reminders', {
+    id: (0, pg_core_1.serial)('id').primaryKey(),
+    customerId: (0, pg_core_1.integer)('customer_id')
+        .notNull()
+        .references(() => exports.users.id, { onDelete: 'cascade' }),
+    customerProductId: (0, pg_core_1.integer)('customer_product_id')
+        .notNull()
+        .references(() => exports.customerProducts.id, { onDelete: 'cascade' }),
+    serviceTypeId: (0, pg_core_1.integer)('service_type_id')
+        .notNull()
+        .references(() => exports.serviceTypes.id, { onDelete: 'cascade' }),
+    promotionCodeId: (0, pg_core_1.integer)('promotion_code_id')
+        .notNull()
+        .references(() => exports.promotionCodes.id, { onDelete: 'cascade' }),
+    reminderDate: (0, pg_core_1.date)('reminder_date').notNull(),
+    createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
+    updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
+}, (table) => ({
+    customerIdIdx: (0, pg_core_1.index)('maintenance_reminders_customer_id_idx').on(table.customerId),
+    customerProductIdIdx: (0, pg_core_1.index)('maintenance_reminders_customer_product_id_idx').on(table.customerProductId),
+    reminderDateIdx: (0, pg_core_1.index)('maintenance_reminders_reminder_date_idx').on(table.reminderDate),
+}));
 exports.bookings = (0, pg_core_1.pgTable)('bookings', {
     id: (0, pg_core_1.serial)('id').primaryKey(),
     technicianId: (0, pg_core_1.integer)('technician_id')
@@ -152,6 +221,9 @@ exports.bookings = (0, pg_core_1.pgTable)('bookings', {
         .references(() => exports.customerProducts.id, { onDelete: 'cascade' }),
     addressId: (0, pg_core_1.integer)('address_id')
         .references(() => exports.addresses.id, { onDelete: 'set null' }),
+    promoCodeId: (0, pg_core_1.integer)('promo_code_id').references(() => exports.promotionCodes.id, {
+        onDelete: 'set null',
+    }),
     bookingOnDate: (0, pg_core_1.date)('booking_on_date').notNull(),
     bookingForDate: (0, pg_core_1.date)('booking_for_date').notNull(),
     bookingTime: (0, pg_core_1.time)('booking_time').notNull(),
@@ -167,6 +239,7 @@ exports.bookings = (0, pg_core_1.pgTable)('bookings', {
     statusIdx: (0, pg_core_1.index)('bookings_status_idx').on(table.status),
     bookingForDateTimeIdx: (0, pg_core_1.index)('bookings_booking_for_date_time_idx').on(table.bookingForDate, table.bookingTime),
     bookingForDateTechnicianIdx: (0, pg_core_1.index)('bookings_booking_for_date_technician_idx').on(table.bookingForDate, table.technicianId),
+    promoCodeIdIdx: (0, pg_core_1.index)('bookings_promo_code_id_idx').on(table.promoCodeId),
 }));
 exports.bookingServices = (0, pg_core_1.pgTable)('booking_services', {
     bookingId: (0, pg_core_1.integer)('booking_id')
@@ -290,6 +363,9 @@ exports.usersRelations = (0, drizzle_orm_1.relations)(exports.users, ({ one, man
     bookingsAsTechnician: many(exports.bookings),
     technicianServices: many(exports.technicianServices),
     timeslots: many(exports.timeslots),
+    timeOffRequestsAsTechnician: many(exports.timeOffRequests, { relationName: 'technicianTimeOffRequests' }),
+    timeOffRequestsAsReviewer: many(exports.timeOffRequests, { relationName: 'reviewedTimeOffRequests' }),
+    maintenanceReminders: many(exports.maintenanceReminders),
     forumPosts: many(exports.forumPosts),
     forumComments: many(exports.forumComments),
     forumPostLikes: many(exports.forumPostLikes),
@@ -315,6 +391,8 @@ exports.customerProductsRelations = (0, drizzle_orm_1.relations)(exports.custome
         references: [exports.products.id],
     }),
     bookings: many(exports.bookings),
+    promotionCodes: many(exports.promotionCodes),
+    maintenanceReminders: many(exports.maintenanceReminders),
 }));
 exports.timeslotsRelations = (0, drizzle_orm_1.relations)(exports.timeslots, ({ one }) => ({
     technician: one(exports.users, {
@@ -322,9 +400,23 @@ exports.timeslotsRelations = (0, drizzle_orm_1.relations)(exports.timeslots, ({ 
         references: [exports.users.id],
     }),
 }));
+exports.timeOffRequestsRelations = (0, drizzle_orm_1.relations)(exports.timeOffRequests, ({ one }) => ({
+    technician: one(exports.users, {
+        fields: [exports.timeOffRequests.technicianId],
+        references: [exports.users.id],
+        relationName: 'technicianTimeOffRequests',
+    }),
+    reviewer: one(exports.users, {
+        fields: [exports.timeOffRequests.reviewerId],
+        references: [exports.users.id],
+        relationName: 'reviewedTimeOffRequests',
+    }),
+}));
 exports.serviceTypesRelations = (0, drizzle_orm_1.relations)(exports.serviceTypes, ({ many }) => ({
     technicianServices: many(exports.technicianServices),
     bookingServices: many(exports.bookingServices),
+    promotionCodes: many(exports.promotionCodes),
+    maintenanceReminders: many(exports.maintenanceReminders),
 }));
 exports.technicianServicesRelations = (0, drizzle_orm_1.relations)(exports.technicianServices, ({ one }) => ({
     technician: one(exports.users, {
@@ -344,6 +436,10 @@ exports.bookingsRelations = (0, drizzle_orm_1.relations)(exports.bookings, ({ on
     aircon: one(exports.customerProducts, {
         fields: [exports.bookings.airconId],
         references: [exports.customerProducts.id],
+    }),
+    promoCode: one(exports.promotionCodes, {
+        fields: [exports.bookings.promoCodeId],
+        references: [exports.promotionCodes.id],
     }),
     bookingServices: many(exports.bookingServices),
     bookingImages: many(exports.bookingImages),
@@ -422,6 +518,36 @@ exports.forumCommentLikesRelations = (0, drizzle_orm_1.relations)(exports.forumC
     comment: one(exports.forumComments, {
         fields: [exports.forumCommentLikes.commentId],
         references: [exports.forumComments.id],
+    }),
+}));
+exports.promotionCodesRelations = (0, drizzle_orm_1.relations)(exports.promotionCodes, ({ one, many }) => ({
+    customerProduct: one(exports.customerProducts, {
+        fields: [exports.promotionCodes.customerProductId],
+        references: [exports.customerProducts.id],
+    }),
+    serviceType: one(exports.serviceTypes, {
+        fields: [exports.promotionCodes.serviceTypeId],
+        references: [exports.serviceTypes.id],
+    }),
+    maintenanceReminder: one(exports.maintenanceReminders),
+    bookings: many(exports.bookings),
+}));
+exports.maintenanceRemindersRelations = (0, drizzle_orm_1.relations)(exports.maintenanceReminders, ({ one }) => ({
+    customer: one(exports.users, {
+        fields: [exports.maintenanceReminders.customerId],
+        references: [exports.users.id],
+    }),
+    customerProduct: one(exports.customerProducts, {
+        fields: [exports.maintenanceReminders.customerProductId],
+        references: [exports.customerProducts.id],
+    }),
+    serviceType: one(exports.serviceTypes, {
+        fields: [exports.maintenanceReminders.serviceTypeId],
+        references: [exports.serviceTypes.id],
+    }),
+    promotionCode: one(exports.promotionCodes, {
+        fields: [exports.maintenanceReminders.promotionCodeId],
+        references: [exports.promotionCodes.id],
     }),
 }));
 //# sourceMappingURL=schema.js.map

@@ -11,11 +11,13 @@ const common_1 = require("@nestjs/common");
 const bookings_service_1 = require("./bookings.service");
 const bookings_controller_1 = require("./bookings.controller");
 const supabase_service_1 = require("../../config/supabase.service");
+const maintenance_reminders_module_1 = require("../maintenance-reminders/maintenance-reminders.module");
 let BookingsModule = class BookingsModule {
 };
 exports.BookingsModule = BookingsModule;
 exports.BookingsModule = BookingsModule = __decorate([
     (0, common_1.Module)({
+        imports: [maintenance_reminders_module_1.MaintenanceRemindersModule],
         controllers: [bookings_controller_1.BookingsController],
         providers: [bookings_service_1.BookingsService, supabase_service_1.SupabaseService],
         exports: [bookings_service_1.BookingsService],
