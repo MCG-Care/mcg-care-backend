@@ -23,11 +23,13 @@ import {
   Calendar,
   Clock,
   ListChecks,
+  CalendarDays,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Technician, TechnicianService, Timeslot, ServiceType, Booking } from "@/types";
 import { formatCurrency } from "@/lib/utils";
+import TimeOffRequestsModal from "./TimeOffRequestsModal";
 
 // District/City/Township data structure
 const addressData = {
@@ -184,6 +186,7 @@ const TechniciansPage = () => {
   const [showBookingsModal, setShowBookingsModal] = useState(false);
   const [technicianBookings, setTechnicianBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const [showTimeOffRequestsModal, setShowTimeOffRequestsModal] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -736,10 +739,20 @@ const TechniciansPage = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-m font-bold">{t("manageTechnicians")}</h1>
         {isAdmin && (
-          <Button onClick={handleCreate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            {t("addTechnician")}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowTimeOffRequestsModal(true)}
+              className="gap-2"
+            >
+              <CalendarDays className="h-4 w-4" />
+              {t("checkRequests")}
+            </Button>
+            <Button onClick={handleCreate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              {t("addTechnician")}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -1573,6 +1586,12 @@ const TechniciansPage = () => {
           </Card>
         </div>
       )}
+
+      {/* Time Off Requests Modal */}
+      <TimeOffRequestsModal
+        isOpen={showTimeOffRequestsModal}
+        onClose={() => setShowTimeOffRequestsModal(false)}
+      />
     </div>
   );
 };

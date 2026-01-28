@@ -212,6 +212,34 @@ export interface Timeslot {
   updatedAt?: string;
 }
 
+export interface TimeOffRequest {
+  id: string;
+  technicianId: number;
+  startDate: string;
+  endDate: string;
+  startSlot: number;
+  endSlot: number;
+  isFullDay: boolean;
+  reason?: string;
+  status: "pending" | "approved" | "rejected";
+  reviewerId?: number | null;
+  reviewedAt?: string | null;
+  reviewNote?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  technician?: {
+    id: number;
+    name: string;
+    email: string;
+    phoneNo: string;
+  };
+  reviewer?: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+}
+
 export type Language = "en" | "my";
 
 export interface Translations {
