@@ -25,6 +25,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Booking } from "@/types";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/utils";
 
 type SortBy = "bookingForDate" | "bookingOnDate" | null;
 type SortOrder = "asc" | "desc";
@@ -760,7 +761,7 @@ const BookingsPage = () => {
                       key={s.service.id}
                       className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                     >
-                      {s.service?.name} - {s.service?.serviceFee} Ks
+                      {s.service?.name} - {formatCurrency(s.service?.serviceFee)} Ks
                     </span>
                   )) || <p>{t("noServices")}</p>}
                 </div>
@@ -895,7 +896,7 @@ const BookingsPage = () => {
                       className="mt-1"
                     />
                   ) : (
-                    <p className="font-medium mt-1">{selectedBooking.fees || "0.00"} Ks</p>
+                    <p className="font-medium mt-1">{formatCurrency(selectedBooking.fees)} Ks</p>
                   )}
                 </div>
               </div>

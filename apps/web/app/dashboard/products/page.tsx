@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 const ProductsPage = () => {
   const { t } = useLanguage();
@@ -629,7 +629,7 @@ const ProductsPage = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t("price")}</span>
                   <span className="text-lg font-bold text-primary">
-                    {product.price} Ks
+                    {formatCurrency(product.price)} Ks
                   </span>
                 </div>
                 {product.capacity && (
@@ -847,7 +847,7 @@ const ProductsPage = () => {
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">{t("price")}</Label>
-                      <p className="font-medium text-primary">{selectedProduct.price} Ks</p>
+                      <p className="font-medium text-primary">{formatCurrency(selectedProduct.price)} Ks</p>
                     </div>
                     {selectedProduct.capacity && (
                       <div>

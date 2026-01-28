@@ -28,6 +28,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { User, CustomerProduct, ForumPost, Booking } from "@/types";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/utils";
 
 const CustomersPage = () => {
   const { t } = useLanguage();
@@ -903,7 +904,7 @@ const CustomersPage = () => {
                           </div>
                           <div>
                             <Label className="text-muted-foreground">{t("fees")}</Label>
-                            <p className="font-medium">{booking.fees || "0.00"} Ks</p>
+                            <p className="font-medium">{formatCurrency(booking.fees)} Ks</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">{t("technician")}</Label>
@@ -1025,7 +1026,7 @@ const CustomersPage = () => {
                       key={s.service.id}
                       className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                     >
-                      {s.service?.name} - {s.service?.serviceFee} Ks
+                      {s.service?.name} - {formatCurrency(s.service?.serviceFee)} Ks
                     </span>
                   )) || <p>{t("noServices")}</p>}
                 </div>
@@ -1109,7 +1110,7 @@ const CustomersPage = () => {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t("fees")}</Label>
-                  <p className="font-medium mt-1">{selectedBookingDetail.fees || "0.00"} Ks</p>
+                  <p className="font-medium mt-1">{formatCurrency(selectedBookingDetail.fees)} Ks</p>
                 </div>
               </div>
 

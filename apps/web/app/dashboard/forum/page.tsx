@@ -22,6 +22,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Plus,
+  Megaphone,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
@@ -31,12 +33,19 @@ import Image from "next/image";
 type SortBy = "postedDate" | "likes" | null;
 type SortOrder = "asc" | "desc";
 type DateRangeType = "single" | "range";
+type TabType = "posts" | "announcements";
 
 const ForumPage = () => {
   const { t } = useLanguage();
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabType>("posts");
+  
+  // Admin check
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Filter states
   const [dateRangeType, setDateRangeType] = useState<DateRangeType>("single");
@@ -48,10 +57,9 @@ const ForumPage = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   
   // Pagination states
+  // Note: Since we filter by tab client-side, we use client-side pagination for filtered posts
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [totalPosts, setTotalPosts] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   
   // Modal states
   const [selectedPost, setSelectedPost] = useState<ForumPost | null>(null);
@@ -60,19 +68,44 @@ const ForumPage = () => {
   const [newComment, setNewComment] = useState("");
   const [postLiked, setPostLiked] = useState(false);
   const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
+  
+  // Create post modal states
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
+  const [createPostFormData, setCreatePostFormData] = useState({
+    title: "",
+    content: "",
+  });
+  const [createPostImages, setCreatePostImages] = useState<File[]>([]);
+  const [createPostImagePreviews, setCreatePostImagePreviews] = useState<string[]>([]);
+  const [creatingPost, setCreatingPost] = useState(false);
 
   useEffect(() => {
+    checkAdmin();
     fetchPosts();
-  }, [currentPage, pageSize, searchQuery]);
+  }, [searchQuery]); // Only refetch when search changes, tab filtering is client-side
+
+  const checkAdmin = () => {
+    try {
+      const adminUser = localStorage.getItem("admin_user");
+      if (adminUser) {
+        const user = JSON.parse(adminUser);
+        setIsAdmin(user.role === "admin");
+      }
+    } catch (error) {
+      console.error("Error checking admin:", error);
+      setIsAdmin(false);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
       
       // Build query parameters
+      // Fetch a large number of posts since we filter by tab client-side
       const params: Record<string, any> = {
-        page: currentPage,
-        limit: pageSize,
+        page: 1,
+        limit: 1000, // Fetch up to 1000 posts for proper tab filtering
       };
       
       // Add search if provided
@@ -84,16 +117,10 @@ const ForumPage = () => {
       
       // Handle paginated response
       const postsData = response.data?.data || [];
-      const pagination = response.data?.pagination || {};
-      
       setPosts(postsData);
-      setTotalPosts(pagination.total || 0);
-      setTotalPages(pagination.totalPages || 0);
     } catch (error) {
       console.error("Error fetching forum posts:", error);
       setPosts([]);
-      setTotalPosts(0);
-      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -344,12 +371,88 @@ const ForumPage = () => {
     setCurrentPage(1);
   };
 
+  const handleCreatePost = () => {
+    setIsCreatingPost(true);
+    setCreatePostFormData({ title: "", content: "" });
+    setCreatePostImages([]);
+    setCreatePostImagePreviews([]);
+  };
+
+  const handleCreatePostImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setCreatePostImages(files);
+      
+      // Create previews
+      const previews = files.map(file => URL.createObjectURL(file));
+      setCreatePostImagePreviews(previews);
+    }
+  };
+
+  const handleSubmitCreatePost = async () => {
+    if (!createPostFormData.title || !createPostFormData.content) {
+      alert("Please fill in both title and content");
+      return;
+    }
+
+    try {
+      setCreatingPost(true);
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", createPostFormData.title);
+      formDataToSend.append("content", createPostFormData.content);
+      
+      // Add images if provided
+      createPostImages.forEach((image) => {
+        formDataToSend.append("images", image);
+      });
+
+      await api.post("/forum/posts", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // Reset form and close modal
+      setIsCreatingPost(false);
+      setCreatePostFormData({ title: "", content: "" });
+      setCreatePostImages([]);
+      setCreatePostImagePreviews([]);
+      
+      // Refresh posts
+      setCurrentPage(1);
+      await fetchPosts();
+    } catch (error: any) {
+      console.error("Error creating post:", error);
+      alert(error.response?.data?.message || "Failed to create post");
+    } finally {
+      setCreatingPost(false);
+    }
+  };
+
+  const handleCancelCreatePost = () => {
+    setIsCreatingPost(false);
+    setCreatePostFormData({ title: "", content: "" });
+    setCreatePostImages([]);
+    setCreatePostImagePreviews([]);
+  };
+
+  // Filter posts by tab (posts vs announcements)
+  const postsByTab = useMemo(() => {
+    if (activeTab === "announcements") {
+      // Show only admin posts
+      return posts.filter((post) => post.user?.role === "admin");
+    } else {
+      // Show only customer and technician posts
+      return posts.filter((post) => post.user?.role !== "admin");
+    }
+  }, [posts, activeTab]);
+
   // Filter and sort posts (client-side for date ranges and sorting)
   // Search is handled server-side via API
   const filteredAndSortedPosts = useMemo(() => {
-    let result = [...posts];
+    let result = [...postsByTab];
 
-    // Search is now handled server-side, no need to filter here
+    // Search is now handled server-side, but we need to filter by tab first
 
     // Date filter (posted date)
     if (dateRangeType === "single" && dateFrom) {
@@ -387,7 +490,17 @@ const ForumPage = () => {
     });
 
     return result;
-  }, [posts, searchQuery, dateRangeType, dateFrom, dateTo, sortBy, sortOrder]);
+  }, [postsByTab, dateRangeType, dateFrom, dateTo, sortBy, sortOrder]);
+
+  // Client-side pagination for filtered posts
+  const paginatedPosts = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredAndSortedPosts.slice(startIndex, endIndex);
+  }, [filteredAndSortedPosts, currentPage, pageSize]);
+
+  const totalFilteredPosts = filteredAndSortedPosts.length;
+  const totalPages = Math.ceil(totalFilteredPosts / pageSize);
 
   const handleSort = (field: SortBy) => {
     if (sortBy === field) {
@@ -423,6 +536,12 @@ const ForumPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-m font-bold">{t("forumPosts")}</h1>
+        {isAdmin && (
+          <Button onClick={handleCreatePost} className="gap-2">
+            <Plus className="h-4 w-4" />
+            {activeTab === "announcements" ? t("createAnnouncement") : t("createPost")}
+          </Button>
+        )}
       </div>
 
       {/* Filters and Sort */}
@@ -551,14 +670,52 @@ const ForumPage = () => {
         </CardContent>
       </Card>
 
+      {/* Tab Switcher - Prominent, right above posts */}
+      <Card className="bg-card">
+        <CardContent className="p-4">
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                setActiveTab("posts");
+                setCurrentPage(1);
+              }}
+              variant={activeTab === "posts" ? "default" : "outline"}
+              className={`flex-1 gap-2 ${
+                activeTab === "posts"
+                  ? "bg-primary text-primary-foreground"
+                  : ""
+              }`}
+            >
+              <MessageSquare className="h-4 w-4" />
+              {t("posts")}
+            </Button>
+            <Button
+              onClick={() => {
+                setActiveTab("announcements");
+                setCurrentPage(1);
+              }}
+              variant={activeTab === "announcements" ? "default" : "outline"}
+              className={`flex-1 gap-2 ${
+                activeTab === "announcements"
+                  ? "bg-primary text-primary-foreground"
+                  : ""
+              }`}
+            >
+              <Megaphone className="h-4 w-4" />
+              {t("announcements")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Pagination Info */}
-      {!loading && totalPosts > 0 && (
+      {!loading && totalFilteredPosts > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div>
-            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalPosts)} of {totalPosts} posts
+            {t("showing")} {((currentPage - 1) * pageSize) + 1} {t("to")} {Math.min(currentPage * pageSize, totalFilteredPosts)} {t("of")} {totalFilteredPosts} {activeTab === "announcements" ? t("announcements").toLowerCase() : t("posts").toLowerCase()}
           </div>
           <div className="flex items-center gap-2">
-            <Label className="text-sm">Items per page:</Label>
+            <Label className="text-sm">{t("itemsPerPage")}:</Label>
             <select
               className="px-2 py-1 border rounded-md bg-background"
               value={pageSize}
@@ -574,10 +731,10 @@ const ForumPage = () => {
       )}
 
       {/* Forum Posts List */}
-      {filteredAndSortedPosts.length > 0 ? (
+      {paginatedPosts.length > 0 ? (
         <>
           <div className="grid grid-cols-1 gap-4">
-            {filteredAndSortedPosts.map((post) => (
+            {paginatedPosts.map((post) => (
             <Card
               key={post.id}
               className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -643,7 +800,7 @@ const ForumPage = () => {
                 onClick={() => handlePageChange(1)}
                 disabled={currentPage === 1}
               >
-                First
+                {t("first")}
               </Button>
               <Button
                 variant="outline"
@@ -651,7 +808,7 @@ const ForumPage = () => {
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                Previous
+                {t("previous")}
               </Button>
               
               {/* Page numbers */}
@@ -688,7 +845,7 @@ const ForumPage = () => {
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                Next
+                {t("next")}
               </Button>
               <Button
                 variant="outline"
@@ -696,7 +853,7 @@ const ForumPage = () => {
                 onClick={() => handlePageChange(totalPages)}
                 disabled={currentPage === totalPages}
               >
-                Last
+                {t("last")}
               </Button>
             </div>
           )}
@@ -709,10 +866,141 @@ const ForumPage = () => {
                 ? t("loading") || "Loading..."
                 : searchQuery || dateFrom || dateTo
                 ? t("noPostsFoundMatchingFilters")
+                : activeTab === "announcements"
+                ? t("noAnnouncementsYet")
                 : t("noPostsYet")}
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Create Post Modal */}
+      {isCreatingPost && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+          onClick={handleCancelCreatePost}
+        >
+          <Card
+            className="w-full max-w-3xl bg-background my-8 flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
+              <CardTitle className="text-2xl">
+                {activeTab === "announcements" ? t("createAnnouncement") : t("createPost")}
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={handleCancelCreatePost}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6 overflow-y-auto flex-1 pb-4">
+              <div>
+                <Label htmlFor="create-title">{t("title")} *</Label>
+                <Input
+                  id="create-title"
+                  value={createPostFormData.title}
+                  onChange={(e) =>
+                    setCreatePostFormData({ ...createPostFormData, title: e.target.value })
+                  }
+                  placeholder={t("enterPostTitle")}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="create-content">{t("content") || "Content"} *</Label>
+                <Textarea
+                  id="create-content"
+                  value={createPostFormData.content}
+                  onChange={(e) =>
+                    setCreatePostFormData({ ...createPostFormData, content: e.target.value })
+                  }
+                  placeholder={t("enterPostContent")}
+                  rows={10}
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Image Upload */}
+              <div>
+                <Label>{t("images")} ({t("optional")})</Label>
+                <div className="mt-2 space-y-4">
+                  <div>
+                    <Label htmlFor="create-images" className="cursor-pointer">
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors">
+                        <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          {createPostImages.length > 0
+                            ? `${createPostImages.length} ${t("imagesSelected")}`
+                            : t("selectImages")}
+                        </p>
+                      </div>
+                    </Label>
+                    <Input
+                      id="create-images"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleCreatePostImageChange}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* Image Previews */}
+                  {createPostImagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-4">
+                      {createPostImagePreviews.map((preview, index) => (
+                        <div key={index} className="relative">
+                          <Image
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            width={150}
+                            height={150}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2"
+                            onClick={() => {
+                              const newImages = createPostImages.filter((_, i) => i !== index);
+                              const newPreviews = createPostImagePreviews.filter((_, i) => i !== index);
+                              setCreatePostImages(newImages);
+                              setCreatePostImagePreviews(newPreviews);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+            {/* Sticky Action Buttons */}
+            <div className="flex gap-2 p-4 border-t bg-background sticky bottom-0 flex-shrink-0">
+              <Button
+                onClick={handleSubmitCreatePost}
+                disabled={
+                  creatingPost ||
+                  !createPostFormData.title ||
+                  !createPostFormData.content
+                }
+                className="flex-1 gap-2"
+              >
+                {creatingPost ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {t("create")}
+              </Button>
+              <Button variant="outline" onClick={handleCancelCreatePost} className="flex-1">
+                {t("cancel")}
+              </Button>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Forum Post Detail Modal */}

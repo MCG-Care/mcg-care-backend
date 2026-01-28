@@ -22,6 +22,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { ServiceType } from "@/types";
+import { formatCurrency } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -385,7 +386,7 @@ const ServicesPage = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">{t("serviceFee")}</p>
                   <p className="text-lg font-bold text-primary">
-                    {service.serviceFee} Ks
+                    {formatCurrency(service.serviceFee)} Ks
                   </p>
                 </div>
                 <div className="text-right">

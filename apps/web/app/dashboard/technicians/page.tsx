@@ -27,6 +27,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Technician, TechnicianService, Timeslot, ServiceType, Booking } from "@/types";
+import { formatCurrency } from "@/lib/utils";
 
 // District/City/Township data structure
 const addressData = {
@@ -1089,7 +1090,7 @@ const TechniciansPage = () => {
                                   </p>
                                 )}
                                 <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                  <span>{t("fee")}: {service.serviceFee || "N/A"} Ks</span>
+                                  <span>{t("fee")}: {service.serviceFee ? formatCurrency(service.serviceFee) : "N/A"} Ks</span>
                                   <span>{t("durationMin")}: {service.duration || "N/A"} {t("min")}</span>
                                 </div>
                               </div>
@@ -1387,7 +1388,7 @@ const TechniciansPage = () => {
                                 </p>
                               )}
                               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                <span>{t("fee")}: {service.serviceFee} Ks</span>
+                                <span>{t("fee")}: {formatCurrency(service.serviceFee)} Ks</span>
                                 <span>{t("durationMin")}: {service.duration} {t("min")}</span>
                               </div>
                             </div>
@@ -1513,7 +1514,7 @@ const TechniciansPage = () => {
                                     key={idx}
                                     className="px-2 py-1 bg-muted rounded-md text-xs"
                                   >
-                                    {bs.service.name} ({bs.service.serviceFee} Ks)
+                                    {bs.service.name} ({formatCurrency(bs.service.serviceFee)} Ks)
                                   </span>
                                 ))}
                               </div>
@@ -1531,7 +1532,7 @@ const TechniciansPage = () => {
                               {t("duration") || "Duration"}: {booking.duration} {t("min") || "min"}
                             </span>
                             <span className="text-muted-foreground">
-                              {t("fees") || "Fees"}: {booking.fees} Ks
+                              {t("fees") || "Fees"}: {formatCurrency(booking.fees)} Ks
                             </span>
                           </div>
                         </div>
