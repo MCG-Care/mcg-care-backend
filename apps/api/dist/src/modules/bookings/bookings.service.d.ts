@@ -3,9 +3,11 @@ import { UpdateBookingDto } from './dto/update-booking.dto';
 import { QueryBookingsDto } from './dto/query-bookings.dto';
 import { AvailabilityQueryDto } from './dto/availability-query.dto';
 import { SupabaseService } from '../../config/supabase.service';
+import { MaintenanceRemindersService } from '../maintenance-reminders/maintenance-reminders.service';
 export declare class BookingsService {
     private readonly supabaseService;
-    constructor(supabaseService: SupabaseService);
+    private readonly maintenanceRemindersService;
+    constructor(supabaseService: SupabaseService, maintenanceRemindersService: MaintenanceRemindersService);
     create(customerId: number, createBookingDto: CreateBookingDto, imageFiles?: Express.Multer.File[]): Promise<any>;
     private findAvailableTechnician;
     private checkTechnicianAvailability;
