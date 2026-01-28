@@ -48,10 +48,16 @@ const ServicesPage = () => {
     serviceFee: "",
     duration: "",
   });
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalServices, setTotalServices] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     fetchServices();
-  }, []);
+  }, [currentPage, pageSize, searchQuery]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -76,17 +82,33 @@ const ServicesPage = () => {
   const fetchServices = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/service-types");
       
-      // Handle both paginated and non-paginated responses
-      const servicesData = Array.isArray(response.data)
-        ? response.data
-        : response.data?.data || [];
+      // Build query parameters
+      const params: Record<string, any> = {
+        page: currentPage,
+        limit: pageSize,
+      };
+      
+      // Add search if provided
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
+      
+      const response = await api.get("/service-types", { params });
+      
+      // Handle paginated response
+      const servicesData = response.data?.data || [];
+      const pagination = response.data?.pagination || {};
       
       setServices(servicesData);
+      setTotalServices(pagination.total || 0);
+      setTotalPages(pagination.totalPages || 0);
     } catch (error) {
       console.error("Error fetching services:", error);
       alert("Failed to fetch services");
+      setServices([]);
+      setTotalServices(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -128,6 +150,7 @@ const ServicesPage = () => {
         await api.post("/service-types", payload);
       }
 
+      setCurrentPage(1); // Reset to first page after create/update
       await fetchServices();
       handleCancel();
     } catch (error) {
@@ -141,6 +164,10 @@ const ServicesPage = () => {
 
     try {
       await api.delete(`/service-types/${id}`);
+      // If we're on a page that might become empty, go back a page
+      if (services.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
       await fetchServices();
     } catch (error) {
       console.error("Error deleting service:", error);
@@ -160,11 +187,18 @@ const ServicesPage = () => {
     });
   };
 
-  const filteredServices = services.filter(
-    (service) =>
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
+  // Search is now handled server-side, so we just use services directly
+  const filteredServices = services;
 
   const sortedServices = [...filteredServices].sort((a, b) => {
     if (!sortBy) return 0;
@@ -210,7 +244,10 @@ const ServicesPage = () => {
               <Input
                 placeholder={t("searchServices")}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page when searching
+                }}
                 className="pl-10"
               />
             </div>
@@ -288,6 +325,28 @@ const ServicesPage = () => {
         </CardContent>
       </Card>
 
+      {/* Pagination Info */}
+      {!loading && totalServices > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div>
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalServices)} of {totalServices} services
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Items per page:</Label>
+            <select
+              className="px-2 py-1 border rounded-md bg-background"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Services Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedServices.map((service) => (
@@ -339,7 +398,7 @@ const ServicesPage = () => {
         ))}
       </div>
 
-      {sortedServices.length === 0 && (
+      {sortedServices.length === 0 && !loading && (
         <Card>
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
@@ -349,6 +408,73 @@ const ServicesPage = () => {
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+          >
+            First
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          
+          {/* Page numbers */}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(pageNum)}
+                  className="min-w-[40px]"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+          >
+            Last
+          </Button>
+        </div>
       )}
 
       {/* Create/Edit Modal */}

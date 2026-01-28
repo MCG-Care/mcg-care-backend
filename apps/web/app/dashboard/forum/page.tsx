@@ -47,6 +47,12 @@ const ForumPage = () => {
   const [sortBy, setSortBy] = useState<SortBy>("postedDate");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  
   // Modal states
   const [selectedPost, setSelectedPost] = useState<ForumPost | null>(null);
   const [editingPost, setEditingPost] = useState(false);
@@ -57,20 +63,37 @@ const ForumPage = () => {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [currentPage, pageSize, searchQuery]);
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/forum/posts");
       
-      const postsData = Array.isArray(response.data)
-        ? response.data
-        : response.data?.data || [];
+      // Build query parameters
+      const params: Record<string, any> = {
+        page: currentPage,
+        limit: pageSize,
+      };
+      
+      // Add search if provided
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
+      
+      const response = await api.get("/forum/posts", { params });
+      
+      // Handle paginated response
+      const postsData = response.data?.data || [];
+      const pagination = response.data?.pagination || {};
       
       setPosts(postsData);
+      setTotalPosts(pagination.total || 0);
+      setTotalPages(pagination.totalPages || 0);
     } catch (error) {
       console.error("Error fetching forum posts:", error);
+      setPosts([]);
+      setTotalPosts(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -153,6 +176,7 @@ const ForumPage = () => {
     
     try {
       await api.patch(`/forum/posts/${selectedPost.id}`, postFormData);
+      setCurrentPage(1); // Reset to first page after update
       await fetchPosts();
       setEditingPost(false);
       setSelectedPost(null);
@@ -169,6 +193,10 @@ const ForumPage = () => {
     
     try {
       await api.delete(`/forum/posts/${selectedPost.id}`);
+      // If we're on a page that might become empty, go back a page
+      if (posts.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
       await fetchPosts();
       setSelectedPost(null);
     } catch (error) {
@@ -298,6 +326,7 @@ const ForumPage = () => {
     setDateRangeType("single");
     setDateFrom("");
     setDateTo("");
+    setCurrentPage(1); // Reset to first page when clearing filters
   };
 
   const clearSort = () => {
@@ -305,19 +334,22 @@ const ForumPage = () => {
     setSortOrder("desc");
   };
 
-  // Filter and sort posts
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
+  // Filter and sort posts (client-side for date ranges and sorting)
+  // Search is handled server-side via API
   const filteredAndSortedPosts = useMemo(() => {
     let result = [...posts];
 
-    // Search filter
-    if (searchQuery) {
-      result = result.filter(
-        (post) =>
-          post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.user?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+    // Search is now handled server-side, no need to filter here
 
     // Date filter (posted date)
     if (dateRangeType === "single" && dateFrom) {
@@ -412,7 +444,10 @@ const ForumPage = () => {
               <Input
                 placeholder={t("search") + "..."}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page when searching
+                }}
                 className="pl-10"
               />
             </div>
@@ -429,6 +464,7 @@ const ForumPage = () => {
                   setDateRangeType(e.target.value as DateRangeType);
                   setDateFrom("");
                   setDateTo("");
+                  setCurrentPage(1); // Reset to first page when changing date type
                 }}
               >
                 <option value="single">{t("singleDate")}</option>
@@ -444,7 +480,10 @@ const ForumPage = () => {
               <Input
                 type="date"
                 value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  setCurrentPage(1); // Reset to first page when changing date filter
+                }}
                 className="w-full"
               />
             </div>
@@ -456,7 +495,10 @@ const ForumPage = () => {
                 <Input
                   type="date"
                   value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
+                  onChange={(e) => {
+                    setDateTo(e.target.value);
+                    setCurrentPage(1); // Reset to first page when changing date filter
+                  }}
                   className="w-full"
                   min={dateFrom}
                 />
@@ -509,10 +551,33 @@ const ForumPage = () => {
         </CardContent>
       </Card>
 
+      {/* Pagination Info */}
+      {!loading && totalPosts > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div>
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalPosts)} of {totalPosts} posts
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Items per page:</Label>
+            <select
+              className="px-2 py-1 border rounded-md bg-background"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Forum Posts List */}
       {filteredAndSortedPosts.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {filteredAndSortedPosts.map((post) => (
+        <>
+          <div className="grid grid-cols-1 gap-4">
+            {filteredAndSortedPosts.map((post) => (
             <Card
               key={post.id}
               className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -566,13 +631,83 @@ const ForumPage = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+              >
+                First
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(pageNum)}
+                      className="min-w-[40px]"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                Last
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <Card>
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
-              {searchQuery || dateFrom || dateTo
+              {loading
+                ? t("loading") || "Loading..."
+                : searchQuery || dateFrom || dateTo
                 ? t("noPostsFoundMatchingFilters")
                 : t("noPostsYet")}
             </p>

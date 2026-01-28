@@ -46,27 +46,89 @@ const BookingsPage = () => {
   const [sortBy, setSortBy] = useState<SortBy>("bookingOnDate");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20); // Increased from default 10
+  const [totalBookings, setTotalBookings] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  
   // Modal states
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [editingBooking, setEditingBooking] = useState(false);
   const [bookingFormData, setBookingFormData] = useState<Partial<Booking>>({});
 
+  // Fetch bookings whenever filters, pagination, or sort changes
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [currentPage, pageSize, statusFilter, dateFrom, dateTo, dateRangeType, sortBy, sortOrder]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/bookings");
       
-      const bookingsData = Array.isArray(response.data)
-        ? response.data
-        : response.data?.data || [];
+      // Build query parameters
+      const params: Record<string, any> = {};
+      
+      // For date ranges, fetch all bookings (no pagination) to filter properly
+      // For single date or no date filter, use pagination
+      const useDateRange = dateRangeType === "range" && dateFrom && dateTo;
+      
+      if (useDateRange) {
+        // Fetch a large number of bookings to ensure we get all matching the date range
+        // Note: This is a workaround until backend supports date range queries
+        params.page = 1;
+        params.limit = 1000; // Fetch up to 1000 bookings for date range filtering
+      } else {
+        // Normal pagination
+        params.page = currentPage;
+        params.limit = pageSize;
+      }
+      
+      // Add status filter if not "all"
+      if (statusFilter !== "all") {
+        params.status = statusFilter;
+      }
+      
+      // Add date filter (single date only - API limitation)
+      if (dateRangeType === "single" && dateFrom) {
+        params.bookingForDate = dateFrom;
+      }
+      
+      const response = await api.get("/bookings", { params });
+      
+      // Handle paginated response
+      let bookingsData = response.data?.data || [];
+      let pagination = response.data?.pagination || {};
+      
+      // If using date range, filter client-side and paginate manually
+      if (useDateRange) {
+        const filtered = bookingsData.filter((booking: Booking) => {
+          const bookingDate = new Date(booking.bookingForDate).toISOString().split("T")[0];
+          return bookingDate >= dateFrom && bookingDate <= dateTo;
+        });
+        
+        // Apply client-side pagination
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        bookingsData = filtered.slice(startIndex, endIndex);
+        
+        // Update pagination info
+        pagination = {
+          total: filtered.length,
+          totalPages: Math.ceil(filtered.length / pageSize),
+          page: currentPage,
+          limit: pageSize,
+        };
+      }
       
       setBookings(bookingsData);
+      setTotalBookings(pagination.total || 0);
+      setTotalPages(pagination.totalPages || 0);
     } catch (error) {
       console.error("Error fetching bookings:", error);
+      setBookings([]);
+      setTotalBookings(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -147,6 +209,8 @@ const BookingsPage = () => {
     
     try {
       await api.patch(`/bookings/${selectedBooking.id}`, bookingFormData);
+      // Reset to first page after update to see the updated booking
+      setCurrentPage(1);
       await fetchBookings();
       setEditingBooking(false);
       setSelectedBooking(null);
@@ -164,6 +228,10 @@ const BookingsPage = () => {
     
     try {
       await api.delete(`/bookings/${selectedBooking.id}`);
+      // If we're on a page that might become empty, go back a page
+      if (bookings.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
       await fetchBookings();
       setSelectedBooking(null);
     } catch (error) {
@@ -177,6 +245,7 @@ const BookingsPage = () => {
     setDateRangeType("single");
     setDateFrom("");
     setDateTo("");
+    setCurrentPage(1); // Reset to first page when clearing filters
   };
 
   const clearSort = () => {
@@ -184,11 +253,25 @@ const BookingsPage = () => {
     setSortOrder("desc");
   };
 
-  // Filter and sort bookings
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  // Filter and sort bookings (client-side for search only)
+  // Note: Status and single date filtering is done server-side
+  // Date range filtering is handled in fetchBookings (fetches more data, then filters)
+  // Search by customer/technician name is client-side because API doesn't support it
   const filteredAndSortedBookings = useMemo(() => {
     let result = [...bookings];
 
-    // Search filter
+    // Search filter (client-side - API doesn't support search by name)
     if (searchQuery) {
       result = result.filter(
         (booking) =>
@@ -198,25 +281,11 @@ const BookingsPage = () => {
       );
     }
 
-    // Status filter
-    if (statusFilter !== "all") {
-      result = result.filter((booking) => booking.status === statusFilter);
-    }
-
-    // Date filter
-    if (dateRangeType === "single" && dateFrom) {
-      result = result.filter((booking) => {
-        const bookingDate = new Date(booking.bookingForDate).toISOString().split("T")[0];
-        return bookingDate === dateFrom;
-      });
-    } else if (dateRangeType === "range" && dateFrom && dateTo) {
-      result = result.filter((booking) => {
-        const bookingDate = new Date(booking.bookingForDate).toISOString().split("T")[0];
-        return bookingDate >= dateFrom && bookingDate <= dateTo;
-      });
-    }
+    // Date range filtering is already done in fetchBookings
+    // No need to filter again here
 
     // Sorting - always sort (default to newest first by createdAt)
+    // Note: Server-side sorting would be better, but API doesn't support sort parameters
     result.sort((a, b) => {
       let aValue: string | Date;
       let bValue: string | Date;
@@ -239,7 +308,7 @@ const BookingsPage = () => {
     });
 
     return result;
-  }, [bookings, searchQuery, statusFilter, dateRangeType, dateFrom, dateTo, sortBy, sortOrder]);
+  }, [bookings, searchQuery, dateRangeType, dateFrom, dateTo, sortBy, sortOrder]);
 
   const handleSort = (field: SortBy) => {
     if (sortBy === field) {
@@ -296,7 +365,10 @@ const BookingsPage = () => {
               <Input
                 placeholder={t("search") + "..."}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page when searching
+                }}
                 className="pl-10"
               />
             </div>
@@ -309,7 +381,10 @@ const BookingsPage = () => {
               <select
                 className="w-full px-3 py-2 border rounded-md bg-background"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1); // Reset to first page when changing status filter
+                }}
               >
                 <option value="all">{t("allStatuses")}</option>
                 <option value="pending">{t("pending")}</option>
@@ -329,6 +404,7 @@ const BookingsPage = () => {
                   setDateRangeType(e.target.value as DateRangeType);
                   setDateFrom("");
                   setDateTo("");
+                  setCurrentPage(1); // Reset to first page when changing date type
                 }}
               >
                 <option value="single">{t("singleDate")}</option>
@@ -344,7 +420,10 @@ const BookingsPage = () => {
               <Input
                 type="date"
                 value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  setCurrentPage(1); // Reset to first page when changing date filter
+                }}
                 className="w-full"
               />
             </div>
@@ -356,10 +435,18 @@ const BookingsPage = () => {
                 <Input
                   type="date"
                   value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
+                  onChange={(e) => {
+                    setDateTo(e.target.value);
+                    setCurrentPage(1); // Reset to first page when changing date filter
+                  }}
                   className="w-full"
                   min={dateFrom}
                 />
+                {dateFrom && dateTo && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Searching up to 1000 bookings for this date range. For larger ranges, consider using single date filters.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -409,10 +496,33 @@ const BookingsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Pagination Info */}
+      {!loading && totalBookings > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div>
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalBookings)} of {totalBookings} bookings
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Items per page:</Label>
+            <select
+              className="px-2 py-1 border rounded-md bg-background"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Bookings List */}
       {filteredAndSortedBookings.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {filteredAndSortedBookings.map((booking) => (
+        <>
+          <div className="grid grid-cols-1 gap-4">
+            {filteredAndSortedBookings.map((booking) => (
             <Card
               key={booking.id}
               className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -471,13 +581,83 @@ const BookingsPage = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+              >
+                First
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(pageNum)}
+                      className="min-w-[40px]"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                Last
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <Card>
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
-              {searchQuery || statusFilter !== "all" || dateFrom || dateTo
+              {loading
+                ? t("loading") || "Loading..."
+                : searchQuery || statusFilter !== "all" || dateFrom || dateTo
                 ? t("noBookingsFoundMatchingFilters")
                 : t("noBookingsYet")}
             </p>
