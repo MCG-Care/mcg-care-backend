@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 const ProductsPage = () => {
   const { t } = useLanguage();
@@ -70,10 +70,16 @@ const ProductsPage = () => {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [currentPage, pageSize, searchQuery, filterByType]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -104,16 +110,38 @@ const ProductsPage = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/products");
       
-      const productsData = Array.isArray(response.data)
-        ? response.data
-        : response.data?.data || [];
+      // Build query parameters
+      const params: Record<string, any> = {
+        page: currentPage,
+        limit: pageSize,
+      };
+      
+      // Add search if provided
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
+      
+      // Add type filter if not "all"
+      if (filterByType !== "all") {
+        params.type = filterByType;
+      }
+      
+      const response = await api.get("/products", { params });
+      
+      // Handle paginated response
+      const productsData = response.data?.data || [];
+      const pagination = response.data?.pagination || {};
       
       setProducts(productsData);
+      setTotalProducts(pagination.total || 0);
+      setTotalPages(pagination.totalPages || 0);
     } catch (error) {
       console.error("Error fetching products:", error);
       alert("Failed to fetch products");
+      setProducts([]);
+      setTotalProducts(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -236,6 +264,7 @@ const ProductsPage = () => {
         });
       }
 
+      setCurrentPage(1); // Reset to first page after create/update
       await fetchProducts();
       handleCancel();
     } catch (error: any) {
@@ -251,6 +280,10 @@ const ProductsPage = () => {
 
     try {
       await api.delete(`/products/${id}`);
+      // If we're on a page that might become empty, go back a page
+      if (products.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
       await fetchProducts();
       if (selectedProduct?.id === id) {
         handleCancel();
@@ -286,18 +319,18 @@ const ProductsPage = () => {
     resetForm();
   };
 
-  const filteredProducts = products.filter(
-    (product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.productModel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesType = filterByType === "all" || product.type === filterByType;
-      
-      return matchesSearch && matchesType;
-    }
-  );
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
+  // Search and filter are now handled server-side, so we just use products directly
+  const filteredProducts = products;
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     // Default sorting: newest first (by createdAt)
@@ -360,7 +393,10 @@ const ProductsPage = () => {
               <Input
                 placeholder={t("searchProducts")}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page when searching
+                }}
                 className="pl-10"
               />
             </div>
@@ -383,36 +419,42 @@ const ProductsPage = () => {
                     <DropdownMenuItem onClick={() => {
                       setFilterByType("all");
                       setIsFilterDropdownOpen(false);
+                      setCurrentPage(1); // Reset to first page when changing filter
                     }}>
                       {t("allTypes")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => {
                       setFilterByType("split");
                       setIsFilterDropdownOpen(false);
+                      setCurrentPage(1);
                     }}>
                       {t("split")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => {
                       setFilterByType("window");
                       setIsFilterDropdownOpen(false);
+                      setCurrentPage(1);
                     }}>
                       {t("window")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => {
                       setFilterByType("cassette");
                       setIsFilterDropdownOpen(false);
+                      setCurrentPage(1);
                     }}>
                       {t("cassette")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => {
                       setFilterByType("portable");
                       setIsFilterDropdownOpen(false);
+                      setCurrentPage(1);
                     }}>
                       {t("portable")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => {
                       setFilterByType("central");
                       setIsFilterDropdownOpen(false);
+                      setCurrentPage(1);
                     }}>
                       {t("central")}
                     </DropdownMenuItem>
@@ -524,6 +566,28 @@ const ProductsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Pagination Info */}
+      {!loading && totalProducts > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div>
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalProducts)} of {totalProducts} products
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Items per page:</Label>
+            <select
+              className="px-2 py-1 border rounded-md bg-background"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedProducts.map((product) => (
@@ -565,7 +629,7 @@ const ProductsPage = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t("price")}</span>
                   <span className="text-lg font-bold text-primary">
-                    {product.price} Ks
+                    {formatCurrency(product.price)} Ks
                   </span>
                 </div>
                 {product.capacity && (
@@ -614,16 +678,83 @@ const ProductsPage = () => {
         ))}
       </div>
 
-      {sortedProducts.length === 0 && (
+      {sortedProducts.length === 0 && !loading && (
         <Card>
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
-              {searchQuery
+              {searchQuery || filterByType !== "all"
                 ? t("noProductsFound")
                 : t("noProductsAvailable")}
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+          >
+            First
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          
+          {/* Page numbers */}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(pageNum)}
+                  className="min-w-[40px]"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+          >
+            Last
+          </Button>
+        </div>
       )}
 
       {/* View/Edit/Create Modal */}
@@ -716,7 +847,7 @@ const ProductsPage = () => {
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">{t("price")}</Label>
-                      <p className="font-medium text-primary">{selectedProduct.price} Ks</p>
+                      <p className="font-medium text-primary">{formatCurrency(selectedProduct.price)} Ks</p>
                     </div>
                     {selectedProduct.capacity && (
                       <div>

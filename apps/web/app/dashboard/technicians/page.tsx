@@ -23,10 +23,13 @@ import {
   Calendar,
   Clock,
   ListChecks,
+  CalendarDays,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Technician, TechnicianService, Timeslot, ServiceType, Booking } from "@/types";
+import { formatCurrency } from "@/lib/utils";
+import TimeOffRequestsModal from "./TimeOffRequestsModal";
 
 // District/City/Township data structure
 const addressData = {
@@ -161,6 +164,11 @@ const TechniciansPage = () => {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  
   const [selectedTechnician, setSelectedTechnician] = useState<Technician | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -178,6 +186,7 @@ const TechniciansPage = () => {
   const [showBookingsModal, setShowBookingsModal] = useState(false);
   const [technicianBookings, setTechnicianBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const [showTimeOffRequestsModal, setShowTimeOffRequestsModal] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -700,6 +709,23 @@ const TechniciansPage = () => {
     return matchesSearch;
   });
 
+  // Client-side pagination
+  const paginatedTechnicians = filteredTechnicians.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+  const totalPages = Math.ceil(filteredTechnicians.length / pageSize);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -713,10 +739,20 @@ const TechniciansPage = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-m font-bold">{t("manageTechnicians")}</h1>
         {isAdmin && (
-          <Button onClick={handleCreate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            {t("addTechnician")}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowTimeOffRequestsModal(true)}
+              className="gap-2"
+            >
+              <CalendarDays className="h-4 w-4" />
+              {t("checkRequests")}
+            </Button>
+            <Button onClick={handleCreate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              {t("addTechnician")}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -728,16 +764,41 @@ const TechniciansPage = () => {
             <Input
               placeholder={t("searchTechnicians")}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1); // Reset to first page when searching
+              }}
               className="pl-10"
             />
           </div>
         </CardContent>
       </Card>
 
+      {/* Pagination Info */}
+      {!loading && filteredTechnicians.length > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div>
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredTechnicians.length)} of {filteredTechnicians.length} technicians
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Items per page:</Label>
+            <select
+              className="px-2 py-1 border rounded-md bg-background"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Technicians Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTechnicians.map((technician) => (
+        {paginatedTechnicians.map((technician) => (
           <Card
             key={technician.id}
             className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -821,7 +882,7 @@ const TechniciansPage = () => {
         ))}
       </div>
 
-      {filteredTechnicians.length === 0 && (
+      {filteredTechnicians.length === 0 && !loading && (
         <Card>
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
@@ -831,6 +892,73 @@ const TechniciansPage = () => {
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+          >
+            First
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          
+          {/* Page numbers */}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(pageNum)}
+                  className="min-w-[40px]"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+          >
+            Last
+          </Button>
+        </div>
       )}
 
       {/* View/Edit/Create Modal */}
@@ -975,7 +1103,7 @@ const TechniciansPage = () => {
                                   </p>
                                 )}
                                 <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                  <span>{t("fee")}: {service.serviceFee || "N/A"} Ks</span>
+                                  <span>{t("fee")}: {service.serviceFee ? formatCurrency(service.serviceFee) : "N/A"} Ks</span>
                                   <span>{t("durationMin")}: {service.duration || "N/A"} {t("min")}</span>
                                 </div>
                               </div>
@@ -1273,7 +1401,7 @@ const TechniciansPage = () => {
                                 </p>
                               )}
                               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                <span>{t("fee")}: {service.serviceFee} Ks</span>
+                                <span>{t("fee")}: {formatCurrency(service.serviceFee)} Ks</span>
                                 <span>{t("durationMin")}: {service.duration} {t("min")}</span>
                               </div>
                             </div>
@@ -1399,7 +1527,7 @@ const TechniciansPage = () => {
                                     key={idx}
                                     className="px-2 py-1 bg-muted rounded-md text-xs"
                                   >
-                                    {bs.service.name} ({bs.service.serviceFee} Ks)
+                                    {bs.service.name} ({formatCurrency(bs.service.serviceFee)} Ks)
                                   </span>
                                 ))}
                               </div>
@@ -1417,7 +1545,7 @@ const TechniciansPage = () => {
                               {t("duration") || "Duration"}: {booking.duration} {t("min") || "min"}
                             </span>
                             <span className="text-muted-foreground">
-                              {t("fees") || "Fees"}: {booking.fees} Ks
+                              {t("fees") || "Fees"}: {formatCurrency(booking.fees)} Ks
                             </span>
                           </div>
                         </div>
@@ -1458,6 +1586,12 @@ const TechniciansPage = () => {
           </Card>
         </div>
       )}
+
+      {/* Time Off Requests Modal */}
+      <TimeOffRequestsModal
+        isOpen={showTimeOffRequestsModal}
+        onClose={() => setShowTimeOffRequestsModal(false)}
+      />
     </div>
   );
 };
