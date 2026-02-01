@@ -26,6 +26,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Booking, ForumPost, DashboardStats } from "@/types";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/utils";
 
 const DashboardPage = () => {
   const { t } = useLanguage();
@@ -584,7 +585,7 @@ const DashboardPage = () => {
                       key={s.service.id}
                       className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                     >
-                      {s.service?.name} - {s.service?.serviceFee} Ks
+                      {s.service?.name} - {formatCurrency(s.service?.serviceFee)} Ks
                     </span>
                   )) || <p>{t("noServices")}</p>}
                 </div>
@@ -719,7 +720,7 @@ const DashboardPage = () => {
                       className="mt-1"
                     />
                   ) : (
-                    <p className="font-medium mt-1">{selectedBooking.fees || "0.00"} Ks</p>
+                    <p className="font-medium mt-1">{formatCurrency(selectedBooking.fees)} Ks</p>
                   )}
                 </div>
               </div>
