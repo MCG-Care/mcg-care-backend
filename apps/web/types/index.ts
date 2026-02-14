@@ -139,6 +139,17 @@ export interface DashboardStats {
   upcomingBookings: number;
 }
 
+export interface AddressInfo {
+  id: number;
+  name?: string;
+  address: string;
+  township: string;
+  city: string;
+  district: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -146,16 +157,8 @@ export interface User {
   phoneNo: string;
   role: "customer" | "technician" | "admin";
   primaryAddressId?: number | null;
-  address?: {
-    id: number;
-    name?: string;
-    address: string;
-    township: string;
-    city: string;
-    district: string;
-    createdAt?: string;
-    updatedAt?: string;
-  } | null;
+  address?: AddressInfo | null;
+  primaryAddress?: AddressInfo | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -167,16 +170,8 @@ export interface Technician {
   phoneNo: string;
   role: "technician";
   primaryAddressId?: number | null;
-  address?: {
-    id: number;
-    name?: string;
-    address: string;
-    township: string;
-    city: string;
-    district: string;
-    createdAt?: string;
-    updatedAt?: string;
-  } | null;
+  address?: AddressInfo | null;
+  primaryAddress?: AddressInfo | null;
   averageRating?: number;
   totalFeedbacks?: number;
   createdAt?: string;
@@ -194,6 +189,8 @@ export interface CustomerProduct {
   purchaseCode?: string;
   product?: Product;
   customer?: User;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TechnicianService {

@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Wrench,
+  AirVent,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -58,6 +59,11 @@ const Sidebar = () => {
       name: t("customers"),
       href: "/dashboard/customers",
       icon: Users,
+    },
+    {
+      name: t("customerProducts"),
+      href: "/dashboard/customer-products",
+      icon: AirVent,
     },
   ], [t, language]);
 
