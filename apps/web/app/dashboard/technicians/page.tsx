@@ -187,6 +187,7 @@ const TechniciansPage = () => {
   const [technicianBookings, setTechnicianBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [showTimeOffRequestsModal, setShowTimeOffRequestsModal] = useState(false);
+  const [pendingTimeOffCount, setPendingTimeOffCount] = useState<number>(0);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -236,6 +237,23 @@ const TechniciansPage = () => {
     fetchTechnicians();
     fetchAllServices();
   }, []);
+
+  const fetchPendingTimeOffCount = async () => {
+    if (!isAdmin) return;
+    try {
+      const response = await api.get("/time-off-requests?status=pending");
+      const data = Array.isArray(response.data) ? response.data : [];
+      setPendingTimeOffCount(data.length);
+    } catch {
+      setPendingTimeOffCount(0);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchPendingTimeOffCount();
+    }
+  }, [isAdmin]);
 
   const checkAdmin = () => {
     try {
@@ -747,6 +765,11 @@ const TechniciansPage = () => {
             >
               <CalendarDays className="h-4 w-4" />
               {t("checkRequests")}
+              {pendingTimeOffCount > 0 && (
+                <span className="ml-1 flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-medium text-white">
+                  {pendingTimeOffCount}
+                </span>
+              )}
             </Button>
             <Button onClick={handleCreate} className="gap-2">
               <Plus className="h-4 w-4" />
@@ -1590,7 +1613,10 @@ const TechniciansPage = () => {
       {/* Time Off Requests Modal */}
       <TimeOffRequestsModal
         isOpen={showTimeOffRequestsModal}
-        onClose={() => setShowTimeOffRequestsModal(false)}
+        onClose={() => {
+          setShowTimeOffRequestsModal(false);
+          fetchPendingTimeOffCount();
+        }}
       />
     </div>
   );

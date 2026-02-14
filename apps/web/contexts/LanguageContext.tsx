@@ -244,6 +244,7 @@ const translations: Translations = {
     warrantyUntil: "Warranty until",
     purchaseCode: "Purchase Code",
     clickToViewBookings: "Click to view bookings →",
+    viewBookings: "View All Bookings",
     clickToViewDetails: "Click to view details →",
     noBookingsFoundForProduct: "No bookings found for this product",
     // Customer Products (admin)
@@ -578,6 +579,7 @@ const translations: Translations = {
     warrantyUntil: "အာမခံ ကုန်ဆုံးရက်",
     purchaseCode: "ဝယ်ယူမှု ကုဒ်",
     clickToViewBookings: "ကြိုတင်မှာကြားမှုများ ကြည့်ရန် နှိပ်ပါ →",
+    viewBookings: "ကြိုတင်မှာကြားမှုများအားလုံး ကြည့်မည်",
     clickToViewDetails: "အသေးစိတ် ကြည့်ရန် နှိပ်ပါ →",
     noBookingsFoundForProduct: "ဤထုတ်ကုန်အတွက် ကြိုတင်မှာကြားမှုများမတွေ့ပါ",
     manageCustomerProducts: "ဖောက်သည် ထုတ်ကုန်များ စီမံခန့်ခွဲမှု (မှတ်ပုံတင်ထားသော လေအေးပေးစက်များ)",
