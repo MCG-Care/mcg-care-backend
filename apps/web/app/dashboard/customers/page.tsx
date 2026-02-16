@@ -29,7 +29,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { User, CustomerProduct, ForumPost, Booking } from "@/types";
 import Image from "next/image";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatTimeTo12Hour } from "@/lib/utils";
 
 const CustomersPage = () => {
   const { t } = useLanguage();
@@ -913,7 +913,7 @@ const CustomersPage = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <Label className="text-muted-foreground">{t("bookingTime")}</Label>
-                            <p className="font-medium">{booking.bookingTime || "N/A"}</p>
+                            <p className="font-medium">{formatTimeTo12Hour(booking.bookingTime)}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">{t("duration")}</Label>
@@ -1119,7 +1119,7 @@ const CustomersPage = () => {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t("bookingTime")}</Label>
-                  <p className="font-medium mt-1">{selectedBookingDetail.bookingTime || "N/A"}</p>
+                  <p className="font-medium mt-1">{formatTimeTo12Hour(selectedBookingDetail.bookingTime)}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t("duration")}</Label>

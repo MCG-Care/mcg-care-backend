@@ -28,7 +28,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Technician, TechnicianService, Timeslot, ServiceType, Booking } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatHourTo12Hour, formatTimeTo12Hour } from "@/lib/utils";
 import TimeOffRequestsModal from "./TimeOffRequestsModal";
 
 // District/City/Township data structure
@@ -447,7 +447,7 @@ const TechniciansPage = () => {
   };
 
   const formatHour = (hour: number) => {
-    return `${hour}:00`;
+    return formatHourTo12Hour(hour);
   };
 
   const handleEdit = async (technician: Technician) => {
@@ -1517,7 +1517,7 @@ const TechniciansPage = () => {
                             </div>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Clock className="h-4 w-4" />
-                              <span>{booking.bookingTime}</span>
+                              <span>{formatTimeTo12Hour(booking.bookingTime)}</span>
                             </div>
                           </div>
                           

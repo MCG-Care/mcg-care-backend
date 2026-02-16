@@ -22,7 +22,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { CustomerProduct, Booking } from "@/types";
 import Image from "next/image";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatTimeTo12Hour } from "@/lib/utils";
 
 /**
  * Extract serial number from QR URL.
@@ -712,7 +712,7 @@ const CustomerProductsPage = () => {
                               {t("bookingTime")}
                             </Label>
                             <p className="font-medium">
-                              {booking.bookingTime || "N/A"}
+                              {formatTimeTo12Hour(booking.bookingTime)}
                             </p>
                           </div>
                           <div>
@@ -973,7 +973,7 @@ const CustomerProductsPage = () => {
                     {t("bookingTime")}
                   </Label>
                   <p className="font-medium mt-1">
-                    {selectedBookingDetail.bookingTime || "N/A"}
+                    {formatTimeTo12Hour(selectedBookingDetail.bookingTime)}
                   </p>
                 </div>
                 <div>
