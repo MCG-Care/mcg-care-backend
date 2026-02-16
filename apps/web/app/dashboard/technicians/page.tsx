@@ -28,7 +28,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Technician, TechnicianService, Timeslot, ServiceType, Booking } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatHourTo12Hour, formatTimeTo12Hour } from "@/lib/utils";
 import TimeOffRequestsModal from "./TimeOffRequestsModal";
 
 // District/City/Township data structure
@@ -187,6 +187,7 @@ const TechniciansPage = () => {
   const [technicianBookings, setTechnicianBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [showTimeOffRequestsModal, setShowTimeOffRequestsModal] = useState(false);
+  const [pendingTimeOffCount, setPendingTimeOffCount] = useState<number>(0);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -236,6 +237,23 @@ const TechniciansPage = () => {
     fetchTechnicians();
     fetchAllServices();
   }, []);
+
+  const fetchPendingTimeOffCount = async () => {
+    if (!isAdmin) return;
+    try {
+      const response = await api.get("/time-off-requests?status=pending");
+      const data = Array.isArray(response.data) ? response.data : [];
+      setPendingTimeOffCount(data.length);
+    } catch {
+      setPendingTimeOffCount(0);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchPendingTimeOffCount();
+    }
+  }, [isAdmin]);
 
   const checkAdmin = () => {
     try {
@@ -429,7 +447,7 @@ const TechniciansPage = () => {
   };
 
   const formatHour = (hour: number) => {
-    return `${hour}:00`;
+    return formatHourTo12Hour(hour);
   };
 
   const handleEdit = async (technician: Technician) => {
@@ -747,6 +765,11 @@ const TechniciansPage = () => {
             >
               <CalendarDays className="h-4 w-4" />
               {t("checkRequests")}
+              {pendingTimeOffCount > 0 && (
+                <span className="ml-1 flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-medium text-white">
+                  {pendingTimeOffCount}
+                </span>
+              )}
             </Button>
             <Button onClick={handleCreate} className="gap-2">
               <Plus className="h-4 w-4" />
@@ -1494,7 +1517,7 @@ const TechniciansPage = () => {
                             </div>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Clock className="h-4 w-4" />
-                              <span>{booking.bookingTime}</span>
+                              <span>{formatTimeTo12Hour(booking.bookingTime)}</span>
                             </div>
                           </div>
                           
@@ -1590,7 +1613,10 @@ const TechniciansPage = () => {
       {/* Time Off Requests Modal */}
       <TimeOffRequestsModal
         isOpen={showTimeOffRequestsModal}
-        onClose={() => setShowTimeOffRequestsModal(false)}
+        onClose={() => {
+          setShowTimeOffRequestsModal(false);
+          fetchPendingTimeOffCount();
+        }}
       />
     </div>
   );

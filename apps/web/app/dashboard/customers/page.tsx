@@ -23,12 +23,13 @@ import {
   Edit,
   Trash2,
   Save,
+  ArrowRight,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { User, CustomerProduct, ForumPost, Booking } from "@/types";
 import Image from "next/image";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatTimeTo12Hour } from "@/lib/utils";
 
 const CustomersPage = () => {
   const { t } = useLanguage();
@@ -438,48 +439,64 @@ const CustomersPage = () => {
         </div>
       )}
 
-      {/* Customers Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Customers List (compact) */}
+      <div className="grid grid-cols-1 gap-4">
         {paginatedCustomers.map((customer) => (
           <Card
             key={customer.id}
             className="hover:shadow-lg transition-shadow cursor-pointer"
             onClick={() => handleCustomerClick(customer)}
           >
-            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 gap-2">
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <UserIcon className="h-6 w-6 text-white" />
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <UserIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-base truncate">
+                        {customer.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {customer.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                    {customer.phoneNo && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("phone")}</p>
+                        <p className="text-sm font-medium truncate">{customer.phoneNo}</p>
+                      </div>
+                    )}
+                    {(customer.address || customer.primaryAddress) && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("location")}</p>
+                        <p className="text-sm font-medium truncate">
+                          {(customer.address || customer.primaryAddress)?.city}, {(customer.address || customer.primaryAddress)?.district}
+                        </p>
+                      </div>
+                    )}
+                    {customer.createdAt && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("joined")}</p>
+                        <p className="text-sm font-medium">{formatDate(customer.createdAt)}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <CardTitle className="text-lg truncate w-full">{customer.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground truncate w-full">
-                    {customer.email}
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {customer.phoneNo && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{customer.phoneNo}</span>
-                  </div>
-                )}
-                {customer.address && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground truncate">
-                      {customer.address.city}, {customer.address.district}
-                    </span>
-                  </div>
-                )}
-                {customer.createdAt && (
-                  <div className="text-xs text-muted-foreground pt-2">
-                    {t("joined")} {formatDate(customer.createdAt)}
-                  </div>
-                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="flex-shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCustomerClick(customer);
+                  }}
+                >
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -896,7 +913,7 @@ const CustomersPage = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <Label className="text-muted-foreground">{t("bookingTime")}</Label>
-                            <p className="font-medium">{booking.bookingTime || "N/A"}</p>
+                            <p className="font-medium">{formatTimeTo12Hour(booking.bookingTime)}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">{t("duration")}</Label>
@@ -1102,7 +1119,7 @@ const CustomersPage = () => {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t("bookingTime")}</Label>
-                  <p className="font-medium mt-1">{selectedBookingDetail.bookingTime || "N/A"}</p>
+                  <p className="font-medium mt-1">{formatTimeTo12Hour(selectedBookingDetail.bookingTime)}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t("duration")}</Label>

@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { db, schema } from '../../config/database';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, or, ilike, sql, desc, inArray } from 'drizzle-orm';
 import { CreateCustomerProductDto } from './dto/create-customer-product.dto';
 import { UpdateCustomerProductDto } from './dto/update-customer-product.dto';
 import { QueryCustomerProductsDto } from './dto/query-customer-products.dto';
@@ -95,18 +95,64 @@ export class CustomerProductsService {
 
   /**
    * Find all customer products for a specific customer
+   * Admin can search by serial number (last part of qrUrl), customer name, or email
    */
   async findAll(customerId: number | undefined, query: QueryCustomerProductsDto) {
-    const { page = 1, limit = 10, customerId: filterCustomerId } = query;
+    const {
+      page = 1,
+      limit = 10,
+      customerId: filterCustomerId,
+      search,
+    } = query;
     const offset = (page - 1) * limit;
 
     // Determine which customerId to use: filterCustomerId (admin) or customerId (customer)
     const targetCustomerId = filterCustomerId || customerId;
 
-    // Build where condition
-    const whereCondition = targetCustomerId
+    // Build base where condition
+    let whereCondition = targetCustomerId
       ? eq(schema.customerProducts.customerId, targetCustomerId)
       : undefined;
+
+    // For admin view (no targetCustomerId), add search filter when provided
+    if (!targetCustomerId && search && search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      // Get IDs of customer products matching search (serial/qrUrl, customer name, email)
+      const matchingRows = await db
+        .select({ id: schema.customerProducts.id })
+        .from(schema.customerProducts)
+        .leftJoin(
+          schema.users,
+          eq(schema.customerProducts.customerId, schema.users.id),
+        )
+        .where(
+          or(
+            ilike(schema.customerProducts.qrUrl, searchTerm),
+            ilike(schema.users.name, searchTerm),
+            ilike(schema.users.email, searchTerm),
+            ilike(schema.users.phoneNo, searchTerm),
+          ),
+        );
+      const matchingIds = matchingRows.map((r) => r.id);
+      if (matchingIds.length === 0) {
+        // No matches, return empty result
+        return {
+          data: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          },
+        };
+      }
+      whereCondition = whereCondition
+        ? and(
+            whereCondition,
+            inArray(schema.customerProducts.id, matchingIds),
+          )
+        : inArray(schema.customerProducts.id, matchingIds);
+    }
 
     // Get total count
     const [{ count }] = await db

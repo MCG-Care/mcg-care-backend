@@ -25,7 +25,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Booking } from "@/types";
 import Image from "next/image";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatTimeTo12Hour } from "@/lib/utils";
 
 type SortBy = "bookingForDate" | "bookingOnDate" | null;
 type SortOrder = "asc" | "desc";
@@ -878,7 +878,7 @@ const BookingsPage = () => {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t("bookingTime")}</Label>
-                  <p className="font-medium mt-1">{selectedBooking.bookingTime || "N/A"}</p>
+                  <p className="font-medium mt-1">{formatTimeTo12Hour(selectedBooking.bookingTime)}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t("duration")}</Label>

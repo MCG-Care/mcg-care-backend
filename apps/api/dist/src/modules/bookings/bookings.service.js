@@ -470,7 +470,7 @@ let BookingsService = class BookingsService {
         }
         return Object.assign(Object.assign({}, booking), { serviceAddress });
     }
-    async update(id, userId, userRole, updateBookingDto) {
+    async update(id, userId, userRole, updateBookingDto, imageFiles) {
         const booking = await this.findOne(id, userId, userRole);
         if (userRole === 'customer') {
             throw new common_1.ForbiddenException('Customers cannot update bookings');
@@ -521,7 +521,18 @@ let BookingsService = class BookingsService {
         if (updateBookingDto.fees !== undefined) {
             updateData.fees = updateBookingDto.fees.toString();
         }
+        if (updateBookingDto.status === 'unsuccessful' && booking.status === 'pending') {
+            await this.restoreTimeslots(booking);
+        }
         await database_1.db.update(database_1.schema.bookings).set(updateData).where((0, drizzle_orm_1.eq)(database_1.schema.bookings.id, id));
+        if (imageFiles && imageFiles.length > 0) {
+            const imageUrls = await this.uploadBookingImages(id, imageFiles);
+            const imageRecords = imageUrls.map((url) => ({
+                bookingId: id,
+                url,
+            }));
+            await database_1.db.insert(database_1.schema.bookingImages).values(imageRecords);
+        }
         if (updateBookingDto.status === 'done') {
             try {
                 await this.maintenanceRemindersService.createRemindersForBooking(id);

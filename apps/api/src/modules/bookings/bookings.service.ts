@@ -697,9 +697,16 @@ export class BookingsService {
   }
 
   /**
-   * Update a booking (status, description, fees)
+   * Update a booking (status, description, fees).
+   * Technicians can optionally attach images (e.g. proof of customer location) when updating status.
    */
-  async update(id: number, userId: number, userRole: string, updateBookingDto: UpdateBookingDto) {
+  async update(
+    id: number,
+    userId: number,
+    userRole: string,
+    updateBookingDto: UpdateBookingDto,
+    imageFiles?: Express.Multer.File[],
+  ) {
     const booking = await this.findOne(id, userId, userRole);
 
     // Only technicians and admins can update bookings
@@ -784,7 +791,22 @@ export class BookingsService {
       updateData.fees = updateBookingDto.fees.toString();
     }
 
+    // When marking a pending booking as unsuccessful, reclaim the technician's slots
+    if (updateBookingDto.status === 'unsuccessful' && booking.status === 'pending') {
+      await this.restoreTimeslots(booking);
+    }
+
     await db.update(schema.bookings).set(updateData).where(eq(schema.bookings.id, id));
+
+    // Upload and attach images if provided (e.g. technician proof of customer location)
+    if (imageFiles && imageFiles.length > 0) {
+      const imageUrls = await this.uploadBookingImages(id, imageFiles);
+      const imageRecords = imageUrls.map((url) => ({
+        bookingId: id,
+        url,
+      }));
+      await db.insert(schema.bookingImages).values(imageRecords);
+    }
 
     // If booking is marked as "done", generate maintenance reminders
     if (updateBookingDto.status === 'done') {
