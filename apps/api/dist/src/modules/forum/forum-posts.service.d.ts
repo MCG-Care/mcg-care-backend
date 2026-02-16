@@ -84,7 +84,7 @@ export declare class ForumPostsService {
             [x: string]: any;
         }[];
     }>;
-    update(id: number, updatePostDto: UpdatePostDto, userId: number, imageFiles?: Express.Multer.File[]): Promise<{
+    update(id: number, updatePostDto: UpdatePostDto, userId: number, isAdmin?: boolean, imageFiles?: Express.Multer.File[]): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date | null;

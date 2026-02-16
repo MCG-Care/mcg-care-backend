@@ -47,6 +47,7 @@ let ForumPostsController = class ForumPostsController {
     }
     async update(id, updatePostDto, files, user) {
         const userId = user.id;
+        const isAdmin = user.role === 'admin';
         if (files && files.length > 0) {
             const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
             for (const file of files) {
@@ -55,7 +56,7 @@ let ForumPostsController = class ForumPostsController {
                 }
             }
         }
-        return this.forumPostsService.update(id, updatePostDto, userId, files);
+        return this.forumPostsService.update(id, updatePostDto, userId, isAdmin, files);
     }
     async remove(id, user) {
         const userId = user.id;

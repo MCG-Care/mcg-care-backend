@@ -119,15 +119,15 @@ let ForumPostsService = class ForumPostsService {
         }
         return post;
     }
-    async update(id, updatePostDto, userId, imageFiles) {
+    async update(id, updatePostDto, userId, isAdmin = false, imageFiles) {
         const existingPost = await database_1.db.query.forumPosts.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.forumPosts.id, id),
         });
         if (!existingPost) {
             throw new common_1.NotFoundException(`Forum post with ID ${id} not found`);
         }
-        if (existingPost.userId !== userId) {
-            throw new common_1.ForbiddenException('You can only update your own posts. Admin role check not yet implemented.');
+        if (!isAdmin && existingPost.userId !== userId) {
+            throw new common_1.ForbiddenException('You can only update your own posts.');
         }
         const [updatedPost] = await database_1.db
             .update(database_1.schema.forumPosts)
