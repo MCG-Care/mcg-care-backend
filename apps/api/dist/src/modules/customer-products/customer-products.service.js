@@ -64,12 +64,35 @@ let CustomerProductsService = class CustomerProductsService {
         return this.findOne(newCustomerProduct.id, customerId, false);
     }
     async findAll(customerId, query) {
-        const { page = 1, limit = 10, customerId: filterCustomerId } = query;
+        const { page = 1, limit = 10, customerId: filterCustomerId, search, } = query;
         const offset = (page - 1) * limit;
         const targetCustomerId = filterCustomerId || customerId;
-        const whereCondition = targetCustomerId
+        let whereCondition = targetCustomerId
             ? (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.customerId, targetCustomerId)
             : undefined;
+        if (!targetCustomerId && search && search.trim()) {
+            const searchTerm = `%${search.trim()}%`;
+            const matchingRows = await database_1.db
+                .select({ id: database_1.schema.customerProducts.id })
+                .from(database_1.schema.customerProducts)
+                .leftJoin(database_1.schema.users, (0, drizzle_orm_1.eq)(database_1.schema.customerProducts.customerId, database_1.schema.users.id))
+                .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.ilike)(database_1.schema.customerProducts.qrUrl, searchTerm), (0, drizzle_orm_1.ilike)(database_1.schema.users.name, searchTerm), (0, drizzle_orm_1.ilike)(database_1.schema.users.email, searchTerm), (0, drizzle_orm_1.ilike)(database_1.schema.users.phoneNo, searchTerm)));
+            const matchingIds = matchingRows.map((r) => r.id);
+            if (matchingIds.length === 0) {
+                return {
+                    data: [],
+                    pagination: {
+                        page,
+                        limit,
+                        total: 0,
+                        totalPages: 0,
+                    },
+                };
+            }
+            whereCondition = whereCondition
+                ? (0, drizzle_orm_1.and)(whereCondition, (0, drizzle_orm_1.inArray)(database_1.schema.customerProducts.id, matchingIds))
+                : (0, drizzle_orm_1.inArray)(database_1.schema.customerProducts.id, matchingIds);
+        }
         const [{ count }] = await database_1.db
             .select({ count: (0, drizzle_orm_1.sql) `cast(count(*) as int)` })
             .from(database_1.schema.customerProducts)

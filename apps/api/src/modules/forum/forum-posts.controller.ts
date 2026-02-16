@@ -86,8 +86,9 @@ export class ForumPostsController {
     @UploadedFiles() files?: Express.Multer.File[],
     @CurrentUser() user?: any,
   ) {
-    // Get userId from authenticated user - ownership validated in service
+    // Get userId and role from authenticated user - ownership or admin validated in service
     const userId = user.id;
+    const isAdmin = user.role === 'admin';
 
     // Validate file types
     if (files && files.length > 0) {
@@ -101,7 +102,7 @@ export class ForumPostsController {
       }
     }
 
-    return this.forumPostsService.update(id, updatePostDto, userId, files);
+    return this.forumPostsService.update(id, updatePostDto, userId, isAdmin, files);
   }
 
   @Delete(':id')

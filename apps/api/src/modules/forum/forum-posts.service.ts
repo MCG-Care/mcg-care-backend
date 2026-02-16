@@ -164,7 +164,8 @@ export class ForumPostsService {
   async update(
     id: number,
     updatePostDto: UpdatePostDto,
-    userId: number, // TODO: Will come from auth token
+    userId: number,
+    isAdmin: boolean = false,
     imageFiles?: Express.Multer.File[],
   ) {
     // Check if post exists
@@ -176,12 +177,9 @@ export class ForumPostsService {
       throw new NotFoundException(`Forum post with ID ${id} not found`);
     }
 
-    // TODO: Check if user is the owner or admin
-    // For now, we'll check if user is the owner
-    if (existingPost.userId !== userId) {
-      throw new ForbiddenException(
-        'You can only update your own posts. Admin role check not yet implemented.',
-      );
+    // Users can update their own posts, admins can update any post
+    if (!isAdmin && existingPost.userId !== userId) {
+      throw new ForbiddenException('You can only update your own posts.');
     }
 
     // Update post

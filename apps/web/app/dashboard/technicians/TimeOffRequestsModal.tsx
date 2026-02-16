@@ -23,6 +23,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { TimeOffRequest } from "@/types";
+import { formatHourTo12Hour } from "@/lib/utils";
 
 type TabType = "pending" | "past";
 
@@ -251,7 +252,7 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
   };
 
   const formatSlot = (slot: number) => {
-    return `${slot}:00`;
+    return formatHourTo12Hour(slot);
   };
 
   const formatDateRange = (startDate: string, endDate: string) => {
@@ -443,6 +444,7 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
                             day: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
+                            hour12: true,
                           })}
                         </p>
                       </div>
@@ -478,6 +480,7 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
                                   day: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
+                                  hour12: true,
                                 })}
                               </p>
                             </div>
@@ -705,7 +708,7 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
                           key={idx}
                           className="px-2 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded text-xs font-medium"
                         >
-                          {hour.trim()}:00
+                          {formatHourTo12Hour(parseInt(hour.trim(), 10))}
                         </span>
                       ))}
                     </div>
@@ -723,7 +726,7 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
                           key={idx}
                           className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded text-xs font-medium"
                         >
-                          {hour.trim()}:00
+                          {formatHourTo12Hour(parseInt(hour.trim(), 10))}
                         </span>
                       ))}
                     </div>

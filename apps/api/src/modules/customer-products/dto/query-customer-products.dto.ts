@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, Min } from 'class-validator';
+import { IsOptional, IsInt, Min, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class QueryCustomerProductsDto {
@@ -19,4 +19,8 @@ export class QueryCustomerProductsDto {
   @Type(() => Number)
   @IsOptional()
   customerId?: number; // For admin: filter by specific customer
+
+  @IsString()
+  @IsOptional()
+  search?: string; // Search by serial number (last part of qrUrl), customer name, or email
 }

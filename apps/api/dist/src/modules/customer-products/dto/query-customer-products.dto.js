@@ -40,4 +40,9 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], QueryCustomerProductsDto.prototype, "customerId", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], QueryCustomerProductsDto.prototype, "search", void 0);
 //# sourceMappingURL=query-customer-products.dto.js.map
