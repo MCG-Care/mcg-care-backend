@@ -84,14 +84,31 @@ export class BookingsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update booking' })
+  @ApiOperation({
+    summary: 'Update booking',
+    description:
+      'Update booking status, description, or fees. Technicians can optionally attach images (e.g. proof of customer location) when changing status to "inprogress". Send as multipart/form-data with "images" field for image uploads, or application/json for status/description/fees only.',
+  })
+  @ApiConsumes('application/json', 'multipart/form-data')
   @ApiParam({ name: 'id', description: 'Booking ID' })
+  @UseInterceptors(FilesInterceptor('images', 10))
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBookingDto: UpdateBookingDto,
+    @UploadedFiles() images: Express.Multer.File[],
     @CurrentUser() user: any,
   ) {
-    return this.bookingsService.update(id, user.id, user.role, updateBookingDto);
+    // Validate images if provided
+    if (images && images.length > 0) {
+      this.validateImages(images);
+    }
+    return this.bookingsService.update(
+      id,
+      user.id,
+      user.role,
+      updateBookingDto,
+      images,
+    );
   }
 
   @Delete(':id')

@@ -590,7 +590,7 @@ const translations: Translations = {
     warrantyInformation: "အာမခံ အချက်အလက်",
     noWarrantyInformation: "အာမခံ အချက်အလက် မထည့်သွင်းထားပါ",
     customerProductDetails: "ဖောက်သည် ထုတ်ကုန် အသေးစိတ်",
-    productNickname: "ထုတ်ကုန် ကြန်အမည်",
+    productNickname: "ထုတ်ကုန် အမည်ပြောင်",
     registeredOn: "မှတ်ပုံတင်သည့်ရက်",
     bookingTime: "ကြိုတင်မှာကြားသော အချိန်",
     fees: "ဝန်ဆောင်ခ",

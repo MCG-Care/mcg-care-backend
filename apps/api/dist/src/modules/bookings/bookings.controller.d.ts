@@ -21,7 +21,7 @@ export declare class BookingsController {
         availableSlots: number[];
     }[]>;
     findOne(id: number, user: any): Promise<any>;
-    update(id: number, updateBookingDto: UpdateBookingDto, user: any): Promise<any>;
+    update(id: number, updateBookingDto: UpdateBookingDto, images: Express.Multer.File[], user: any): Promise<any>;
     remove(id: number, user: any): Promise<{
         message: string;
     }>;

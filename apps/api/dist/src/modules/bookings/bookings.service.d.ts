@@ -23,7 +23,7 @@ export declare class BookingsService {
         };
     }>;
     findOne(id: number, userId: number, userRole: string): Promise<any>;
-    update(id: number, userId: number, userRole: string, updateBookingDto: UpdateBookingDto): Promise<any>;
+    update(id: number, userId: number, userRole: string, updateBookingDto: UpdateBookingDto, imageFiles?: Express.Multer.File[]): Promise<any>;
     remove(id: number, userId: number, userRole: string): Promise<{
         message: string;
     }>;

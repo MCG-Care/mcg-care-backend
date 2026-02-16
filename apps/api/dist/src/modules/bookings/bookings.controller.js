@@ -48,8 +48,11 @@ let BookingsController = class BookingsController {
     async findOne(id, user) {
         return this.bookingsService.findOne(id, user.id, user.role);
     }
-    async update(id, updateBookingDto, user) {
-        return this.bookingsService.update(id, user.id, user.role, updateBookingDto);
+    async update(id, updateBookingDto, images, user) {
+        if (images && images.length > 0) {
+            this.validateImages(images);
+        }
+        return this.bookingsService.update(id, user.id, user.role, updateBookingDto, images);
     }
     async remove(id, user) {
         return this.bookingsService.remove(id, user.id, user.role);
@@ -119,13 +122,19 @@ __decorate([
 ], BookingsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Update booking' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update booking',
+        description: 'Update booking status, description, or fees. Technicians can optionally attach images (e.g. proof of customer location) when changing status to "inprogress". Send as multipart/form-data with "images" field for image uploads, or application/json for status/description/fees only.',
+    }),
+    (0, swagger_1.ApiConsumes)('application/json', 'multipart/form-data'),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Booking ID' }),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images', 10)),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __param(2, (0, common_1.UploadedFiles)()),
+    __param(3, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, update_booking_dto_1.UpdateBookingDto, Object]),
+    __metadata("design:paramtypes", [Number, update_booking_dto_1.UpdateBookingDto, Array, Object]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "update", null);
 __decorate([
