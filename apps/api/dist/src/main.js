@@ -33,6 +33,7 @@ async function bootstrap() {
         .addTag('service-logs', 'Service log tracking')
         .addTag('feedbacks', 'Customer feedback')
         .addTag('forum', 'Forum posts and comments')
+        .addTag('promotion-codes', 'Promotion code management')
         .addBearerAuth({
         type: 'http',
         scheme: 'bearer',

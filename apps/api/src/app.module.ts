@@ -13,6 +13,7 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { ServiceLogsModule } from './modules/service-logs/service-logs.module';
 import { FeedbacksModule } from './modules/feedbacks/feedbacks.module';
 import { MaintenanceRemindersModule } from './modules/maintenance-reminders/maintenance-reminders.module';
+import { PromotionCodesModule } from './modules/promotion-codes/promotion-codes.module';
 import { TimeOffRequestsModule } from './modules/time-off-requests/time-off-requests.module';
 import { DatabaseModule } from './config/database.module';
 
@@ -36,6 +37,7 @@ import { DatabaseModule } from './config/database.module';
     ServiceLogsModule,
     FeedbacksModule,
     MaintenanceRemindersModule,
+    PromotionCodesModule,
     TimeOffRequestsModule,
   ],
   controllers: [],
