@@ -1,5 +1,5 @@
 export declare class PromotionCodesService {
-    findOne(id: number, customerId: number): Promise<{
+    findOne(id: number, userId: number, userRole: string): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;

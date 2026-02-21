@@ -23,19 +23,15 @@ let PromotionCodesController = class PromotionCodesController {
         this.promotionCodesService = promotionCodesService;
     }
     async findOne(id, user) {
-        if (user.role !== 'customer') {
-            throw new common_1.BadRequestException('Only customers can view promotion codes');
-        }
-        return this.promotionCodesService.findOne(id, user.id);
+        return this.promotionCodesService.findOne(id, user.id, user.role);
     }
 };
 exports.PromotionCodesController = PromotionCodesController;
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({
-        summary: 'Get promotion code by ID (Customer only)',
-        description: 'Returns promo code details for the given ID. Same structure as promotion codes included in maintenance-reminders. ' +
-            'Only customers can view their own promotion codes.',
+        summary: 'Get promotion code by ID',
+        description: 'Returns promo code details for the given ID. Accessible by the related customer, assigned technicians, and admins.',
     }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Promotion code ID' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),

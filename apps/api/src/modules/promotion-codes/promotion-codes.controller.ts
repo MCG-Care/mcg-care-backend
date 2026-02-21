@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-  BadRequestException,
-  Param,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { PromotionCodesService } from './promotion-codes.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,17 +15,12 @@ export class PromotionCodesController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Get promotion code by ID (Customer only)',
+    summary: 'Get promotion code by ID',
     description:
-      'Returns promo code details for the given ID. Same structure as promotion codes included in maintenance-reminders. ' +
-      'Only customers can view their own promotion codes.',
+      'Returns promo code details for the given ID. Accessible by the related customer, assigned technicians, and admins.',
   })
   @ApiParam({ name: 'id', description: 'Promotion code ID' })
   async findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
-    if (user.role !== 'customer') {
-      throw new BadRequestException('Only customers can view promotion codes');
-    }
-
-    return this.promotionCodesService.findOne(id, user.id);
+    return this.promotionCodesService.findOne(id, user.id, user.role);
   }
 }

@@ -22,7 +22,7 @@ const common_1 = require("@nestjs/common");
 const database_1 = require("../../config/database");
 const drizzle_orm_1 = require("drizzle-orm");
 let PromotionCodesService = class PromotionCodesService {
-    async findOne(id, customerId) {
+    async findOne(id, userId, userRole) {
         const result = await database_1.db.query.promotionCodes.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.promotionCodes.id, id),
             with: {
@@ -35,11 +35,29 @@ let PromotionCodesService = class PromotionCodesService {
             throw new common_1.NotFoundException(`Promotion code with ID ${id} not found`);
         }
         const customerProduct = result.customerProduct;
-        if ((customerProduct === null || customerProduct === void 0 ? void 0 : customerProduct.customerId) !== customerId) {
+        const customerProductId = result.customerProductId;
+        if (userRole === 'admin') {
+            const { customerProduct: _ } = result, promoCode = __rest(result, ["customerProduct"]);
+            return promoCode;
+        }
+        if (userRole === 'customer') {
+            if ((customerProduct === null || customerProduct === void 0 ? void 0 : customerProduct.customerId) === userId) {
+                const { customerProduct: _ } = result, promoCode = __rest(result, ["customerProduct"]);
+                return promoCode;
+            }
             throw new common_1.ForbiddenException('You can only view your own promotion codes');
         }
-        const { customerProduct: _ } = result, promoCode = __rest(result, ["customerProduct"]);
-        return promoCode;
+        if (userRole === 'technician') {
+            const technicianBooking = await database_1.db.query.bookings.findFirst({
+                where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(database_1.schema.bookings.airconId, customerProductId), (0, drizzle_orm_1.eq)(database_1.schema.bookings.technicianId, userId)),
+            });
+            if (technicianBooking) {
+                const { customerProduct: _ } = result, promoCode = __rest(result, ["customerProduct"]);
+                return promoCode;
+            }
+            throw new common_1.ForbiddenException('You can only view promotion codes for aircons you have been assigned to');
+        }
+        throw new common_1.ForbiddenException('You do not have access to this promotion code');
     }
 };
 exports.PromotionCodesService = PromotionCodesService;
