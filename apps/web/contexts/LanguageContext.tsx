@@ -99,7 +99,9 @@ const translations: Translations = {
     sortByDateAsc: "Date: Oldest First",
     sortByDateDesc: "Date: Newest First",
     filterByType: "Filter by Type",
+    filterByBrand: "Filter by Brand",
     allTypes: "All Types",
+    allBrands: "All Brands",
     clearFilter: "Clear Filter",
     
     // Forum
@@ -434,7 +436,9 @@ const translations: Translations = {
     sortByDateAsc: "ရက်စွဲ: ဟောင်းမှ သစ်သို့",
     sortByDateDesc: "ရက်စွဲ: သစ်မှ ဟောင်းသို့",
     filterByType: "အမျိုးအစားဖြင့် စစ်ထုတ်မည်",
+    filterByBrand: "ကုန်အမှတ်တံဆိပ်ဖြင့် စစ်ထုတ်မည်",
     allTypes: "အားလုံး",
+    allBrands: "ကုန်အမှတ်တံဆိပ်အားလုံး",
     clearFilter: "စစ်ထုတ်မှု ဖယ်ရှားမည်",
     
     // Forum

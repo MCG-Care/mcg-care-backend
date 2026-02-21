@@ -41,7 +41,7 @@ const ProductsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"releaseDate-asc" | "releaseDate-desc" | "capacity-asc" | "capacity-desc" | "price-asc" | "price-desc" | null>(null);
-  const [filterByType, setFilterByType] = useState<Product["type"] | "all">("all");
+  const [filterByBrand, setFilterByBrand] = useState<string>("all");
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
@@ -76,10 +76,11 @@ const ProductsPage = () => {
   const [pageSize, setPageSize] = useState(20);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [availableBrands, setAvailableBrands] = useState<string[]>([]);
 
   useEffect(() => {
     fetchProducts();
-  }, [currentPage, pageSize, searchQuery, filterByType]);
+  }, [currentPage, pageSize, searchQuery, filterByBrand]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -111,31 +112,38 @@ const ProductsPage = () => {
     try {
       setLoading(true);
       
-      // Build query parameters
+      // Fetch with high limit for client-side brand filtering (no backend changes)
       const params: Record<string, any> = {
-        page: currentPage,
-        limit: pageSize,
+        page: 1,
+        limit: 2000, // Fetch enough to filter by brand on client
       };
       
-      // Add search if provided
       if (searchQuery) {
         params.search = searchQuery;
       }
       
-      // Add type filter if not "all"
-      if (filterByType !== "all") {
-        params.type = filterByType;
+      const response = await api.get("/products", { params });
+      let productsData: Product[] = response.data?.data || [];
+      
+      // Extract unique brands for dropdown (from unfiltered data)
+      const brands = [...new Set(productsData.map((p: Product) => p.brand).filter(Boolean))].sort();
+      setAvailableBrands(brands);
+      
+      // Client-side filter by brand
+      if (filterByBrand !== "all" && filterByBrand) {
+        productsData = productsData.filter(
+          (p: Product) => p.brand?.toLowerCase() === filterByBrand.toLowerCase()
+        );
       }
       
-      const response = await api.get("/products", { params });
+      // Client-side pagination
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const paginatedData = productsData.slice(start, end);
       
-      // Handle paginated response
-      const productsData = response.data?.data || [];
-      const pagination = response.data?.pagination || {};
-      
-      setProducts(productsData);
-      setTotalProducts(pagination.total || 0);
-      setTotalPages(pagination.totalPages || 0);
+      setProducts(paginatedData);
+      setTotalProducts(productsData.length);
+      setTotalPages(Math.ceil(productsData.length / pageSize) || 1);
     } catch (error) {
       console.error("Error fetching products:", error);
       alert("Failed to fetch products");
@@ -410,57 +418,34 @@ const ProductsPage = () => {
                   }}
                 >
                   <Filter className="h-4 w-4" />
-                  {filterByType === "all"
-                    ? t("filterByType")
-                    : t(filterByType)}
+                  {filterByBrand === "all"
+                    ? t("filterByBrand")
+                    : filterByBrand}
                 </DropdownMenuTrigger>
                 {isFilterDropdownOpen && (
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => {
-                      setFilterByType("all");
-                      setIsFilterDropdownOpen(false);
-                      setCurrentPage(1); // Reset to first page when changing filter
-                    }}>
-                      {t("allTypes")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setFilterByType("split");
+                      setFilterByBrand("all");
                       setIsFilterDropdownOpen(false);
                       setCurrentPage(1);
                     }}>
-                      {t("split")}
+                      {t("allBrands")}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setFilterByType("window");
-                      setIsFilterDropdownOpen(false);
-                      setCurrentPage(1);
-                    }}>
-                      {t("window")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setFilterByType("cassette");
-                      setIsFilterDropdownOpen(false);
-                      setCurrentPage(1);
-                    }}>
-                      {t("cassette")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setFilterByType("portable");
-                      setIsFilterDropdownOpen(false);
-                      setCurrentPage(1);
-                    }}>
-                      {t("portable")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setFilterByType("central");
-                      setIsFilterDropdownOpen(false);
-                      setCurrentPage(1);
-                    }}>
-                      {t("central")}
-                    </DropdownMenuItem>
-                    {filterByType !== "all" && (
+                    {availableBrands.map((brand) => (
+                      <DropdownMenuItem
+                        key={brand}
+                        onClick={() => {
+                          setFilterByBrand(brand);
+                          setIsFilterDropdownOpen(false);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        {brand}
+                      </DropdownMenuItem>
+                    ))}
+                    {filterByBrand !== "all" && (
                       <DropdownMenuItem onClick={() => {
-                        setFilterByType("all");
+                        setFilterByBrand("all");
                         setIsFilterDropdownOpen(false);
                       }}>
                         {t("clearFilter")}
@@ -682,7 +667,7 @@ const ProductsPage = () => {
         <Card>
           <CardContent className="py-12">
             <p className="text-center text-muted-foreground">
-              {searchQuery || filterByType !== "all"
+              {searchQuery || filterByBrand !== "all"
                 ? t("noProductsFound")
                 : t("noProductsAvailable")}
             </p>
