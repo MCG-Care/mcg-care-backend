@@ -132,7 +132,7 @@ let TimeslotsService = class TimeslotsService {
         }
         const today = new Date();
         const timeslots = [];
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 31; i++) {
             const date = new Date(today);
             date.setDate(date.getDate() + i);
             const dateStr = this.getLocalDateString(date);
