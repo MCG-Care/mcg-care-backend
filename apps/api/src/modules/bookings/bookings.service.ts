@@ -718,6 +718,32 @@ export class BookingsService {
       throw new ForbiddenException('You can only update your assigned bookings');
     }
 
+    // Validate status transitions: pending -> inprogress | unsuccessful; inprogress -> done | unsuccessful
+    // Terminal states (done, unsuccessful) cannot be changed
+    if (updateBookingDto.status && updateBookingDto.status !== booking.status) {
+      const currentStatus = booking.status;
+      const newStatus = updateBookingDto.status;
+
+      if (currentStatus === 'done' || currentStatus === 'unsuccessful') {
+        throw new BadRequestException(
+          `Cannot change status of a booking that is already "${currentStatus}". Terminal states cannot be modified.`
+        );
+      }
+
+      const allowedTransitions: Record<string, string[]> = {
+        pending: ['inprogress', 'unsuccessful'],
+        inprogress: ['done', 'unsuccessful'],
+      };
+
+      const allowed = allowedTransitions[currentStatus];
+      if (!allowed || !allowed.includes(newStatus)) {
+        throw new BadRequestException(
+          `Invalid status transition: cannot change from "${currentStatus}" to "${newStatus}". ` +
+            `Allowed transitions: ${allowed?.join(' or ') ?? 'none'}.`
+        );
+      }
+    }
+
     // Validate that booking date has passed before marking as "done"
     if (updateBookingDto.status === 'done') {
       // Get current time in Bangkok timezone (UTC+7)

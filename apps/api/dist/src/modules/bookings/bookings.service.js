@@ -471,12 +471,29 @@ let BookingsService = class BookingsService {
         return Object.assign(Object.assign({}, booking), { serviceAddress });
     }
     async update(id, userId, userRole, updateBookingDto, imageFiles) {
+        var _a;
         const booking = await this.findOne(id, userId, userRole);
         if (userRole === 'customer') {
             throw new common_1.ForbiddenException('Customers cannot update bookings');
         }
         if (userRole === 'technician' && booking.technicianId !== userId) {
             throw new common_1.ForbiddenException('You can only update your assigned bookings');
+        }
+        if (updateBookingDto.status && updateBookingDto.status !== booking.status) {
+            const currentStatus = booking.status;
+            const newStatus = updateBookingDto.status;
+            if (currentStatus === 'done' || currentStatus === 'unsuccessful') {
+                throw new common_1.BadRequestException(`Cannot change status of a booking that is already "${currentStatus}". Terminal states cannot be modified.`);
+            }
+            const allowedTransitions = {
+                pending: ['inprogress', 'unsuccessful'],
+                inprogress: ['done', 'unsuccessful'],
+            };
+            const allowed = allowedTransitions[currentStatus];
+            if (!allowed || !allowed.includes(newStatus)) {
+                throw new common_1.BadRequestException(`Invalid status transition: cannot change from "${currentStatus}" to "${newStatus}". ` +
+                    `Allowed transitions: ${(_a = allowed === null || allowed === void 0 ? void 0 : allowed.join(' or ')) !== null && _a !== void 0 ? _a : 'none'}.`);
+            }
         }
         if (updateBookingDto.status === 'done') {
             const now = new Date();

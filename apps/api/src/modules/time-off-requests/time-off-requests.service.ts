@@ -55,6 +55,17 @@ export class TimeOffRequestsService {
       throw new BadRequestException('Cannot request time off for past dates');
     }
 
+    // Validate that dates are within the 31-day timeslots range (today through today+30)
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 30);
+    const maxDateStr = this.getLocalDateString(maxDate);
+    if (endDate > maxDateStr) {
+      throw new BadRequestException(
+        `Time-off requests must be within the 31-day scheduling window (today through ${maxDateStr}). ` +
+          `Cannot request time off for dates beyond the available timeslots.`,
+      );
+    }
+
     // For full day requests, ensure slots are 9 and 16
     if (isFullDay && (startSlot !== 9 || endSlot !== 16)) {
       throw new BadRequestException('Full day requests must have startSlot=9 and endSlot=16');
@@ -187,8 +198,9 @@ export class TimeOffRequestsService {
       throw new ForbiddenException('Only admins can review time-off requests');
     }
 
-    // If approving, check for existing bookings first
+    // If approving, validate timeslots exist and check for existing bookings
     if (status === 'approved') {
+      await this.validateTimeslotsExistForRequest(request);
       await this.checkForExistingBookings(request);
     }
 
@@ -211,6 +223,44 @@ export class TimeOffRequestsService {
     }
 
     return updatedRequest;
+  }
+
+  /**
+   * Validate that timeslots exist for all dates in the request range.
+   * Time-off can only be approved for dates that already have timeslot rows.
+   * Throws if any date is outside the 30-day scheduling window.
+   */
+  private async validateTimeslotsExistForRequest(request: any) {
+    const { technicianId, startDate, endDate } = request;
+
+    const dates: string[] = [];
+    const currentDate = new Date(startDate);
+    const finalDate = new Date(endDate);
+
+    while (currentDate <= finalDate) {
+      dates.push(this.getLocalDateString(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const missingDates: string[] = [];
+    for (const date of dates) {
+      const timeslot = await db.query.timeslots.findFirst({
+        where: and(
+          eq(schema.timeslots.technicianId, technicianId),
+          eq(schema.timeslots.date, date),
+        ),
+      });
+      if (!timeslot) {
+        missingDates.push(date);
+      }
+    }
+
+    if (missingDates.length > 0) {
+      throw new BadRequestException(
+        `Cannot approve: ${missingDates.length} date(s) outside the 30-day scheduling window (${missingDates.join(', ')}). ` +
+          `Time-off can only be approved for dates that exist in the timeslots. Please ask the technician to resubmit within the valid range.`,
+      );
+    }
   }
 
   /**
@@ -305,31 +355,23 @@ export class TimeOffRequestsService {
         ),
       });
 
-      if (timeslot) {
-        // Remove the requested slots
-        const currentSlots = timeslot.slots;
-        const updatedSlots = currentSlots.filter((slot) => !slotsToRemove.includes(slot));
-
-        // Update the timeslot
-        await db
-          .update(schema.timeslots)
-          .set({
-            slots: updatedSlots,
-            updatedAt: new Date(),
-          })
-          .where(eq(schema.timeslots.id, timeslot.id));
-      } else {
-        // If timeslot doesn't exist yet (e.g., for future dates), we might want to create it
-        // with the blocked slots already removed
-        const allSlots = [9, 10, 11, 12, 13, 14, 15, 16];
-        const availableSlots = allSlots.filter((slot) => !slotsToRemove.includes(slot));
-
-        await db.insert(schema.timeslots).values({
-          technicianId,
-          date,
-          slots: availableSlots,
-        });
+      if (!timeslot) {
+        throw new BadRequestException(
+          `Timeslot not found for technician on ${date}. Time-off can only be approved for dates within the 30-day scheduling window.`,
+        );
       }
+
+      // Remove the requested slots
+      const currentSlots = timeslot.slots;
+      const updatedSlots = currentSlots.filter((slot) => !slotsToRemove.includes(slot));
+
+      await db
+        .update(schema.timeslots)
+        .set({
+          slots: updatedSlots,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.timeslots.id, timeslot.id));
     }
   }
 

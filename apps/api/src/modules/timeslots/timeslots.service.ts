@@ -169,7 +169,7 @@ export class TimeslotsService {
   }
 
   /**
-   * Initialize timeslots for a new technician (30 days)
+   * Initialize timeslots for a new technician (31 days: today through today+30)
    */
   async initializeTechnicianTimeslots(technicianId: number) {
     // Check if technician exists (with a retry in case of timing issues)
@@ -196,8 +196,11 @@ export class TimeslotsService {
     const today = new Date();
     const timeslots = [];
 
-    // Create timeslots for next 30 days
-    for (let i = 0; i < 30; i++) {
+    // Create timeslots for next 31 days (today through today+30)
+    // We need 31 days so maintenance (which adds today+30) doesn't create a gap:
+    // Init creates today+0..today+30; maintenance adds today+30. Without today+30
+    // from init, the day before maintenance's new day would be missing (e.g. 23-03).
+    for (let i = 0; i < 31; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
       const dateStr = this.getLocalDateString(date);
