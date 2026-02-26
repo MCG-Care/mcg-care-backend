@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,13 +57,15 @@ const CustomerProductsPage = () => {
   const [pageSize, setPageSize] = useState(20);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isInitialLoadRef = useRef(true);
 
-  // Debounce search
+  // Debounce search (500ms for slow typers)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery.trim());
       setCurrentPage(1);
-    }, 300);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -96,6 +98,17 @@ const CustomerProductsPage = () => {
   useEffect(() => {
     fetchCustomerProducts();
   }, [fetchCustomerProducts]);
+
+  // Restore focus to search input after refresh completes (skip initial load)
+  useEffect(() => {
+    if (!loading && searchInputRef.current) {
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+      } else {
+        searchInputRef.current.focus();
+      }
+    }
+  }, [loading]);
 
   const fetchProductDetail = async (id: string) => {
     try {
@@ -196,6 +209,7 @@ const CustomerProductsPage = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              ref={searchInputRef}
               placeholder={t("searchCustomerProducts")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

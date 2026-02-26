@@ -44,14 +44,33 @@ let ForumPostsService = class ForumPostsService {
     async findAll(query) {
         const { search, userId, page = 1, limit = 10 } = query;
         const offset = (page - 1) * limit;
-        const conditions = [];
-        if (search) {
-            conditions.push((0, drizzle_orm_1.or)((0, drizzle_orm_1.ilike)(database_1.schema.forumPosts.title, `%${search}%`), (0, drizzle_orm_1.ilike)(database_1.schema.forumPosts.content, `%${search}%`)));
+        let whereClause;
+        if (search && search.trim()) {
+            const searchTerm = `%${search.trim()}%`;
+            const matchingRows = await database_1.db
+                .select({ id: database_1.schema.forumPosts.id })
+                .from(database_1.schema.forumPosts)
+                .leftJoin(database_1.schema.users, (0, drizzle_orm_1.eq)(database_1.schema.forumPosts.userId, database_1.schema.users.id))
+                .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.ilike)(database_1.schema.forumPosts.title, searchTerm), (0, drizzle_orm_1.ilike)(database_1.schema.forumPosts.content, searchTerm), (0, drizzle_orm_1.ilike)(database_1.schema.users.name, searchTerm)));
+            const matchingIds = matchingRows.map((r) => r.id);
+            if (matchingIds.length === 0) {
+                return {
+                    data: [],
+                    pagination: {
+                        page,
+                        limit,
+                        total: 0,
+                        totalPages: 0,
+                    },
+                };
+            }
+            whereClause = (0, drizzle_orm_1.inArray)(database_1.schema.forumPosts.id, matchingIds);
         }
         if (userId) {
-            conditions.push((0, drizzle_orm_1.eq)(database_1.schema.forumPosts.userId, userId));
+            whereClause = whereClause
+                ? (0, drizzle_orm_1.and)(whereClause, (0, drizzle_orm_1.eq)(database_1.schema.forumPosts.userId, userId))
+                : (0, drizzle_orm_1.eq)(database_1.schema.forumPosts.userId, userId);
         }
-        const whereClause = conditions.length > 0 ? (0, drizzle_orm_1.and)(...conditions) : undefined;
         const [{ count }] = await database_1.db
             .select({ count: (0, drizzle_orm_1.sql) `cast(count(*) as int)` })
             .from(database_1.schema.forumPosts)

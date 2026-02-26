@@ -59,4 +59,16 @@ export function formatHourTo12Hour(hour: number): string {
   return `${displayHour}:00 ${period}`;
 }
 
-
+/**
+ * Get today's date in Bangkok timezone (YYYY-MM-DD format)
+ * Bookings use book_for date in Bangkok time, so we must compare against Bangkok date
+ */
+export function getTodayInBangkok(): string {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(new Date());
+}

@@ -46,6 +46,8 @@ const ProductsPage = () => {
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isInitialLoadRef = useRef(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -77,10 +79,31 @@ const ProductsPage = () => {
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search - only trigger fetch after user stops typing/deleting (500ms for slow typers)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchProducts();
-  }, [currentPage, pageSize, searchQuery, filterByBrand]);
+  }, [currentPage, pageSize, debouncedSearch, filterByBrand]);
+
+  // Restore focus to search input after refresh completes (skip initial load)
+  useEffect(() => {
+    if (!loading && searchInputRef.current) {
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+      } else {
+        searchInputRef.current.focus();
+      }
+    }
+  }, [loading]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -118,8 +141,8 @@ const ProductsPage = () => {
         limit: 2000, // Fetch enough to filter by brand on client
       };
       
-      if (searchQuery) {
-        params.search = searchQuery;
+      if (debouncedSearch) {
+        params.search = debouncedSearch;
       }
       
       const response = await api.get("/products", { params });
@@ -374,7 +397,8 @@ const ProductsPage = () => {
     }
   });
 
-  if (loading) {
+  // Only show full-page loader on initial load (no data yet). Keep search bar visible during search/filter to prevent focus loss.
+  if (loading && products.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -399,12 +423,10 @@ const ProductsPage = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 placeholder={t("searchProducts")}
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1); // Reset to first page when searching
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>

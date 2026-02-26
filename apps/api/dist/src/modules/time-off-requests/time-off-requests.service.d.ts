@@ -107,6 +107,7 @@ export declare class TimeOffRequestsService {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    private validateTimeslotsExistForRequest;
     private checkForExistingBookings;
     private blockTimeslots;
     remove(id: number, userId: number, userRole: string): Promise<{

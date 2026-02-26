@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { db, schema } from '../../config/database';
-import { eq, ilike, or, and, sql, desc } from 'drizzle-orm';
+import { eq, ilike, or, and, sql, desc, inArray } from 'drizzle-orm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { QueryPostsDto } from './dto/query-posts.dto';
@@ -56,22 +56,42 @@ export class ForumPostsService {
     const offset = (page - 1) * limit;
 
     // Build where conditions
-    const conditions = [];
+    let whereClause;
 
-    if (search) {
-      conditions.push(
-        or(
-          ilike(schema.forumPosts.title, `%${search}%`),
-          ilike(schema.forumPosts.content, `%${search}%`),
-        ),
-      );
+    if (search && search.trim()) {
+      // Search in title, content, and poster's username (user.name)
+      const searchTerm = `%${search.trim()}%`;
+      const matchingRows = await db
+        .select({ id: schema.forumPosts.id })
+        .from(schema.forumPosts)
+        .leftJoin(schema.users, eq(schema.forumPosts.userId, schema.users.id))
+        .where(
+          or(
+            ilike(schema.forumPosts.title, searchTerm),
+            ilike(schema.forumPosts.content, searchTerm),
+            ilike(schema.users.name, searchTerm),
+          ),
+        );
+      const matchingIds = matchingRows.map((r) => r.id);
+      if (matchingIds.length === 0) {
+        return {
+          data: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          },
+        };
+      }
+      whereClause = inArray(schema.forumPosts.id, matchingIds);
     }
 
     if (userId) {
-      conditions.push(eq(schema.forumPosts.userId, userId));
+      whereClause = whereClause
+        ? and(whereClause, eq(schema.forumPosts.userId, userId))
+        : eq(schema.forumPosts.userId, userId);
     }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     // Get total count
     const [{ count }] = await db
