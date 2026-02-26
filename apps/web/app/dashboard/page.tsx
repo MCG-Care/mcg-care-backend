@@ -68,17 +68,29 @@ const DashboardPage = () => {
       const bookings = Array.isArray(bookingsResponse.data)
         ? bookingsResponse.data
         : bookingsResponse.data?.data || [];
-      const todayBookings = Array.isArray(todayBookingsResponse.data)
+      const todayBookingsRaw = Array.isArray(todayBookingsResponse.data)
         ? todayBookingsResponse.data
         : todayBookingsResponse.data?.data || [];
+
+      // Helper: get YYYY-MM-DD from bookingForDate (handles "2026-02-27" or "2026-02-27T00:00:00" formats)
+      const getBookingDatePart = (b: Booking) => b.bookingForDate?.split("T")[0] ?? "";
+
+      // Today's bookings: only include those with bookingForDate === today (Bangkok)
+      // Client-side filter guards against API/date edge cases
+      const todayBookings = todayBookingsRaw.filter(
+        (b: Booking) => getBookingDatePart(b) === today
+      );
 
       // Calculate stats
       const pending = bookings.filter((b: Booking) => b.status === "pending").length;
       const inProgress = bookings.filter((b: Booking) => b.status === "in_progress" || b.status === "inprogress").length;
       const todayCount = todayBookings.length;
+      // Upcoming = bookingForDate > today (Bangkok), excludes today; status not cancelled/unsuccessful
       const upcoming = bookings.filter(
         (b: Booking) =>
-          new Date(b.bookingForDate) > new Date() && b.status !== "cancelled" && b.status !== "unsuccessful"
+          getBookingDatePart(b) > today &&
+          b.status !== "cancelled" &&
+          b.status !== "unsuccessful"
       ).length;
 
       setStats({
