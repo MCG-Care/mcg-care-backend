@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +57,8 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [totalRequests, setTotalRequests] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
     if (isOpen) {
@@ -74,6 +76,17 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, currentPage, pageSize, statusFilter, searchQuery, isOpen]);
+
+  // Restore focus to search input after refresh completes (skip initial load)
+  useEffect(() => {
+    if (!loading && searchInputRef.current) {
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+      } else {
+        searchInputRef.current.focus();
+      }
+    }
+  }, [loading]);
 
   const fetchRequests = async () => {
     try {
@@ -322,6 +335,7 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 placeholder={t("searchTimeOffRequests")}
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}

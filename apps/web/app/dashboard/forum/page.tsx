@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,11 +78,34 @@ const ForumPage = () => {
   const [createPostImages, setCreatePostImages] = useState<File[]>([]);
   const [createPostImagePreviews, setCreatePostImagePreviews] = useState<string[]>([]);
   const [creatingPost, setCreatingPost] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isInitialLoadRef = useRef(true);
+
+  // Debounce search - only trigger fetch after user stops typing/deleting (500ms for slow typers)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     checkAdmin();
     fetchPosts();
-  }, [searchQuery]); // Only refetch when search changes, tab filtering is client-side
+  }, [debouncedSearch]); // Only refetch when debounced search changes, tab filtering is client-side
+
+  // Restore focus to search input after refresh completes (skip initial load)
+  useEffect(() => {
+    if (!loading && searchInputRef.current) {
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+      } else {
+        searchInputRef.current.focus();
+      }
+    }
+  }, [loading]);
 
   const checkAdmin = () => {
     try {
@@ -109,8 +132,8 @@ const ForumPage = () => {
       };
       
       // Add search if provided
-      if (searchQuery) {
-        params.search = searchQuery;
+      if (debouncedSearch) {
+        params.search = debouncedSearch;
       }
       
       const response = await api.get("/forum/posts", { params });
@@ -524,7 +547,8 @@ const ForumPage = () => {
     );
   };
 
-  if (loading) {
+  // Only show full-page loader on initial load (no data yet). Keep search bar visible during search to prevent focus loss.
+  if (loading && posts.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -561,12 +585,10 @@ const ForumPage = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 placeholder={t("search") + "..."}
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1); // Reset to first page when searching
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
