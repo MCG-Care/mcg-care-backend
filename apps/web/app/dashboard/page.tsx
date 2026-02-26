@@ -26,7 +26,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Booking, ForumPost, DashboardStats } from "@/types";
 import Image from "next/image";
-import { formatCurrency, formatTimeTo12Hour } from "@/lib/utils";
+import { formatCurrency, formatTimeTo12Hour, getTodayInBangkok } from "@/lib/utils";
 
 const DashboardPage = () => {
   const { t } = useLanguage();
@@ -56,21 +56,26 @@ const DashboardPage = () => {
     try {
       setLoading(true);
 
-      // Fetch bookings
-      const bookingsResponse = await api.get("/bookings");
-      
-      // API returns paginated data: {data: [...], pagination: {...}}
-      const bookings = Array.isArray(bookingsResponse.data) 
-        ? bookingsResponse.data 
+      // Use Bangkok timezone for today's date - matches bookingForDate (book_for)
+      const today = getTodayInBangkok();
+
+      // Fetch all bookings for stats (paginated - we need enough for pending/upcoming counts)
+      const [bookingsResponse, todayBookingsResponse] = await Promise.all([
+        api.get("/bookings", { params: { page: 1, limit: 500 } }),
+        api.get("/bookings", { params: { bookingForDate: today, limit: 100 } }),
+      ]);
+
+      const bookings = Array.isArray(bookingsResponse.data)
+        ? bookingsResponse.data
         : bookingsResponse.data?.data || [];
+      const todayBookings = Array.isArray(todayBookingsResponse.data)
+        ? todayBookingsResponse.data
+        : todayBookingsResponse.data?.data || [];
 
       // Calculate stats
-      const today = new Date().toISOString().split("T")[0];
       const pending = bookings.filter((b: Booking) => b.status === "pending").length;
       const inProgress = bookings.filter((b: Booking) => b.status === "in_progress" || b.status === "inprogress").length;
-      const todayCount = bookings.filter(
-        (b: Booking) => b.bookingForDate?.split("T")[0] === today
-      ).length;
+      const todayCount = todayBookings.length;
       const upcoming = bookings.filter(
         (b: Booking) =>
           new Date(b.bookingForDate) > new Date() && b.status !== "cancelled" && b.status !== "unsuccessful"
@@ -83,10 +88,6 @@ const DashboardPage = () => {
         upcomingBookings: upcoming,
       });
 
-      // Get today's bookings
-      const todayBookings = bookings.filter(
-        (b: Booking) => b.bookingForDate?.split("T")[0] === today
-      );
       setLatestBookings(todayBookings);
 
       // Fetch forum posts (if endpoint exists)
