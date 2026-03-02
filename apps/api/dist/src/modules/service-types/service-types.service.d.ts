@@ -10,6 +10,8 @@ export declare class ServiceTypesService {
         updatedAt: Date;
         description: string | null;
         serviceFee: string;
+        generatesReminder: boolean;
+        reminderIntervalMonths: number | null;
     }>;
     findAll(query: QueryServiceTypesDto): Promise<{
         data: {
@@ -20,6 +22,8 @@ export declare class ServiceTypesService {
             updatedAt: Date;
             description: string | null;
             serviceFee: string;
+            generatesReminder: boolean;
+            reminderIntervalMonths: number | null;
         }[];
         pagination: {
             page: number;
@@ -36,6 +40,8 @@ export declare class ServiceTypesService {
         updatedAt: Date;
         description: string | null;
         serviceFee: string;
+        generatesReminder: boolean;
+        reminderIntervalMonths: number | null;
     }>;
     update(id: number, updateServiceTypeDto: UpdateServiceTypeDto): Promise<{
         id: number;
@@ -43,6 +49,8 @@ export declare class ServiceTypesService {
         description: string | null;
         serviceFee: string;
         duration: number;
+        generatesReminder: boolean;
+        reminderIntervalMonths: number | null;
         createdAt: Date;
         updatedAt: Date;
     }>;

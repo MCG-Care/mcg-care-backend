@@ -102,6 +102,8 @@ export interface ServiceType {
   description: string;
   serviceFee: string;
   duration: number;
+  generatesReminder?: boolean;
+  reminderIntervalMonths?: number | null;
   createdAt: string;
   updatedAt: string;
 }
