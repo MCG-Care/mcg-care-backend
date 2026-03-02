@@ -188,6 +188,10 @@ const TechniciansPage = () => {
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [showTimeOffRequestsModal, setShowTimeOffRequestsModal] = useState(false);
   const [pendingTimeOffCount, setPendingTimeOffCount] = useState<number>(0);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedTechnicianForFeedback, setSelectedTechnicianForFeedback] = useState<Technician | null>(null);
+  const [technicianFeedbacks, setTechnicianFeedbacks] = useState<any[]>([]);
+  const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -693,6 +697,23 @@ const TechniciansPage = () => {
     }
   };
 
+  const openFeedbackModal = async (technician: Technician) => {
+    setSelectedTechnicianForFeedback(technician);
+    setShowFeedbackModal(true);
+    setLoadingFeedbacks(true);
+    setTechnicianFeedbacks([]);
+    try {
+      const response = await api.get(`/feedbacks?technicianId=${technician.id}&limit=100`);
+      const data = response.data?.data || [];
+      setTechnicianFeedbacks(data);
+    } catch (error) {
+      console.error("Error fetching feedbacks:", error);
+      setTechnicianFeedbacks([]);
+    } finally {
+      setLoadingFeedbacks(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20",
@@ -854,7 +875,14 @@ const TechniciansPage = () => {
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openFeedbackModal(technician);
+                  }}
+                  className="flex items-center gap-2 pt-2 border-t w-full text-left hover:opacity-80 transition-opacity cursor-pointer"
+                >
                   <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                   <span className="text-sm font-medium">
                     {technician.averageRating?.toFixed(1) || "0.0"}
@@ -862,7 +890,7 @@ const TechniciansPage = () => {
                   <span className="text-sm text-muted-foreground">
                     ({technician.totalFeedbacks || 0} {t("reviews")})
                   </span>
-                </div>
+                </button>
               </div>
               {isAdmin && (
                 <div className="flex gap-2 mt-4 pt-4 border-t">
@@ -1036,7 +1064,11 @@ const TechniciansPage = () => {
                 // View Mode
                 <div className="space-y-6">
                   {/* Rating Section */}
-                  <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => openFeedbackModal(selectedTechnician)}
+                    className="flex items-center gap-4 p-4 bg-muted rounded-lg w-full text-left hover:bg-muted/80 transition-colors cursor-pointer"
+                  >
                     <div className="flex items-center gap-2">
                       <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
                       <span className="text-2xl font-bold">
@@ -1046,7 +1078,7 @@ const TechniciansPage = () => {
                     <div className="text-sm text-muted-foreground">
                       {selectedTechnician.totalFeedbacks || 0} {t("reviews")}
                     </div>
-                  </div>
+                  </button>
 
                   {/* Technician Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1603,6 +1635,84 @@ const TechniciansPage = () => {
                   <p className="text-muted-foreground">
                     {t("noBookingsFound") || "No bookings found for this technician"}
                   </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && selectedTechnicianForFeedback && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowFeedbackModal(false)}
+        >
+          <Card
+            className="w-full max-w-2xl max-h-[90vh] flex flex-col bg-background"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                {t("reviews")} - {selectedTechnicianForFeedback.name}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowFeedbackModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-6 overflow-y-auto flex-1">
+              {loadingFeedbacks ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : technicianFeedbacks.length === 0 ? (
+                <p className="text-center text-muted-foreground py-12">
+                  {t("noReviewsYet")}
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {technicianFeedbacks.map((feedback: any) => (
+                    <div
+                      key={feedback.id}
+                      className="p-4 rounded-lg border bg-muted/30 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          <span className="font-medium">{feedback.rating}/5</span>
+                          {feedback.satisfaction != null && (
+                            <span className="text-sm text-muted-foreground">
+                              ({t("feedbackSatisfaction")}: {feedback.satisfaction}/5)
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {formatDate(feedback.createdAt)}
+                        </span>
+                      </div>
+                      {feedback.issueResolved != null && (
+                        <p className="text-sm">
+                          {t("issueResolved")}: {feedback.issueResolved ? t("yes") : t("no")}
+                        </p>
+                      )}
+                      {feedback.note && (
+                        <p className="text-sm whitespace-pre-wrap">{feedback.note}</p>
+                      )}
+                      {feedback.booking?.aircon?.customer && (
+                        <p className="text-xs text-muted-foreground">
+                          {t("customer")}: {feedback.booking.aircon.customer.name}
+                          {feedback.booking?.bookingForDate && (
+                            <> · {formatDate(feedback.booking.bookingForDate)}</>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>

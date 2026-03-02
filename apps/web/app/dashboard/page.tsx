@@ -782,6 +782,42 @@ const DashboardPage = () => {
                 </div>
               )}
 
+              {/* Customer Feedback */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h3 className="font-semibold text-lg mb-3">{t("customerFeedback")}</h3>
+                {selectedBooking.feedback ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-muted-foreground">{t("feedbackRating")}</Label>
+                        <p className="font-medium">{selectedBooking.feedback.rating}/5</p>
+                      </div>
+                      {selectedBooking.feedback.satisfaction != null && (
+                        <div>
+                          <Label className="text-muted-foreground">{t("feedbackSatisfaction")}</Label>
+                          <p className="font-medium">{selectedBooking.feedback.satisfaction}/5</p>
+                        </div>
+                      )}
+                      {selectedBooking.feedback.issueResolved != null && (
+                        <div>
+                          <Label className="text-muted-foreground">{t("issueResolved")}</Label>
+                          <p className="font-medium">{selectedBooking.feedback.issueResolved ? t("yes") : t("no")}</p>
+                        </div>
+                      )}
+                    </div>
+                    {selectedBooking.feedback.note && (
+                      <div>
+                        <Label className="text-muted-foreground">{t("feedbackNote")}</Label>
+                        <p className="mt-1 whitespace-pre-wrap">{selectedBooking.feedback.note}</p>
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground">{t("created")}: {formatDate(selectedBooking.feedback.createdAt)}</p>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">{t("noFeedbackYet")}</p>
+                )}
+              </div>
+
               {/* Timestamps */}
               <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                 <div>

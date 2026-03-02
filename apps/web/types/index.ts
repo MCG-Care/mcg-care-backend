@@ -61,6 +61,14 @@ export interface Booking {
     createdAt?: string;
     updatedAt?: string;
   };
+  feedback?: {
+    id: number;
+    rating: number;
+    satisfaction?: number;
+    issueResolved?: boolean;
+    note?: string;
+    createdAt: string;
+  };
 }
 
 export interface ForumPost {
