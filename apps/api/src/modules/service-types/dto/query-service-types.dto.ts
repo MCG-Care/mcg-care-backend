@@ -12,7 +12,7 @@ export class QueryServiceTypesDto {
   @Min(1)
   @Type(() => Number)
   @IsOptional()
-  limit?: number = 10;
+  limit?: number = 30;
 
   @IsString()
   @IsOptional()

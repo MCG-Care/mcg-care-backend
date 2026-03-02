@@ -58,7 +58,7 @@ let ProductsService = class ProductsService {
         return this.findOne(newProduct.id);
     }
     async findAll(query) {
-        const { search, type, brand, page = 1, limit = 10 } = query;
+        const { search, type, brand, page = 1, limit = 30 } = query;
         const offset = (page - 1) * limit;
         const conditions = [];
         if (search) {

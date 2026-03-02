@@ -61,6 +61,14 @@ export interface Booking {
     createdAt?: string;
     updatedAt?: string;
   };
+  feedback?: {
+    id: number;
+    rating: number;
+    satisfaction?: number;
+    issueResolved?: boolean;
+    note?: string;
+    createdAt: string;
+  };
 }
 
 export interface ForumPost {
@@ -102,6 +110,8 @@ export interface ServiceType {
   description: string;
   serviceFee: string;
   duration: number;
+  generatesReminder?: boolean;
+  reminderIntervalMonths?: number | null;
   createdAt: string;
   updatedAt: string;
 }

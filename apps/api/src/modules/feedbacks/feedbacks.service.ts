@@ -9,9 +9,11 @@ import { eq, and, gte, sql, desc } from 'drizzle-orm';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { QueryFeedbacksDto } from './dto/query-feedbacks.dto';
+import { UsersService } from '../users/user.service';
 
 @Injectable()
 export class FeedbacksService {
+  constructor(private readonly usersService: UsersService) {}
   /**
    * Create a feedback for a booking (customer only, after service is done)
    */
@@ -79,7 +81,7 @@ export class FeedbacksService {
    * Find all feedbacks with pagination and filters
    */
   async findAll(userId: number, userRole: string, query: QueryFeedbacksDto) {
-    const { page = 1, limit = 10, technicianId, minRating } = query;
+    const { page = 1, limit = 30, technicianId, minRating } = query;
     const offset = (page - 1) * limit;
 
     // Build where conditions
@@ -165,7 +167,14 @@ export class FeedbacksService {
     // Limit results
     feedbacks = feedbacks.slice(0, limit);
 
-    return {
+    const response: {
+      data: typeof feedbacks;
+      pagination: { page: number; limit: number; total: number; totalPages: number };
+      technicianId?: number;
+      averageRating?: number;
+      averageRatingRounded?: number;
+      totalFeedbacks?: number;
+    } = {
       data: feedbacks,
       pagination: {
         page,
@@ -174,6 +183,22 @@ export class FeedbacksService {
         totalPages: Math.ceil(count / limit),
       },
     };
+
+    // When filtering by technicianId, include average rating so clients can use one endpoint
+    if (technicianId) {
+      try {
+        const ratingData =
+          await this.usersService.getTechnicianAverageRating(technicianId);
+        response.technicianId = ratingData.technicianId;
+        response.averageRating = ratingData.averageRating;
+        response.averageRatingRounded = ratingData.averageRatingRounded;
+        response.totalFeedbacks = ratingData.totalFeedbacks;
+      } catch {
+        // If technician not found or not a technician, omit rating fields
+      }
+    }
+
+    return response;
   }
 
   /**

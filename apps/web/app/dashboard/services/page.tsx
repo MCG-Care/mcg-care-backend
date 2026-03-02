@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Bell,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
@@ -50,6 +51,8 @@ const ServicesPage = () => {
     description: "",
     serviceFee: "",
     duration: "",
+    generatesReminder: false,
+    reminderIntervalMonths: "6",
   });
   
   // Pagination states
@@ -145,6 +148,8 @@ const ServicesPage = () => {
       description: "",
       serviceFee: "",
       duration: "",
+      generatesReminder: false,
+      reminderIntervalMonths: "6",
     });
   };
 
@@ -156,16 +161,22 @@ const ServicesPage = () => {
       description: service.description,
       serviceFee: service.serviceFee,
       duration: service.duration.toString(),
+      generatesReminder: service.generatesReminder ?? false,
+      reminderIntervalMonths: (service.reminderIntervalMonths ?? 6).toString(),
     });
   };
 
   const handleSave = async () => {
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         name: formData.name,
         description: formData.description,
         serviceFee: parseFloat(formData.serviceFee),
         duration: parseInt(formData.duration),
+        generatesReminder: formData.generatesReminder,
+        reminderIntervalMonths: formData.generatesReminder
+          ? parseInt(formData.reminderIntervalMonths)
+          : null,
       };
 
       if (isEditing && selectedService) {
@@ -208,6 +219,8 @@ const ServicesPage = () => {
       description: "",
       serviceFee: "",
       duration: "",
+      generatesReminder: false,
+      reminderIntervalMonths: "6",
     });
   };
 
@@ -404,6 +417,14 @@ const ServicesPage = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 {service.description}
               </p>
+              {service.generatesReminder && (
+                <div className="flex items-center gap-1.5 mb-3 text-xs text-primary">
+                  <Bell className="h-3.5 w-3.5" />
+                  <span>
+                    Reminder in {service.reminderIntervalMonths ?? 6} months
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between pt-4 border-t">
                 <div>
                   <p className="text-xs text-muted-foreground">{t("serviceFee")}</p>
@@ -574,6 +595,56 @@ const ServicesPage = () => {
                     className="mt-1"
                   />
                 </div>
+              </div>
+
+              {/* Reminder config */}
+              <div className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-sm font-medium">
+                    Maintenance reminder
+                  </Label>
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.generatesReminder}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          generatesReminder: e.target.checked,
+                        })
+                      }
+                      className="rounded border-gray-300"
+                    />
+                    <span className="text-sm">
+                      Generate reminder & promocode when booking marked done
+                    </span>
+                  </label>
+                </div>
+                {formData.generatesReminder && (
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="reminderInterval" className="text-sm">
+                      Reminder in
+                    </Label>
+                    <Input
+                      id="reminderInterval"
+                      type="number"
+                      min={1}
+                      max={24}
+                      value={formData.reminderIntervalMonths}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          reminderIntervalMonths: e.target.value,
+                        })
+                      }
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">months</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 pt-4">

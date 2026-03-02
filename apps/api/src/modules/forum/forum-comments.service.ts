@@ -44,7 +44,7 @@ export class ForumCommentsService {
    * Find all comments with pagination and filters
    */
   async findAll(query: QueryCommentsDto) {
-    const { postId, userId, page = 1, limit = 20 } = query;
+    const { postId, userId, page = 1, limit = 30 } = query;
     const offset = (page - 1) * limit;
 
     // Build where conditions

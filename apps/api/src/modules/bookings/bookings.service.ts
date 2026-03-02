@@ -438,7 +438,7 @@ export class BookingsService {
   async findAll(userId: number, userRole: string, query: QueryBookingsDto) {
     const {
       page = 1,
-      limit = 10,
+      limit = 30,
       customerId,
       technicianId,
       airconId,

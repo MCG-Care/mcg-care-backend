@@ -3,4 +3,6 @@ export declare class CreateServiceTypeDto {
     description?: string;
     serviceFee: number;
     duration: number;
+    generatesReminder?: boolean;
+    reminderIntervalMonths?: number;
 }

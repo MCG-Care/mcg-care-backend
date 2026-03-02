@@ -230,6 +230,8 @@ export const serviceTypes = pgTable(
     description: text('description'),
     serviceFee: decimal('service_fee', { precision: 10, scale: 2 }).notNull(),
     duration: integer('duration').notNull(), // in minutes
+    generatesReminder: boolean('generates_reminder').default(false).notNull(),
+    reminderIntervalMonths: integer('reminder_interval_months'), // e.g. 6 or 12; used when generatesReminder is true
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

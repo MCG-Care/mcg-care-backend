@@ -40,6 +40,10 @@ export declare class FeedbacksController {
             total: number;
             totalPages: number;
         };
+        technicianId?: number;
+        averageRating?: number;
+        averageRatingRounded?: number;
+        totalFeedbacks?: number;
     }>;
     findByBookingId(bookingId: number, user: any): Promise<{
         id: number;
