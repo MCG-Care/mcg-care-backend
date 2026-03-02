@@ -52,7 +52,7 @@ export class ForumPostsService {
    * Find all posts with pagination and filters
    */
   async findAll(query: QueryPostsDto) {
-    const { search, userId, page = 1, limit = 10 } = query;
+    const { search, userId, page = 1, limit = 30 } = query;
     const offset = (page - 1) * limit;
 
     // Build where conditions

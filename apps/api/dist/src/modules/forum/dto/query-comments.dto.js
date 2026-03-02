@@ -15,7 +15,7 @@ const class_transformer_1 = require("class-transformer");
 class QueryCommentsDto {
     constructor() {
         this.page = 1;
-        this.limit = 20;
+        this.limit = 30;
     }
 }
 exports.QueryCommentsDto = QueryCommentsDto;

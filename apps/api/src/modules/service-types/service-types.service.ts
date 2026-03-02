@@ -40,7 +40,7 @@ export class ServiceTypesService {
    * Find all service types with pagination and search
    */
   async findAll(query: QueryServiceTypesDto) {
-    const { page = 1, limit = 10, search } = query;
+    const { page = 1, limit = 30, search } = query;
     const offset = (page - 1) * limit;
 
     // Build where condition for search

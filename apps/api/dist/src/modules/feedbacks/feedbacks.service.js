@@ -5,12 +5,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FeedbacksService = void 0;
 const common_1 = require("@nestjs/common");
 const database_1 = require("../../config/database");
 const drizzle_orm_1 = require("drizzle-orm");
+const user_service_1 = require("../users/user.service");
 let FeedbacksService = class FeedbacksService {
+    constructor(usersService) {
+        this.usersService = usersService;
+    }
     async create(userId, userRole, createFeedbackDto) {
         const { bookingId, rating, satisfaction, issueResolved, note } = createFeedbackDto;
         if (userRole !== 'customer') {
@@ -54,7 +61,7 @@ let FeedbacksService = class FeedbacksService {
         return this.findOne(newFeedback.id, userId, userRole);
     }
     async findAll(userId, userRole, query) {
-        const { page = 1, limit = 10, technicianId, minRating } = query;
+        const { page = 1, limit = 30, technicianId, minRating } = query;
         const offset = (page - 1) * limit;
         const conditions = [];
         if (userRole === 'customer') {
@@ -120,7 +127,7 @@ let FeedbacksService = class FeedbacksService {
             feedbacks = feedbacks.filter((f) => f.booking.technicianId === technicianId);
         }
         feedbacks = feedbacks.slice(0, limit);
-        return {
+        const response = {
             data: feedbacks,
             pagination: {
                 page,
@@ -129,6 +136,18 @@ let FeedbacksService = class FeedbacksService {
                 totalPages: Math.ceil(count / limit),
             },
         };
+        if (technicianId) {
+            try {
+                const ratingData = await this.usersService.getTechnicianAverageRating(technicianId);
+                response.technicianId = ratingData.technicianId;
+                response.averageRating = ratingData.averageRating;
+                response.averageRatingRounded = ratingData.averageRatingRounded;
+                response.totalFeedbacks = ratingData.totalFeedbacks;
+            }
+            catch (_a) {
+            }
+        }
+        return response;
     }
     async findByBookingId(bookingId, userId, userRole) {
         const booking = await database_1.db.query.bookings.findFirst({
@@ -257,6 +276,7 @@ let FeedbacksService = class FeedbacksService {
 };
 exports.FeedbacksService = FeedbacksService;
 exports.FeedbacksService = FeedbacksService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [user_service_1.UsersService])
 ], FeedbacksService);
 //# sourceMappingURL=feedbacks.service.js.map

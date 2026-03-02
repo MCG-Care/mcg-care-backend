@@ -15,7 +15,7 @@ const class_transformer_1 = require("class-transformer");
 class QueryPostsDto {
     constructor() {
         this.page = 1;
-        this.limit = 10;
+        this.limit = 30;
     }
 }
 exports.QueryPostsDto = QueryPostsDto;

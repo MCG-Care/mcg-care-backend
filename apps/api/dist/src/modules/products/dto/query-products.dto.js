@@ -16,7 +16,7 @@ const create_product_dto_1 = require("./create-product.dto");
 class QueryProductsDto {
     constructor() {
         this.page = 1;
-        this.limit = 10;
+        this.limit = 30;
     }
 }
 exports.QueryProductsDto = QueryProductsDto;

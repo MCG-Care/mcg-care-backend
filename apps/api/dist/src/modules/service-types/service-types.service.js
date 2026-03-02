@@ -30,7 +30,7 @@ let ServiceTypesService = class ServiceTypesService {
         return newServiceType;
     }
     async findAll(query) {
-        const { page = 1, limit = 10, search } = query;
+        const { page = 1, limit = 30, search } = query;
         const offset = (page - 1) * limit;
         const whereCondition = search
             ? (0, drizzle_orm_1.or)((0, drizzle_orm_1.ilike)(database_1.schema.serviceTypes.name, `%${search}%`), (0, drizzle_orm_1.ilike)(database_1.schema.serviceTypes.description, `%${search}%`))

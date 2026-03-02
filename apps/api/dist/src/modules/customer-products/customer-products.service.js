@@ -64,7 +64,7 @@ let CustomerProductsService = class CustomerProductsService {
         return this.findOne(newCustomerProduct.id, customerId, false);
     }
     async findAll(customerId, query) {
-        const { page = 1, limit = 10, customerId: filterCustomerId, search, } = query;
+        const { page = 1, limit = 30, customerId: filterCustomerId, search, } = query;
         const offset = (page - 1) * limit;
         const targetCustomerId = filterCustomerId || customerId;
         let whereCondition = targetCustomerId

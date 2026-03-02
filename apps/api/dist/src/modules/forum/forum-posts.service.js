@@ -42,7 +42,7 @@ let ForumPostsService = class ForumPostsService {
         return this.findOne(newPost.id);
     }
     async findAll(query) {
-        const { search, userId, page = 1, limit = 10 } = query;
+        const { search, userId, page = 1, limit = 30 } = query;
         const offset = (page - 1) * limit;
         let whereClause;
         if (search && search.trim()) {
