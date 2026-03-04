@@ -33,7 +33,7 @@ export class ServiceTypesService {
         generatesReminder: createServiceTypeDto.generatesReminder ?? false,
         reminderIntervalMonths: createServiceTypeDto.generatesReminder
           ? (createServiceTypeDto.reminderIntervalMonths ?? 6)
-          : null,
+          : 6, // Default 6 when disabled (avoids NULL for iOS compatibility)
       })
       .returning();
 
@@ -125,7 +125,7 @@ export class ServiceTypesService {
       updateData.generatesReminder = updateServiceTypeDto.generatesReminder;
       updateData.reminderIntervalMonths = updateServiceTypeDto.generatesReminder
         ? (updateServiceTypeDto.reminderIntervalMonths ?? 6)
-        : null;
+        : 6; // Default 6 when disabled (avoids NULL for iOS compatibility)
     } else if (updateServiceTypeDto.reminderIntervalMonths !== undefined) {
       updateData.reminderIntervalMonths = updateServiceTypeDto.reminderIntervalMonths;
     }

@@ -29,7 +29,7 @@ let ServiceTypesService = class ServiceTypesService {
             generatesReminder: (_a = createServiceTypeDto.generatesReminder) !== null && _a !== void 0 ? _a : false,
             reminderIntervalMonths: createServiceTypeDto.generatesReminder
                 ? ((_b = createServiceTypeDto.reminderIntervalMonths) !== null && _b !== void 0 ? _b : 6)
-                : null,
+                : 6,
         })
             .returning();
         return newServiceType;
@@ -85,7 +85,7 @@ let ServiceTypesService = class ServiceTypesService {
             updateData.generatesReminder = updateServiceTypeDto.generatesReminder;
             updateData.reminderIntervalMonths = updateServiceTypeDto.generatesReminder
                 ? ((_b = updateServiceTypeDto.reminderIntervalMonths) !== null && _b !== void 0 ? _b : 6)
-                : null;
+                : 6;
         }
         else if (updateServiceTypeDto.reminderIntervalMonths !== undefined) {
             updateData.reminderIntervalMonths = updateServiceTypeDto.reminderIntervalMonths;
