@@ -24,7 +24,10 @@ import {
   Clock,
   ListChecks,
   CalendarDays,
+  Image as ImageIcon,
+  ArrowLeft,
 } from "lucide-react";
+import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { Technician, TechnicianService, Timeslot, ServiceType, Booking } from "@/types";
@@ -192,6 +195,8 @@ const TechniciansPage = () => {
   const [selectedTechnicianForFeedback, setSelectedTechnicianForFeedback] = useState<Technician | null>(null);
   const [technicianFeedbacks, setTechnicianFeedbacks] = useState<any[]>([]);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
+  const [selectedFeedbackBooking, setSelectedFeedbackBooking] = useState<Booking | null>(null);
+  const [loadingFeedbackBooking, setLoadingFeedbackBooking] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -699,6 +704,7 @@ const TechniciansPage = () => {
 
   const openFeedbackModal = async (technician: Technician) => {
     setSelectedTechnicianForFeedback(technician);
+    setSelectedFeedbackBooking(null);
     setShowFeedbackModal(true);
     setLoadingFeedbacks(true);
     setTechnicianFeedbacks([]);
@@ -711,6 +717,21 @@ const TechniciansPage = () => {
       setTechnicianFeedbacks([]);
     } finally {
       setLoadingFeedbacks(false);
+    }
+  };
+
+  const handleFeedbackClick = async (feedback: any) => {
+    const bookingId = feedback.bookingId || feedback.booking?.id;
+    if (!bookingId) return;
+    setLoadingFeedbackBooking(true);
+    setSelectedFeedbackBooking(null);
+    try {
+      const response = await api.get(`/bookings/${bookingId}`);
+      setSelectedFeedbackBooking(response.data);
+    } catch (error) {
+      console.error("Error fetching booking details:", error);
+    } finally {
+      setLoadingFeedbackBooking(false);
     }
   };
 
@@ -1646,27 +1667,255 @@ const TechniciansPage = () => {
       {showFeedbackModal && selectedTechnicianForFeedback && (
         <div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setShowFeedbackModal(false)}
+          onClick={() => {
+            setShowFeedbackModal(false);
+            setSelectedFeedbackBooking(null);
+          }}
         >
           <Card
-            className="w-full max-w-2xl max-h-[90vh] flex flex-col bg-background"
+            className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-background"
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
-              <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                {t("reviews")} - {selectedTechnicianForFeedback.name}
-              </CardTitle>
+              <div className="flex items-center gap-2">
+                {selectedFeedbackBooking ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSelectedFeedbackBooking(null)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                ) : null}
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                  {selectedFeedbackBooking
+                    ? t("bookingDetails")
+                    : `${t("reviews")} - ${selectedTechnicianForFeedback.name}`}
+                </CardTitle>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowFeedbackModal(false)}
+                onClick={() => {
+                  setShowFeedbackModal(false);
+                  setSelectedFeedbackBooking(null);
+                }}
               >
                 <X className="h-4 w-4" />
               </Button>
             </CardHeader>
             <CardContent className="pt-6 overflow-y-auto flex-1">
-              {loadingFeedbacks ? (
+              {loadingFeedbackBooking ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : selectedFeedbackBooking ? (
+                /* Booking Details View */
+                  <div className="space-y-6">
+                    {/* Customer Information */}
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <h3 className="font-semibold text-lg mb-3">{t("customerInformation")}</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-muted-foreground">{t("name")}</Label>
+                          <p className="font-medium">
+                            {selectedFeedbackBooking.aircon?.customer?.name || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">{t("email")}</Label>
+                          <p className="font-medium">
+                            {selectedFeedbackBooking.aircon?.customer?.email || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">{t("phone")}</Label>
+                          <p className="font-medium">
+                            {selectedFeedbackBooking.aircon?.customer?.phoneNo || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">{t("product")}</Label>
+                          <p className="font-medium">
+                            {selectedFeedbackBooking.aircon?.product?.name || "N/A"}
+                          </p>
+                        </div>
+                        {selectedFeedbackBooking.aircon?.name && (
+                          <div>
+                            <Label className="text-muted-foreground">{t("productNickname")}</Label>
+                            <p className="font-medium">{selectedFeedbackBooking.aircon.name}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Services */}
+                    <div>
+                      <Label className="text-muted-foreground">{t("requestedServices")}</Label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedFeedbackBooking.bookingServices?.map((s: any) => (
+                          <span
+                            key={s.service?.id}
+                            className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                          >
+                            {s.service?.name} - {formatCurrency(s.service?.serviceFee)} Ks
+                          </span>
+                        )) || <p>{t("noServices")}</p>}
+                      </div>
+                    </div>
+
+                    {/* Technician */}
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <h3 className="font-semibold text-lg mb-3">{t("assignedTechnician")}</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-muted-foreground">{t("name")}</Label>
+                          <p className="font-medium">
+                            {selectedFeedbackBooking.technician?.name || t("notAssigned")}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">{t("phone")}</Label>
+                          <p className="font-medium">
+                            {selectedFeedbackBooking.technician?.phoneNo || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Service Address */}
+                    {selectedFeedbackBooking.serviceAddress && (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-3">{t("serviceAddress")}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          {selectedFeedbackBooking.serviceAddress.name && (
+                            <div>
+                              <Label className="text-muted-foreground">{t("name")}</Label>
+                              <p className="font-medium">{selectedFeedbackBooking.serviceAddress.name}</p>
+                            </div>
+                          )}
+                          <div>
+                            <Label className="text-muted-foreground">{t("address")}</Label>
+                            <p className="font-medium">{selectedFeedbackBooking.serviceAddress.address}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">{t("township")}</Label>
+                            <p className="font-medium">{selectedFeedbackBooking.serviceAddress.township}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">{t("city")}</Label>
+                            <p className="font-medium">{selectedFeedbackBooking.serviceAddress.city}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">{t("district")}</Label>
+                            <p className="font-medium">{selectedFeedbackBooking.serviceAddress.district}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Booking Details */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-muted-foreground">{t("status")}</Label>
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-sm mt-1 ${getStatusColor(
+                            selectedFeedbackBooking.status
+                          )}`}
+                        >
+                          {t(selectedFeedbackBooking.status)}
+                        </span>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">{t("scheduledDate")}</Label>
+                        <p className="font-medium mt-1">
+                          {formatDate(selectedFeedbackBooking.bookingForDate)}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">{t("bookingTime")}</Label>
+                        <p className="font-medium mt-1">
+                          {formatTimeTo12Hour(selectedFeedbackBooking.bookingTime)}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">{t("duration")}</Label>
+                        <p className="font-medium mt-1">
+                          {selectedFeedbackBooking.duration} {t("minutes")}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">{t("fees")}</Label>
+                        <p className="font-medium mt-1">
+                          {formatCurrency(selectedFeedbackBooking.fees)} Ks
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <Label className="text-muted-foreground">{t("description")}</Label>
+                      <p className="mt-1 whitespace-pre-wrap">
+                        {selectedFeedbackBooking.description || t("noDescriptionProvided")}
+                      </p>
+                    </div>
+
+                    {/* Photos */}
+                    {selectedFeedbackBooking.bookingImages &&
+                      selectedFeedbackBooking.bookingImages.length > 0 && (
+                        <div>
+                          <Label className="text-muted-foreground flex items-center gap-2">
+                            <ImageIcon className="h-4 w-4" />
+                            {t("photos")} ({selectedFeedbackBooking.bookingImages.length})
+                          </Label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                            {selectedFeedbackBooking.bookingImages.map((img: any) => (
+                              <div
+                                key={img.id}
+                                className="relative aspect-video rounded-lg overflow-hidden border bg-muted"
+                              >
+                                <Image
+                                  src={img.url}
+                                  alt="Booking"
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Customer Feedback */}
+                    {selectedFeedbackBooking.feedback && (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-3">{t("customerFeedback")}</h3>
+                        <div className="space-y-2">
+                          <p className="font-medium">
+                            {selectedFeedbackBooking.feedback.rating}/5
+                            {selectedFeedbackBooking.feedback.satisfaction != null && (
+                              <span className="text-muted-foreground ml-2">
+                                ({t("feedbackSatisfaction")}: {selectedFeedbackBooking.feedback.satisfaction}/5)
+                              </span>
+                            )}
+                          </p>
+                          {selectedFeedbackBooking.feedback.issueResolved != null && (
+                            <p className="text-sm">
+                              {t("issueResolved")}:{" "}
+                              {selectedFeedbackBooking.feedback.issueResolved ? t("yes") : t("no")}
+                            </p>
+                          )}
+                          {selectedFeedbackBooking.feedback.note && (
+                            <p className="text-sm whitespace-pre-wrap">
+                              {selectedFeedbackBooking.feedback.note}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+              ) : loadingFeedbacks ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
@@ -1675,11 +1924,14 @@ const TechniciansPage = () => {
                   {t("noReviewsYet")}
                 </p>
               ) : (
+                /* Feedback List */
                 <div className="space-y-4">
                   {technicianFeedbacks.map((feedback: any) => (
-                    <div
+                    <button
                       key={feedback.id}
-                      className="p-4 rounded-lg border bg-muted/30 space-y-2"
+                      type="button"
+                      onClick={() => handleFeedbackClick(feedback)}
+                      className="w-full p-4 rounded-lg border bg-muted/30 space-y-2 text-left hover:bg-muted/50 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -1711,7 +1963,7 @@ const TechniciansPage = () => {
                           )}
                         </p>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
