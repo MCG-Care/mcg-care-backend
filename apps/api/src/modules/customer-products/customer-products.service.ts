@@ -100,7 +100,7 @@ export class CustomerProductsService {
   async findAll(customerId: number | undefined, query: QueryCustomerProductsDto) {
     const {
       page = 1,
-      limit = 10,
+      limit = 30,
       customerId: filterCustomerId,
       search,
     } = query;

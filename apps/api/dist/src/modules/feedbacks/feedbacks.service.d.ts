@@ -1,7 +1,10 @@
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { QueryFeedbacksDto } from './dto/query-feedbacks.dto';
+import { UsersService } from '../users/user.service';
 export declare class FeedbacksService {
+    private readonly usersService;
+    constructor(usersService: UsersService);
     create(userId: number, userRole: string, createFeedbackDto: CreateFeedbackDto): Promise<{
         id: number;
         createdAt: Date;
@@ -37,6 +40,10 @@ export declare class FeedbacksService {
             total: number;
             totalPages: number;
         };
+        technicianId?: number;
+        averageRating?: number;
+        averageRatingRounded?: number;
+        totalFeedbacks?: number;
     }>;
     findByBookingId(bookingId: number, userId: number, userRole: string): Promise<{
         id: number;

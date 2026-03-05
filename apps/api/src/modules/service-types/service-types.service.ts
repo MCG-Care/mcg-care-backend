@@ -30,6 +30,10 @@ export class ServiceTypesService {
         description: createServiceTypeDto.description,
         serviceFee: createServiceTypeDto.serviceFee.toString(),
         duration: createServiceTypeDto.duration,
+        generatesReminder: createServiceTypeDto.generatesReminder ?? false,
+        reminderIntervalMonths: createServiceTypeDto.generatesReminder
+          ? (createServiceTypeDto.reminderIntervalMonths ?? 6)
+          : 6, // Default 6 when disabled (avoids NULL for iOS compatibility)
       })
       .returning();
 
@@ -40,7 +44,7 @@ export class ServiceTypesService {
    * Find all service types with pagination and search
    */
   async findAll(query: QueryServiceTypesDto) {
-    const { page = 1, limit = 10, search } = query;
+    const { page = 1, limit = 30, search } = query;
     const offset = (page - 1) * limit;
 
     // Build where condition for search
@@ -111,14 +115,25 @@ export class ServiceTypesService {
       }
     }
 
+    // Build update object, handling reminder fields
+    const updateData: Record<string, unknown> = {
+      ...updateServiceTypeDto,
+      serviceFee: updateServiceTypeDto.serviceFee?.toString(),
+      updatedAt: new Date(),
+    };
+    if (updateServiceTypeDto.generatesReminder !== undefined) {
+      updateData.generatesReminder = updateServiceTypeDto.generatesReminder;
+      updateData.reminderIntervalMonths = updateServiceTypeDto.generatesReminder
+        ? (updateServiceTypeDto.reminderIntervalMonths ?? 6)
+        : 6; // Default 6 when disabled (avoids NULL for iOS compatibility)
+    } else if (updateServiceTypeDto.reminderIntervalMonths !== undefined) {
+      updateData.reminderIntervalMonths = updateServiceTypeDto.reminderIntervalMonths;
+    }
+
     // Update service type
     const [updatedServiceType] = await db
       .update(schema.serviceTypes)
-      .set({
-        ...updateServiceTypeDto,
-        serviceFee: updateServiceTypeDto.serviceFee?.toString(),
-        updatedAt: new Date(),
-      })
+      .set(updateData as any)
       .where(eq(schema.serviceTypes.id, id))
       .returning();
 

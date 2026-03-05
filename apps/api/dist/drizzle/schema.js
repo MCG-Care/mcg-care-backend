@@ -151,6 +151,8 @@ exports.serviceTypes = (0, pg_core_1.pgTable)('service_types', {
     description: (0, pg_core_1.text)('description'),
     serviceFee: (0, pg_core_1.decimal)('service_fee', { precision: 10, scale: 2 }).notNull(),
     duration: (0, pg_core_1.integer)('duration').notNull(),
+    generatesReminder: (0, pg_core_1.boolean)('generates_reminder').default(false).notNull(),
+    reminderIntervalMonths: (0, pg_core_1.integer)('reminder_interval_months'),
     createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
     updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
 }, (table) => ({

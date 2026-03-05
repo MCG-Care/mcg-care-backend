@@ -27,7 +27,7 @@ export declare class MaintenanceRemindersService {
     generatePromoCode(): string;
     generateUniquePromoCode(): Promise<string>;
     generateDiscountPercentage(): number;
-    calculateReminderDate(serviceTypeId: number, fromDate: Date): string;
+    calculateReminderDate(reminderIntervalMonths: number, fromDate: Date): string;
     createRemindersForBooking(bookingId: number): Promise<{
         reminder: {
             id: number;

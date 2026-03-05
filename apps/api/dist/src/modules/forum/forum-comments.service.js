@@ -33,7 +33,7 @@ let ForumCommentsService = class ForumCommentsService {
         return this.findOne(newComment.id);
     }
     async findAll(query) {
-        const { postId, userId, page = 1, limit = 20 } = query;
+        const { postId, userId, page = 1, limit = 30 } = query;
         const offset = (page - 1) * limit;
         const conditions = [];
         if (postId) {

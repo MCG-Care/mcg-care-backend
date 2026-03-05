@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { db, schema } from '../../config/database';
-import { eq, and, gte, lte } from 'drizzle-orm';
+import { eq, and, gte, lte, inArray } from 'drizzle-orm';
 
 @Injectable()
 export class MaintenanceRemindersService {
@@ -100,24 +100,11 @@ export class MaintenanceRemindersService {
   }
 
   /**
-   * Calculate reminder date based on service type
-   * Service types 1 and 6: 6 months from now
-   * Service types 5 and 7: 1 year from now
+   * Calculate reminder date based on reminder interval (months)
    */
-  calculateReminderDate(serviceTypeId: number, fromDate: Date): string {
+  calculateReminderDate(reminderIntervalMonths: number, fromDate: Date): string {
     const reminderDate = new Date(fromDate);
-
-    if (serviceTypeId === 1 || serviceTypeId === 6) {
-      // Add 6 months
-      reminderDate.setMonth(reminderDate.getMonth() + 6);
-    } else if (serviceTypeId === 5 || serviceTypeId === 7) {
-      // Add 1 year
-      reminderDate.setFullYear(reminderDate.getFullYear() + 1);
-    } else {
-      // For other service types, default to 6 months
-      reminderDate.setMonth(reminderDate.getMonth() + 6);
-    }
-
+    reminderDate.setMonth(reminderDate.getMonth() + reminderIntervalMonths);
     return reminderDate.toISOString().split('T')[0];
   }
 
@@ -150,10 +137,28 @@ export class MaintenanceRemindersService {
     // Get the date when booking was marked as done (use current date)
     const completionDate = new Date();
 
-    // Filter service types to only include 1, 5, 6, 7
-    const targetServiceTypes = [1, 5, 6, 7];
+    // Get service type IDs from booking
+    const bookingServiceIds = (booking.bookingServices as any[]).map(
+      (bs) => bs.serviceId,
+    );
+
+    // Fetch service types that have generatesReminder=true
+    const reminderConfigs = await db.query.serviceTypes.findMany({
+      where: and(
+        inArray(schema.serviceTypes.id, bookingServiceIds),
+        eq(schema.serviceTypes.generatesReminder, true),
+      ),
+      columns: { id: true, reminderIntervalMonths: true },
+    });
+
+    // Map serviceId -> reminderIntervalMonths (default 6 if not set)
+    const configMap = new Map<number, number>();
+    for (const c of reminderConfigs) {
+      configMap.set(c.id, c.reminderIntervalMonths ?? 6);
+    }
+
     const relevantServices = (booking.bookingServices as any[]).filter((bs) =>
-      targetServiceTypes.includes(bs.serviceId),
+      configMap.has(bs.serviceId),
     );
 
     if (relevantServices.length === 0) {
@@ -169,6 +174,7 @@ export class MaintenanceRemindersService {
     // Create a promo code and reminder for each relevant service
     for (const bookingService of relevantServices) {
       const serviceTypeId = bookingService.serviceId;
+      const intervalMonths = configMap.get(serviceTypeId) ?? 6;
 
       // Generate unique promo code
       const promoCode = await this.generateUniquePromoCode();
@@ -176,7 +182,7 @@ export class MaintenanceRemindersService {
 
       // Calculate reminder date
       const reminderDate = this.calculateReminderDate(
-        serviceTypeId,
+        intervalMonths,
         completionDate,
       );
 

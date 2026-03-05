@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsInt, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsInt, Min, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateServiceTypeDto {
@@ -21,6 +21,17 @@ export class CreateServiceTypeDto {
   @Type(() => Number)
   @IsNotEmpty()
   duration!: number; // in minutes
+
+  @IsBoolean()
+  @IsOptional()
+  @Type(() => Boolean)
+  generatesReminder?: boolean;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  @Type(() => Number)
+  reminderIntervalMonths?: number; // e.g. 6 or 12; used when generatesReminder is true
 }
 
 

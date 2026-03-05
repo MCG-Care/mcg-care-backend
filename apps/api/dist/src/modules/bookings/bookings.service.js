@@ -259,7 +259,7 @@ let BookingsService = class BookingsService {
         return shuffled;
     }
     async findAll(userId, userRole, query) {
-        const { page = 1, limit = 10, customerId, technicianId, airconId, status, bookingForDate, } = query;
+        const { page = 1, limit = 30, customerId, technicianId, airconId, status, bookingForDate, } = query;
         const offset = (page - 1) * limit;
         const conditions = [];
         if (userRole === 'customer') {

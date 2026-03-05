@@ -10,11 +10,13 @@ exports.FeedbacksModule = void 0;
 const common_1 = require("@nestjs/common");
 const feedbacks_service_1 = require("./feedbacks.service");
 const feedbacks_controller_1 = require("./feedbacks.controller");
+const user_module_1 = require("../users/user.module");
 let FeedbacksModule = class FeedbacksModule {
 };
 exports.FeedbacksModule = FeedbacksModule;
 exports.FeedbacksModule = FeedbacksModule = __decorate([
     (0, common_1.Module)({
+        imports: [user_module_1.UsersModule],
         controllers: [feedbacks_controller_1.FeedbacksController],
         providers: [feedbacks_service_1.FeedbacksService],
         exports: [feedbacks_service_1.FeedbacksService],

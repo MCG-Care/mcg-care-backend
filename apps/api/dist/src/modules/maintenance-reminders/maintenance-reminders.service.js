@@ -71,20 +71,13 @@ let MaintenanceRemindersService = class MaintenanceRemindersService {
     generateDiscountPercentage() {
         return Math.floor(Math.random() * 11) + 5;
     }
-    calculateReminderDate(serviceTypeId, fromDate) {
+    calculateReminderDate(reminderIntervalMonths, fromDate) {
         const reminderDate = new Date(fromDate);
-        if (serviceTypeId === 1 || serviceTypeId === 6) {
-            reminderDate.setMonth(reminderDate.getMonth() + 6);
-        }
-        else if (serviceTypeId === 5 || serviceTypeId === 7) {
-            reminderDate.setFullYear(reminderDate.getFullYear() + 1);
-        }
-        else {
-            reminderDate.setMonth(reminderDate.getMonth() + 6);
-        }
+        reminderDate.setMonth(reminderDate.getMonth() + reminderIntervalMonths);
         return reminderDate.toISOString().split('T')[0];
     }
     async createRemindersForBooking(bookingId) {
+        var _a, _b;
         const booking = await database_1.db.query.bookings.findFirst({
             where: (0, drizzle_orm_1.eq)(database_1.schema.bookings.id, bookingId),
             with: {
@@ -104,8 +97,16 @@ let MaintenanceRemindersService = class MaintenanceRemindersService {
             throw new Error(`Booking with ID ${bookingId} not found`);
         }
         const completionDate = new Date();
-        const targetServiceTypes = [1, 5, 6, 7];
-        const relevantServices = booking.bookingServices.filter((bs) => targetServiceTypes.includes(bs.serviceId));
+        const bookingServiceIds = booking.bookingServices.map((bs) => bs.serviceId);
+        const reminderConfigs = await database_1.db.query.serviceTypes.findMany({
+            where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.inArray)(database_1.schema.serviceTypes.id, bookingServiceIds), (0, drizzle_orm_1.eq)(database_1.schema.serviceTypes.generatesReminder, true)),
+            columns: { id: true, reminderIntervalMonths: true },
+        });
+        const configMap = new Map();
+        for (const c of reminderConfigs) {
+            configMap.set(c.id, (_a = c.reminderIntervalMonths) !== null && _a !== void 0 ? _a : 6);
+        }
+        const relevantServices = booking.bookingServices.filter((bs) => configMap.has(bs.serviceId));
         if (relevantServices.length === 0) {
             return [];
         }
@@ -114,9 +115,10 @@ let MaintenanceRemindersService = class MaintenanceRemindersService {
         const createdReminders = [];
         for (const bookingService of relevantServices) {
             const serviceTypeId = bookingService.serviceId;
+            const intervalMonths = (_b = configMap.get(serviceTypeId)) !== null && _b !== void 0 ? _b : 6;
             const promoCode = await this.generateUniquePromoCode();
             const discountPercentage = this.generateDiscountPercentage();
-            const reminderDate = this.calculateReminderDate(serviceTypeId, completionDate);
+            const reminderDate = this.calculateReminderDate(intervalMonths, completionDate);
             const [createdPromoCode] = await database_1.db
                 .insert(database_1.schema.promotionCodes)
                 .values({

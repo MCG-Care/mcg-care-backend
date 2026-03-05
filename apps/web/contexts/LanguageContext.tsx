@@ -292,6 +292,15 @@ const translations: Translations = {
     
     // Booking Detail Modal
     bookingDetails: "Booking Details",
+    customerFeedback: "Customer Feedback",
+    noFeedbackYet: "No feedback information yet.",
+    noReviewsYet: "No reviews yet.",
+    feedbackRating: "Rating",
+    feedbackSatisfaction: "Satisfaction",
+    issueResolved: "Issue Resolved",
+    feedbackNote: "Note",
+    yes: "Yes",
+    no: "No",
     customerInformation: "Customer Information",
     requestedServices: "Requested Services",
     noServices: "No services",
@@ -628,6 +637,15 @@ const translations: Translations = {
     
     // Booking Detail Modal
     bookingDetails: "ကြိုတင်မှာကြားမှု အသေးစိတ်",
+    customerFeedback: "ဖောက်သည် ပြန်ကြားချက်",
+    noFeedbackYet: "ပြန်ကြားချက် အချက်အလက် မရှိသေးပါ။",
+    noReviewsYet: "ပြန်ကြားချက်များ မရှိသေးပါ။",
+    feedbackRating: "အဆင့်သတ်မှတ်ချက်",
+    feedbackSatisfaction: "ကျေနပ်မှု",
+    issueResolved: "ပြဿနာ ဖြေရှင်းပြီး",
+    feedbackNote: "မှတ်ချက်",
+    yes: "ဟုတ်ကဲ့",
+    no: "မဟုတ်ပါ",
     customerInformation: "ဖောက်သည် အချက်အလက်",
     requestedServices: "တောင်းဆိုထားသော ဝန်ဆောင်မှုများ",
     noServices: "ဝန်ဆောင်မှုများမရှိပါ",
