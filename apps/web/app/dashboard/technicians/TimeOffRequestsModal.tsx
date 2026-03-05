@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Search,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
 import api from "@/lib/api";
 import { TimeOffRequest } from "@/types";
@@ -37,6 +38,9 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
   onClose,
 }) => {
   const { t } = useLanguage();
+  const { resolvedTheme } = useTheme();
+  // Match app theme: light modal in light mode, dark modal in dark mode
+  const isLightMode = resolvedTheme !== "dark";
   const [activeTab, setActiveTab] = useState<TabType>("pending");
   const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "rejected">("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -51,6 +55,8 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
     conflictDate?: string;
     bookingHours?: string;
     requestedHours?: string;
+    bookingHoursParsed?: number[];
+    requestedHoursParsed?: number[];
   }>({ isOpen: false });
   
   // Pagination states
@@ -177,11 +183,23 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
     const bookingHoursMatch = message.match(/Booking occupies hours ([0-9,\s]+)/i);
     const requestedHoursMatch = message.match(/requested slots ([0-9,\s]+)/i);
     
+    // Parse hours and filter out invalid values (e.g., from trailing commas) to prevent NaN display
+    const parseValidHours = (str: string): number[] =>
+      str
+        .split(",")
+        .map((h) => parseInt(h.trim(), 10))
+        .filter((h) => !isNaN(h) && h >= 0 && h <= 23);
+    
+    const bookingHoursStr = bookingHoursMatch ? bookingHoursMatch[1].trim() : undefined;
+    const requestedHoursStr = requestedHoursMatch ? requestedHoursMatch[1].trim() : undefined;
+    
     return {
       bookingId: bookingIdMatch ? bookingIdMatch[1] : undefined,
       conflictDate: dateMatch ? dateMatch[1] : undefined,
-      bookingHours: bookingHoursMatch ? bookingHoursMatch[1].trim() : undefined,
-      requestedHours: requestedHoursMatch ? requestedHoursMatch[1].trim() : undefined,
+      bookingHours: bookingHoursStr,
+      requestedHours: requestedHoursStr,
+      bookingHoursParsed: bookingHoursStr ? parseValidHours(bookingHoursStr) : [],
+      requestedHoursParsed: requestedHoursStr ? parseValidHours(requestedHoursStr) : [],
     };
   };
 
@@ -657,22 +675,22 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
         </CardContent>
       </Card>
 
-      {/* Booking Conflict Modal */}
+      {/* Booking Conflict Modal - respects app theme for consistency */}
       {conflictModal.isOpen && (
         <div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
           onClick={() => setConflictModal({ isOpen: false })}
         >
           <Card
-            className="w-full max-w-2xl bg-background"
+            className={`w-full max-w-2xl shadow-xl ${isLightMode ? "bg-white" : "bg-slate-900"}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <CardHeader className="flex flex-row items-center justify-between border-b">
+            <CardHeader className={`flex flex-row items-center justify-between border-b ${isLightMode ? "border-slate-200" : "border-slate-700"}`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isLightMode ? "bg-red-100" : "bg-red-900/20"}`}>
+                  <AlertTriangle className={`h-5 w-5 ${isLightMode ? "text-red-600" : "text-red-400"}`} />
                 </div>
-                <CardTitle className="text-red-600 dark:text-red-400">
+                <CardTitle className={isLightMode ? "text-red-600" : "text-red-400"}>
                   {t("bookingConflictError")}
                 </CardTitle>
               </div>
@@ -681,26 +699,26 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
               </Button>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
-              <p className="text-sm text-muted-foreground">
+              <p className={`text-sm ${isLightMode ? "text-slate-900" : "text-slate-100"}`}>
                 {t("bookingConflictMessage")}
               </p>
 
-              <div className="space-y-3 p-4 bg-muted rounded-lg">
+              <div className={`space-y-3 p-4 rounded-lg border ${isLightMode ? "bg-slate-100 border-slate-200" : "bg-slate-800 border-slate-700"}`}>
                 {conflictModal.bookingId && (
                   <div className="flex items-start gap-3">
-                    <Label className="text-sm font-semibold min-w-[140px]">
+                    <Label className={`text-sm font-semibold min-w-[140px] ${isLightMode ? "text-slate-900" : "text-slate-100"}`}>
                       {t("bookingId")}:
                     </Label>
-                    <p className="text-sm font-mono">{conflictModal.bookingId}</p>
+                    <p className={`text-sm font-mono ${isLightMode ? "text-slate-900" : "text-slate-100"}`}>{conflictModal.bookingId}</p>
                   </div>
                 )}
 
                 {conflictModal.conflictDate && (
                   <div className="flex items-start gap-3">
-                    <Label className="text-sm font-semibold min-w-[140px]">
+                    <Label className={`text-sm font-semibold min-w-[140px] ${isLightMode ? "text-slate-900" : "text-slate-100"}`}>
                       {t("conflictDate")}:
                     </Label>
-                    <p className="text-sm">
+                    <p className={`text-sm ${isLightMode ? "text-slate-900" : "text-slate-100"}`}>
                       {new Date(conflictModal.conflictDate).toLocaleDateString("en-US", {
                         weekday: "long",
                         year: "numeric",
@@ -711,36 +729,36 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
                   </div>
                 )}
 
-                {conflictModal.bookingHours && (
+                {(conflictModal.bookingHoursParsed?.length ?? 0) > 0 && (
                   <div className="flex items-start gap-3">
-                    <Label className="text-sm font-semibold min-w-[140px]">
+                    <Label className={`text-sm font-semibold min-w-[140px] ${isLightMode ? "text-slate-900" : "text-slate-100"}`}>
                       {t("bookingOccupiesHours")}:
                     </Label>
                     <div className="flex flex-wrap gap-1">
-                      {conflictModal.bookingHours.split(",").map((hour, idx) => (
+                      {conflictModal.bookingHoursParsed!.map((hour, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded text-xs font-medium"
+                          className="px-2 py-1 bg-red-600 text-white rounded text-xs font-medium"
                         >
-                          {formatHourTo12Hour(parseInt(hour.trim(), 10))}
+                          {formatHourTo12Hour(hour)}
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {conflictModal.requestedHours && (
+                {(conflictModal.requestedHoursParsed?.length ?? 0) > 0 && (
                   <div className="flex items-start gap-3">
-                    <Label className="text-sm font-semibold min-w-[140px]">
+                    <Label className={`text-sm font-semibold min-w-[140px] ${isLightMode ? "text-slate-900" : "text-slate-100"}`}>
                       {t("requestedSlots")}:
                     </Label>
                     <div className="flex flex-wrap gap-1">
-                      {conflictModal.requestedHours.split(",").map((hour, idx) => (
+                      {conflictModal.requestedHoursParsed!.map((hour, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded text-xs font-medium"
+                          className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-medium"
                         >
-                          {formatHourTo12Hour(parseInt(hour.trim(), 10))}
+                          {formatHourTo12Hour(hour)}
                         </span>
                       ))}
                     </div>
@@ -748,14 +766,14 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
                 )}
               </div>
 
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <div className={`p-4 rounded-lg border ${isLightMode ? "bg-amber-100 border-amber-400" : "bg-amber-900/20 border-amber-700"}`}>
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${isLightMode ? "text-amber-700" : "text-amber-400"}`} />
                   <div>
-                    <Label className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+                    <Label className={`text-sm font-semibold ${isLightMode ? "text-slate-900" : "text-amber-100"}`}>
                       {t("conflictResolution")}:
                     </Label>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                    <p className={`text-sm mt-1 ${isLightMode ? "text-slate-900" : "text-amber-100"}`}>
                       {t("conflictResolutionText")}
                     </p>
                   </div>
@@ -763,7 +781,7 @@ const TimeOffRequestsModal: React.FC<TimeOffRequestsModalProps> = ({
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button onClick={() => setConflictModal({ isOpen: false })}>
+                <Button variant="destructive" onClick={() => setConflictModal({ isOpen: false })}>
                   {t("close")}
                 </Button>
               </div>
