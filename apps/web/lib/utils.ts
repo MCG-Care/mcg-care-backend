@@ -51,9 +51,12 @@ export function formatTimeTo12Hour(timeStr: string | null | undefined): string {
 /**
  * Format an hour number (0-23) to 12-hour AM/PM format
  * @param hour - Hour in 24-hour format (0-23)
- * @returns Formatted string (e.g., "9:00 AM", "1:00 PM")
+ * @returns Formatted string (e.g., "9:00 AM", "1:00 PM"), or "N/A" for invalid input
  */
 export function formatHourTo12Hour(hour: number): string {
+  if (hour == null || isNaN(hour) || hour < 0 || hour > 23) {
+    return "N/A";
+  }
   const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
   const period = hour < 12 ? "AM" : "PM";
   return `${displayHour}:00 ${period}`;
